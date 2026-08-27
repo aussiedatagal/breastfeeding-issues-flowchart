@@ -1,9 +1,3 @@
-- id: b4
-  ask: Is the concern that supply seems low, despite adequate weight gain and output?
-  short: Supply worry?
-  assess: The infant is thriving, but the parent is worried about milk supply.
-  ifYes: b5
-  ifNo: dx-clarify
 - id: b5
   ask: Are there forceful-flow / oversupply signs as well?
   short: Oversupply signs?

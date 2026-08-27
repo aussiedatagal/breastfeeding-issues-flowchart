@@ -6,8 +6,8 @@
     parallel with this. Plot weight on a growth chart: tracking its centile, roughly 25–35 g/day
     at 0–3 months, back to birth weight by day 10–14. Output after day 4–5: at least 6 heavy wet
     nappies and 3 yellow stools per 24 h (stool frequency falls after about 6 weeks — still
-    normal); around 8–12 feeds per 24 h with audible swallowing. ADEQUATE means the milk-making
-    and milk-moving machinery is working, so the problem is pain, a lump, refusal, or a supply
-    worry. INADEQUATE means milk is not getting in — the questions below work out why."
-  ifYes: b1
+    normal); around 8–12 feeds per 24 h with audible swallowing. ADEQUATE and the parent
+    is worried about supply, ask about oversupply next. INADEQUATE means milk is not getting
+    in — the questions below work out why."
+  ifYes: b5
   ifNo: a1

@@ -52,9 +52,14 @@ scripts/            validate-content.mjs (shared with CI), extract-legacy.mjs (o
 legacy/             the original single-file prototypes, kept for reference
 ```
 
-The graph model is a **DAG, not a tree**: several routes can reach one
-diagnosis. Each node is drawn once (under its shortest route from the entry);
-the other routes render as dashed "↗" connectors.
+The map is **several independent decision trees**, one per problem area
+(`domains` in `map.yaml`). The clinician opens every area that applies to the
+dyad — pain, low supply and refusal are not mutually exclusive — and findings
+accumulate across all of them into one problem list.
+
+Within a problem area the model is a **DAG, not a tree**: several routes can
+reach one diagnosis. Each node is drawn once (under its shortest route from that
+area's entry question); the other routes render as dashed "↗" connectors.
 
 `src/graph/*` has no React imports and is covered by unit tests, so the
 decision logic can be reasoned about and changed independently of the UI.

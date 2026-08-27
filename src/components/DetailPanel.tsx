@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import type { Answer, Graph, GraphNode } from "../graph/types.ts";
-import { isQuestion } from "../graph/types.ts";
+import { domainOf, isQuestion } from "../graph/types.ts";
 import type { PathStep } from "../graph/traversal.ts";
+import { DomainPicker } from "./DomainPicker.tsx";
 import styles from "./DetailPanel.module.css";
 
 const FLAG_LABEL: Record<string, string> = {
@@ -13,6 +14,7 @@ const FLAG_LABEL: Record<string, string> = {
 interface Props {
   graph: Graph;
   node: GraphNode | null;
+  rootSelected: boolean;
   path: PathStep[];
   openIds: ReadonlySet<string>;
   findings: string[];
@@ -23,9 +25,11 @@ interface Props {
   onGoTo: (nodeId: string) => void;
   onPin: (id: string) => void;
   onUnpin: (id: string) => void;
+  onToggleDomain: (entryId: string, open: boolean) => void;
 }
 
 export function DetailPanel({ isOpen, onClose, compact, ...rest }: Props) {
+  const { rootSelected, onToggleDomain, ...panelProps } = rest;
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -50,8 +54,41 @@ export function DetailPanel({ isOpen, onClose, compact, ...rest }: Props) {
         aria-label="Details"
         inert={!isOpen}
       >
-        {rest.node && (
-          <PanelContent {...rest} onClose={onClose} node={rest.node} closeRef={closeRef} />
+        {rootSelected ? (
+          <>
+            <div className={styles.head}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p className={styles.kicker}>Start here</p>
+                <h2 className={styles.title}>What is the dyad dealing with?</h2>
+              </div>
+              <button
+                ref={closeRef}
+                className={styles.close}
+                onClick={onClose}
+                aria-label="Close details"
+              >
+                ×
+              </button>
+            </div>
+            <div className={styles.body}>
+              <DomainPicker
+                graph={panelProps.graph}
+                openIds={panelProps.openIds}
+                findings={panelProps.findings}
+                onToggle={onToggleDomain}
+                onGoToDomain={panelProps.onGoTo}
+              />
+            </div>
+          </>
+        ) : (
+          panelProps.node && (
+            <PanelContent
+              {...panelProps}
+              onClose={onClose}
+              node={panelProps.node}
+              closeRef={closeRef}
+            />
+          )
         )}
       </aside>
     </>
@@ -70,13 +107,16 @@ function PanelContent({
   onPin,
   onUnpin,
   closeRef,
-}: Omit<Props, "isOpen" | "compact"> & {
+}: Omit<Props, "isOpen" | "compact" | "onClose" | "rootSelected" | "onToggleDomain"> & {
   node: GraphNode;
+  onClose: () => void;
   closeRef: React.RefObject<HTMLButtonElement | null>;
 }) {
   const question = isQuestion(node);
   const mergeParents = node.parents.filter((p) => p.merge);
   const pinned = !question && findings.includes(node.id);
+  const domain = domainOf(graph, node.id);
+  const isDomainEntry = domain?.entry === node.id;
 
   const NavChips = ({ ids }: { ids: string[] }) => (
     <div className={styles.chips}>
@@ -97,7 +137,13 @@ function PanelContent({
       <div className={styles.head}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <p className={styles.kicker}>
-            {node.id === graph.entry ? "Start here" : question ? "Question" : "Working diagnosis"}
+            {isDomainEntry
+              ? domain!.label
+              : domain
+                ? `${domain.label} · ${question ? "Question" : "Working diagnosis"}`
+                : question
+                  ? "Question"
+                  : "Working diagnosis"}
           </p>
           <h2 className={styles.title}>{question ? node.ask : node.name}</h2>
           {!question && node.flag && (

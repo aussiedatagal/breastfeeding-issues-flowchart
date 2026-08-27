@@ -39,13 +39,18 @@ Import style: relative imports carry the `.ts` / `.tsx` extension
 
 ## The decision model
 
-- It is a **DAG, not a tree**. Multiple routes may reach one diagnosis. A node
-  is drawn once, under its shortest route from the entry (its _canonical_
-  parent); other routes are _merge_ edges, shown dashed with a "↗" stub.
+- It is **N independent sub-trees, not one tree**. `map.yaml` lists `domains`
+  (problem areas), each with an `entry` question. A synthetic ROOT (`ROOT_ID =
+  "__root__"`, not in `nodes`) is the picker; the clinician opens every area
+  that applies — they accumulate, findings span all of them.
+- Within a domain it is a **DAG, not a tree**. Multiple routes may reach one
+  diagnosis. A node is drawn once, under its shortest route from that domain's
+  entry (its _canonical_ parent); other routes are _merge_ edges, shown dashed
+  with a "↗" stub.
 - `content/` is flat: questions reference other nodes by `id` via `ifYes` /
   `ifNo` (or `{ goto: id }` for an explicit jump). `build.ts` does a BFS from
-  the entry to assign canonical parents and depths, and flags every other
-  incoming edge as a merge.
+  all domain entries to assign canonical parents and depths, and flags every
+  other incoming edge as a merge.
 - `reference: true` diagnoses (in `diagnoses/reference.yaml`) are look-alike /
   comparison notes — not on any path, reachable only from a `seeAlso` link.
 

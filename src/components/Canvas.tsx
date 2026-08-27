@@ -46,7 +46,7 @@ export function Canvas({
       <g transform={panZoom.transform}>
         <Connectors layout={layout} activeIds={activeIds} onUndo={onUndo} />
         {layout.placements.map((p) => {
-          if (p.kind === "stub") {
+          if (p.kind === "stub" || p.kind === "domain") {
             const parent = p.parentId ? graph.nodes.get(p.parentId) : undefined;
             return (
               <StubShape
@@ -54,6 +54,17 @@ export function Canvas({
                 placement={p}
                 parentLabel={parent?.short ?? "this question"}
                 onActivate={onStubActivate}
+              />
+            );
+          }
+          if (p.kind === "root") {
+            return (
+              <NodeShape
+                key={p.id}
+                placement={p}
+                node={null}
+                selected={selectedId === "__root__"}
+                onSelect={onInspectNode}
               />
             );
           }
