@@ -11,7 +11,7 @@ interface Props {
 }
 
 /**
- * The running problem list. A dyad often has more than one contributing factor;
+ * The running problem list. A parent often has more than one contributing factor at play;
  * you pin each one as you find it, then rewind and work another branch.
  */
 export function FindingsTray({ graph, findings, onOpen, onRemove, onClear }: Props) {

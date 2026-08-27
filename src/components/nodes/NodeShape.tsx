@@ -34,7 +34,7 @@ export function NodeShape({ placement, node, selected, onSelect }: Props) {
         : "Question";
   const ariaLabel =
     isRoot || !node
-      ? "Start: what is the dyad dealing with?"
+      ? "Start: what is the breastfeeding difficulty?"
       : `${node.kind === "diagnosis" ? "Diagnosis" : "Question"}: ${
           node.kind === "question" ? node.ask : node.name
         }`;

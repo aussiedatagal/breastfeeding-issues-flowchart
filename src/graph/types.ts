@@ -3,7 +3,7 @@ import type { Domain, Flag } from "../content/schema";
 export type { Domain, Flag };
 export type Answer = "yes" | "no";
 
-/** Synthetic id for the "what is the dyad dealing with?" picker at the far left. */
+/** Synthetic id for the opening "what is the difficulty?" picker. */
 export const ROOT_ID = "__root__";
 
 /**

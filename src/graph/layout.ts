@@ -20,7 +20,7 @@ const ROOT_GAP = 132; // vertical gap between the root and the first row of a co
 const WRAP_CHARS = 26;
 const DOMAIN_WRAP = 26;
 const LINE_H = 16.5;
-const ROOT_LABEL = "What is the dyad dealing with?";
+const ROOT_LABEL = "What is the difficulty?";
 
 export interface Placement {
   id: string;
