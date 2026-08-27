@@ -73,4 +73,28 @@
     within 30–90 seconds. The parent is well between feeds. It is a dopamine-drop phenomenon,
     not a mood disorder — though the two can coexist."
   ifYes: dx-dmer
+  ifNo: pain11
+- id: pain11
+  ask: A deep, dull, bilateral ache or burning that continues DURING and AFTER feeds, worst in the
+    lower breast?
+  short: Deep ache during + after?
+  assess: >
+    The pattern of mammary dysbiosis / subacute mastitis: a fairly constant deep
+    ache or burning felt in the breast (not on the nipple surface), present
+    between feeds as well as during, often bilateral and worst in the lower
+    quadrants. Ask about a history of recurrent blocked ducts, blebs, cracked
+    nipples or previous mastitis, exclusive pumping or nipple-shield use, and
+    unresolved oversupply.
+  ifYes: dx-dysbiosis
+  ifNo: pain12
+- id: pain12
+  ask: Does light touch hurt — clothing brushing the nipple, the shower spray, or patting dry with
+    a towel?
+  short: Pain to light touch?
+  assess: >
+    Allodynia — pain from a stimulus that would not normally hurt — points to
+    central sensitisation rather than a local breast problem, especially
+    alongside other chronic pain conditions (fibromyalgia, IBS, migraine, TMJ
+    pain, painful intercourse) and where the breast and nipple exam is normal.
+  ifYes: dx-allodynia
   ifNo: dx-deeppain

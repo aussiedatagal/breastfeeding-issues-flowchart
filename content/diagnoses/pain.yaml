@@ -93,18 +93,53 @@
       depression.
   seeAlso:
     - mim-dmer
-- id: dx-deeppain
-  name: Deep pain with a normal exam (persistent / functional)
+- id: dx-dysbiosis
+  name: Mammary dysbiosis / subacute mastitis
+  flag: often-mislabelled
+  note: >
+    This is what is usually meant by "ductal thrush" — but Candida rarely causes
+    it. It is a bacterial biofilm problem (coagulase-negative staph, viridans
+    strep) on a background of unresolved oversupply.
+  steps:
+    - Bring an excessive supply down first — it is the main driver.
+    - Anti-inflammatory measures; treat blebs and blocked ducts; avoid deep massage and extra pumping.
+    - Milk culture and sensitivities before antibiotics; consider probiotics.
+    - Do NOT treat empirically as Candida.
+  seeAlso:
+    - mim-thrush
+    - dx-recur
+    - dx-bleb
+  coexists:
+    - dx-oald
+    - dx-bleb
+    - dx-plug
+- id: dx-allodynia
+  name: Allodynia / functional (central sensitisation) pain
   flag: often-mislabelled
   note: A diagnosis in its own right once mechanics, skin, vascular and infective causes are
     excluded — not a place-holder for ‘unexplained thrush’.
   steps:
-    - Re-verify latch and pump-flange size.
-    - Treat vasospasm empirically if any features fit.
-    - Consider mammary dysbiosis and central-sensitisation pain; screen mood; multidisciplinary
-      pain approach.
+    - Re-verify latch and pump-flange size; treat any coexisting vasospasm.
+    - Screen for and treat mood disorder; ask about other chronic pain syndromes.
+    - Multidisciplinary pain approach — consider a pain service, TCA/SNRI, psychological therapy.
+    - Empirical antifungal or antibiotic is NOT indicated.
+  seeAlso:
+    - dx-raynaud
+    - dx-deeppain
+- id: dx-deeppain
+  name: Deep pain, exam normal — cause not yet identified
+  note: >
+    A genuine residual once mechanical, skin, vascular, infective, dysbiotic and
+    central-sensitisation causes have all been worked through. Not a
+    place-holder for ‘unexplained thrush’.
+  steps:
+    - Re-verify latch and pump-flange size; watch a full feed and a pumping session.
+    - Reconsider vasospasm, dysbiosis and allodynia — the features can be subtle.
+    - Screen mood; consider a milk culture; multidisciplinary pain approach if it persists.
     - Empirical antifungal or antibiotic is NOT recommended without corroborating signs — infant
       oral thrush, satellite areolar rash, or a positive culture.
   seeAlso:
     - mim-thrush
     - dx-raynaud
+    - dx-dysbiosis
+    - dx-allodynia
