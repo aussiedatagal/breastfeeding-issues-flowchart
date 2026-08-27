@@ -62,9 +62,12 @@ Import style: relative imports carry the `.ts` / `.tsx` extension
   parent. Tapping it opens the next node in place; the answer then moves onto
   the **edge** as a clickable "Yes/No" label (tap to undo). The unchosen branch
   stays as its stub, so tapping that also switches the answer.
-- Tapping a **node body** opens the detail panel (question: "how to assess" +
-  backup Yes/No; diagnosis: points + first steps). Answering via a stub does
-  **not** open the panel; reaching a diagnosis opens it automatically.
+- The detail panel is **opt-in** — the walk stays uncluttered. It opens only
+  when the reader taps a **node body** (question: "how to assess" + backup
+  Yes/No; diagnosis: points + first steps) or a findings chip. Answering via a
+  stub does **not** open it, and neither does reaching an ordinary diagnosis.
+  The one exception: a `do-not-miss` diagnosis opens its panel on arrival so the
+  warning isn't hidden behind a tap.
 - The panel is a **non-modal side drawer on desktop** (map, breadcrumb and
   toolbar stay live; no scrim) and a **bottom sheet on mobile** (scrim, and the
   current node is re-framed into the strip above it). It lives inside `.stage`,

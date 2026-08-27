@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { buildFromFiles } from "../content/load.ts";
 import { pathTo } from "../graph/traversal.ts";
-import { domainOf } from "../graph/types.ts";
+import { domainOf, isDiagnosis } from "../graph/types.ts";
 import { DecisionMap } from "./DecisionMap.tsx";
 
 const contentDir = resolve(__dirname, "../../content");
@@ -41,13 +41,21 @@ const walkTo = (targetId: string) => {
   }
 };
 
+/** open the detail panel for a node by tapping its body on the map */
+const openPanel = (nodeId: string) => {
+  const node = graph.nodes.get(nodeId)!;
+  const kind = node.kind === "diagnosis" ? "Diagnosis" : "Question";
+  const label = node.kind === "diagnosis" ? node.name : node.ask;
+  fireEvent.click(screen.getByRole("button", { name: new RegExp(`${kind}: ${esc(label)}`) }));
+};
+
 afterEach(() => {
   cleanup();
   window.history.replaceState(null, "", window.location.pathname);
 });
 
 describe("<DecisionMap> — user scenarios", () => {
-  it("loads on the picker with a chip for every problem area", () => {
+  it("offers a chip for every problem area on load", () => {
     render(<DecisionMap graph={graph} />);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(graph.title);
     for (const d of graph.domains) {
@@ -68,14 +76,38 @@ describe("<DecisionMap> — user scenarios", () => {
     ).toBeGreaterThanOrEqual(2);
   });
 
-  it("answering through to a diagnosis auto-opens the panel with first steps", () => {
+  it("reaching an ordinary diagnosis leaves the panel closed; tapping it opens the detail", () => {
     render(<DecisionMap graph={graph} />);
     const target = [...graph.nodes.values()].find(
-      (n) => n.kind === "diagnosis" && !n.reference && n.steps.length > 0,
+      (n) =>
+        isDiagnosis(n) &&
+        !n.reference &&
+        n.flag !== "do-not-miss" &&
+        n.steps.length > 0 &&
+        pathTo(graph, n.id).length > 0,
+    )!;
+    if (!isDiagnosis(target)) throw new Error("no ordinary diagnosis found");
+    walkTo(target.id);
+    expect(panel()).toHaveProperty("inert", true);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: new RegExp(`Diagnosis: ${esc(target.name)}`) }),
+    );
+    expect(panel()).toHaveProperty("inert", false);
+    expect(within(panel()).getByRole("heading", { name: /First steps/ })).toBeDefined();
+  });
+
+  it("a do-not-miss diagnosis surfaces its panel without a tap", () => {
+    render(<DecisionMap graph={graph} />);
+    const target = [...graph.nodes.values()].find(
+      (n) =>
+        isDiagnosis(n) &&
+        !n.reference &&
+        n.flag === "do-not-miss" &&
+        pathTo(graph, n.id).length > 0,
     )!;
     walkTo(target.id);
     expect(panel()).toHaveProperty("inert", false);
-    expect(within(panel()).getByRole("heading", { name: /First steps/ })).toBeDefined();
   });
 
   it("Expand all draws every question node once", () => {
@@ -96,8 +128,10 @@ describe("<DecisionMap> — user scenarios", () => {
     const [first, second] = [...byDomain.values()];
 
     walkTo(first!);
+    openPanel(first!);
     fireEvent.click(screen.getByRole("button", { name: "+ Add to findings" }));
     walkTo(second!);
+    openPanel(second!);
     fireEvent.click(screen.getByRole("button", { name: "+ Add to findings" }));
 
     const tray = screen.getByRole("region", { name: /Findings \(2\)/ });

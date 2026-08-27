@@ -105,7 +105,9 @@ export function DecisionMap({ graph }: { graph: Graph }) {
     [groupOf, bottomSheet, panelOpen, centerOn, ensureVisible, inset],
   );
 
-  // Open the panel on a deliberate node click, or when a path lands on a diagnosis.
+  // The panel is opt-in: it opens only when the reader asks for detail (taps a
+  // node or a finding). The one exception is a "do not miss" diagnosis, whose
+  // warning shouldn't wait for a tap.
   const openPanelFor = useCallback(
     (id: string) => {
       actions.select(id);
@@ -114,28 +116,48 @@ export function DecisionMap({ graph }: { graph: Graph }) {
     [actions],
   );
   useEffect(() => {
-    if (selected?.kind === "diagnosis" && selected.depth >= 0) setPanelOpen(true);
+    if (selected?.kind === "diagnosis" && selected.depth >= 0 && selected.flag === "do-not-miss") {
+      setPanelOpen(true);
+    }
   }, [selected]);
 
-  // Show the picker on first load if nothing has been opened yet.
+  // On a phone the four area chips don't fit the canvas side by side, so open
+  // the picker sheet once on first load. (Desktop shows the chips on the map.)
   const introShown = useRef(false);
   useEffect(() => {
     if (introShown.current) return;
-    introShown.current = true;
-    if (selectedId === ROOT_ID && open.size === 0) setPanelOpen(true);
-  }, [selectedId, open.size]);
+    if (selectedId !== ROOT_ID || open.size > 0) {
+      introShown.current = true; // reader already started
+      return;
+    }
+    if (bottomSheet) {
+      introShown.current = true;
+      setPanelOpen(true);
+    }
+  }, [bottomSheet, selectedId, open.size]);
 
-  // First paint: a readable view of the root / current group.
+  // First paint: a readable view. On desktop the whole root + chip fan fits; on
+  // a phone it doesn't, so frame just the current node.
   const positioned = useRef(false);
   useEffect(() => {
     if (positioned.current) return;
-    const g = groupOf(selectedId === ROOT_ID ? ROOT_ID : selectedId);
-    if (!g) return;
     positioned.current = true;
-    const place = () => centerOn(g.center, { fit: g.size, minK: 0.5, maxK: 1, animate: false });
+    const place = () => {
+      if (bottomSheet) {
+        const p = targetLayout.byId.get(selectedId);
+        if (p)
+          centerOn(
+            { x: p.x + p.w / 2, y: p.y },
+            { fit: { w: p.w, h: p.h }, minK: 0.7, maxK: 1.1, animate: false },
+          );
+        return;
+      }
+      const g = groupOf(selectedId === ROOT_ID ? ROOT_ID : selectedId);
+      if (g) centerOn(g.center, { fit: g.size, minK: 0.5, maxK: 1, animate: false });
+    };
     place();
     requestAnimationFrame(place); // once the SVG has real dimensions
-  }, [selectedId, groupOf, centerOn]);
+  }, [selectedId, bottomSheet, targetLayout, groupOf, centerOn]);
 
   // Follow the selection, and the panel opening/closing, so the current node
   // always sits clear of the sheet (mobile) or drawer (desktop) — and fills the
@@ -169,9 +191,12 @@ export function DecisionMap({ graph }: { graph: Graph }) {
 
   const onStubActivate = useCallback(
     (p: Placement) => {
+      if (p.kind === "domain") {
+        actions.openDomain(p.nodeId); // leave the hint up — it now says "tap Yes / No"
+        return;
+      }
       setHintDismissed(true);
-      if (p.kind === "domain") actions.openDomain(p.nodeId);
-      else if (p.merge) actions.goTo(p.nodeId);
+      if (p.merge) actions.goTo(p.nodeId);
       else if (p.parentId && p.answer) actions.answer(p.parentId, p.answer);
     },
     [actions],
@@ -189,7 +214,8 @@ export function DecisionMap({ graph }: { graph: Graph }) {
 
   const onRestart = useCallback(() => {
     actions.restart();
-    setPanelOpen(true);
+    setPanelOpen(false);
+    setHintDismissed(false);
     requestAnimationFrame(() => focusGroup(ROOT_ID, false));
   }, [actions, focusGroup]);
 
@@ -251,14 +277,18 @@ export function DecisionMap({ graph }: { graph: Graph }) {
             onClick={() => setHintDismissed(true)}
             title="Dismiss"
           >
-            {compact ? (
+            {open.size === 0 ? (
               <>
-                Tap <b>Yes</b> / <b>No</b> to follow a branch · pinch to zoom
+                Tap an <b>area</b> to start — open as many as apply. Tap a node for detail.
+              </>
+            ) : compact ? (
+              <>
+                Tap <b>Yes</b> / <b>No</b> to follow a branch · tap a node for detail
               </>
             ) : (
               <>
-                Tap a <b>Yes</b> / <b>No</b> node to open that branch. Tap an edge label to undo.
-                Drag to pan.
+                Tap a <b>Yes</b> / <b>No</b> node to follow that branch; tap a node body for detail.
+                Tap an edge label to undo.
               </>
             )}
           </button>
