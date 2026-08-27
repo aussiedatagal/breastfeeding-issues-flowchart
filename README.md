@@ -44,7 +44,7 @@ src/
   content/          schema (zod) + loader; turns YAML into a validated graph
   graph/            framework-free core:
     build.ts          flat nodes → graph with canonical parents + merge edges
-    layout.ts         progressive-disclosure "spine" layout (pure)
+    layout.ts         progressive-disclosure top-down column layout (pure)
     traversal.ts      open / collapse / answer / path (pure)
   hooks/            useDecisionState (+ URL sync), usePanZoom, useAnimatedLayout, useTheme
   components/       React + SVG rendering; no logic beyond wiring

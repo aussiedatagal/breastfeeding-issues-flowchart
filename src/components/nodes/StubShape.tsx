@@ -50,7 +50,14 @@ export function StubShape({ placement, parentLabel, onActivate }: Props) {
         }
       }}
     >
-      <rect className="dm-stub__box" x={0} y={-h / 2} width={w} height={h} rx={4} />
+      <rect
+        className="dm-stub__box"
+        x={0}
+        y={-h / 2}
+        width={w}
+        height={h}
+        rx={isDomain ? 14 : h / 2}
+      />
       {isDomain ? (
         <text
           className="dm-stub__label"

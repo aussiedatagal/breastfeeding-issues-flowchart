@@ -2,108 +2,121 @@
  * Design tokens. Every colour is defined on bare :root (the light palette),
  * then re-stated for dark under both the media query (system pref) and the
  * explicit [data-theme="dark"] override. Components only ever read var(--…).
+ *
+ * The palette is warm and low-contrast on purpose: the audience is clinicians,
+ * but the people in the room are a parent and a new baby. Soft oat paper, a
+ * calm eucalyptus green, clay and honey for the alerts — nothing clinical-blue,
+ * nothing that reads as a terminal.
  */
 :root {
-  --bg: #f4f1ec;
-  --surface: #fdfbf7;
-  --surface-sunken: #ebe6dd;
+  --bg: #f5efe4;
+  --surface: #fffdf8;
+  --surface-sunken: #ece5d6;
   --surface-raised: #ffffff;
 
-  --ink: #23201b;
-  --ink-muted: #6a6459;
-  --ink-faint: #9b9488;
-  --hairline: #d8d1c4;
-  --hairline-strong: #c3bbaa;
+  --ink: #322c23;
+  --ink-muted: #736a5c;
+  --ink-faint: #a99e8b;
+  --hairline: #e3dbc9;
+  --hairline-strong: #cec2a8;
 
-  --accent: #0d5f57;
-  --accent-ink: #f4f1ec;
-  --accent-wash: #dde9e6;
+  --accent: #35786a;
+  --accent-ink: #fffdf8;
+  --accent-wash: #dfeae4;
 
-  --danger: #a3392b;
-  --danger-wash: #f0ddd8;
-  --caution: #8a6524;
-  --caution-wash: #f0e6d0;
-  --calm: #3a6f4f;
-  --calm-wash: #dde8dd;
+  --root-wash: #f3e3d8;
 
-  --focus: #1673b8;
-  --shadow: 20px 24px 60px -32px rgba(35, 30, 24, 0.4);
-  --shadow-sm: 0 1px 2px rgba(35, 30, 24, 0.08), 0 4px 12px -6px rgba(35, 30, 24, 0.14);
+  --danger: #b1503d;
+  --danger-wash: #f2ded6;
+  --caution: #9a7328;
+  --caution-wash: #f1e6cd;
+  --calm: #4c7d57;
+  --calm-wash: #e0ebde;
+
+  --focus: #2f6f9e;
+  --shadow: 0 20px 44px -26px rgba(58, 44, 26, 0.4);
+  --shadow-sm: 0 1px 2px rgba(58, 44, 26, 0.06), 0 8px 20px -10px rgba(58, 44, 26, 0.16);
 
   --font-sans:
     "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-display: "Fraunces", "Iowan Old Style", Palatino, Georgia, serif;
+  /* kept for the small tracked labels — no longer monospace */
+  --font-mono: var(--font-sans);
 
   --step-0: 0.9375rem;
   --step--1: 0.8125rem;
   --step--2: 0.6875rem;
   --step-1: 1.0625rem;
-  --step-2: 1.375rem;
+  --step-2: 1.4375rem;
 
-  --radius: 4px;
-  --radius-lg: 8px;
+  --radius: 10px;
+  --radius-lg: 18px;
 
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #161410;
-    --surface: #201d17;
-    --surface-sunken: #131109;
-    --surface-raised: #2a261e;
+    --bg: #191510;
+    --surface: #221d16;
+    --surface-sunken: #141009;
+    --surface-raised: #2c2619;
 
-    --ink: #ece6da;
-    --ink-muted: #a69d8d;
-    --ink-faint: #6f6858;
-    --hairline: #38332a;
-    --hairline-strong: #4a4438;
+    --ink: #ede6d7;
+    --ink-muted: #aba08c;
+    --ink-faint: #746b58;
+    --hairline: #3a3327;
+    --hairline-strong: #4d4536;
 
-    --accent: #58b9ad;
-    --accent-ink: #0d1c1a;
-    --accent-wash: #123a36;
+    --accent: #63bda9;
+    --accent-ink: #10201c;
+    --accent-wash: #163a34;
 
-    --danger: #e2867a;
-    --danger-wash: #3a221d;
-    --caution: #d7a45e;
-    --caution-wash: #392e1a;
-    --calm: #74b78c;
-    --calm-wash: #1e3226;
+    --root-wash: #3a2a20;
+
+    --danger: #e0897a;
+    --danger-wash: #3c231c;
+    --caution: #d6a758;
+    --caution-wash: #3a2f18;
+    --calm: #77b98a;
+    --calm-wash: #1f3323;
 
     --focus: #5aa9e6;
-    --shadow: 20px 24px 60px -32px rgba(0, 0, 0, 0.6);
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 18px -8px rgba(0, 0, 0, 0.5);
+    --shadow: 0 20px 44px -26px rgba(0, 0, 0, 0.6);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 22px -10px rgba(0, 0, 0, 0.5);
 
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #161410;
-  --surface: #201d17;
-  --surface-sunken: #131109;
-  --surface-raised: #2a261e;
+  --bg: #191510;
+  --surface: #221d16;
+  --surface-sunken: #141009;
+  --surface-raised: #2c2619;
 
-  --ink: #ece6da;
-  --ink-muted: #a69d8d;
-  --ink-faint: #6f6858;
-  --hairline: #38332a;
-  --hairline-strong: #4a4438;
+  --ink: #ede6d7;
+  --ink-muted: #aba08c;
+  --ink-faint: #746b58;
+  --hairline: #3a3327;
+  --hairline-strong: #4d4536;
 
-  --accent: #58b9ad;
-  --accent-ink: #0d1c1a;
-  --accent-wash: #123a36;
+  --accent: #63bda9;
+  --accent-ink: #10201c;
+  --accent-wash: #163a34;
 
-  --danger: #e2867a;
-  --danger-wash: #3a221d;
-  --caution: #d7a45e;
-  --caution-wash: #392e1a;
-  --calm: #74b78c;
-  --calm-wash: #1e3226;
+  --root-wash: #3a2a20;
+
+  --danger: #e0897a;
+  --danger-wash: #3c231c;
+  --caution: #d6a758;
+  --caution-wash: #3a2f18;
+  --calm: #77b98a;
+  --calm-wash: #1f3323;
 
   --focus: #5aa9e6;
-  --shadow: 20px 24px 60px -32px rgba(0, 0, 0, 0.6);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 18px -8px rgba(0, 0, 0, 0.5);
+  --shadow: 0 20px 44px -26px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 22px -10px rgba(0, 0, 0, 0.5);
 
   color-scheme: dark;
 }

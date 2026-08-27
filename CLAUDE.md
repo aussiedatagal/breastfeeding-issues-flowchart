@@ -23,7 +23,7 @@ content/            YAML decision graph — EDUCATOR-OWNED, no code needed to ed
 src/content/        zod schema + loader (YAML → validated Graph)
 src/graph/          framework-free core, unit-tested:
                       build.ts     flat nodes → Graph (canonical parents, merge edges, cycle checks)
-                      layout.ts    progressive-disclosure "spine" layout (pure)
+                      layout.ts    progressive-disclosure top-down column layout (pure)
                       traversal.ts open / collapse / answer / reveal / path (pure)
                       types.ts     Graph model + guards (isQuestion / isReference / …)
 src/hooks/          useDecisionState (+URL hash sync), usePanZoom, useAnimatedLayout, useTheme
@@ -41,7 +41,7 @@ Import style: relative imports carry the `.ts` / `.tsx` extension
 
 - It is **N independent sub-trees, not one tree**. `map.yaml` lists `domains`
   (problem areas), each with an `entry` question. A synthetic ROOT (`ROOT_ID =
-  "__root__"`, not in `nodes`) is the picker; the clinician opens every area
+"__root__"`, not in `nodes`) is the picker; the clinician opens every area
   that applies — they accumulate, findings span all of them.
 - Within a domain it is a **DAG, not a tree**. Multiple routes may reach one
   diagnosis. A node is drawn once, under its shortest route from that domain's
@@ -56,9 +56,11 @@ Import style: relative imports carry the `.ts` / `.tsx` extension
 
 ## Interaction (do not regress without asking)
 
-- An un-opened branch is a small clickable **"Yes" / "No" stub node** beside its
+- The map flows **top-to-bottom**. Each problem area is its own vertical
+  **column**; the tree inside it grows downward, branches spreading sideways.
+- An un-opened branch is a small clickable **"Yes" / "No" stub node** below its
   parent. Tapping it opens the next node in place; the answer then moves onto
-  the **edge** as a clickable "YES/NO" label (tap to undo). The unchosen branch
+  the **edge** as a clickable "Yes/No" label (tap to undo). The unchosen branch
   stays as its stub, so tapping that also switches the answer.
 - Tapping a **node body** opens the detail panel (question: "how to assess" +
   backup Yes/No; diagnosis: points + first steps). Answering via a stub does
@@ -86,9 +88,10 @@ question "yes" skips whatever the "no" branch would have surfaced. Handled by:
 - **`multifactorialNote`** in `map.yaml` → standing note on every diagnosis.
 - Workflow: pin a finding → breadcrumb-rewind to a fork → take the other branch
   → pin again. The output is a problem list, not a single diagnosis.
-- Camera: readable zoom by default (centres the current question + its stubs);
-  pans to follow the selection only when it drifts out of view; wheel/pinch to
-  zoom, drag to pan, ± buttons and Fit. Honours `prefers-reduced-motion`.
+- Camera: readable zoom by default (centres the current question + the row of
+  stubs below it); pans to follow the selection only when it drifts out of view;
+  wheel/pinch to zoom, drag to pan, ± buttons and Fit. Honours
+  `prefers-reduced-motion`.
 
 ## QA harness
 
@@ -113,9 +116,11 @@ still exist as endpoints, flagged `do-not-miss`.
   components. Keep components to wiring.
 - Content changes: edit `content/*.yaml`; `npm run validate` must pass.
 - Match the existing house style — plain CSS Modules + tokens in
-  `src/styles/tokens.css`, no UI framework, IBM Plex faces, 4px radii,
-  warm-neutral palette with a single teal-green accent. Both light and dark
-  themes are defined token-level; keep them in sync.
+  `src/styles/tokens.css`, no UI framework. Warm oat-paper palette, a calm
+  eucalyptus-green accent, clay/honey for alerts; IBM Plex Sans for text,
+  Fraunces for display headings, no monospace; 10–18px radii. Deliberately soft
+  and non-clinical — the people in the room are a parent and a new baby. Both
+  light and dark themes are defined token-level; keep them in sync.
 
 ## Clinical caveats
 

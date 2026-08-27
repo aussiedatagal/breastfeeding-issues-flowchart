@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ROOT_ID, type Graph } from "../graph/types.ts";
-import { computeLayout, DOMAIN_W, STUB_W } from "../graph/layout.ts";
+import { computeLayout } from "../graph/layout.ts";
 import type { Placement } from "../graph/layout.ts";
 import { canonicalChain, expandAll } from "../graph/traversal.ts";
 import { useDecisionState } from "../hooks/useDecisionState.ts";
@@ -43,22 +43,35 @@ export function DecisionMap({ graph }: { graph: Graph }) {
     [panelOpen, compact],
   );
 
-  // The question and its two Yes/No stubs (or the root and its domain column),
-  // as one group to keep in view.
-  const STUB_ROOM = STUB_W + 64;
+  // The node together with the row directly below it (its Yes/No stubs and any
+  // opened child, or — for the root — the problem-area columns), framed as one.
   const groupOf = useCallback(
     (id: string) => {
       const p = targetLayout.byId.get(id);
       if (!p) return null;
-      const w = id === ROOT_ID ? p.w + 320 + DOMAIN_W : p.w + STUB_ROOM;
-      const h = Math.max(p.h, 96);
+      let minX = p.x;
+      let maxX = p.x + p.w;
+      let minY = p.y - p.h / 2;
+      let maxY = p.y + p.h / 2;
+      for (const q of targetLayout.placements) {
+        const touches =
+          q.parentId === id ||
+          targetLayout.connectors.some((c) => c.fromId === id && c.toId === q.id);
+        if (!touches) continue;
+        minX = Math.min(minX, q.x);
+        maxX = Math.max(maxX, q.x + q.w);
+        minY = Math.min(minY, q.y - q.h / 2);
+        maxY = Math.max(maxY, q.y + q.h / 2);
+      }
+      const w = Math.max(maxX - minX, 320);
+      const h = Math.max(maxY - minY, 120);
       return {
-        rect: { x: p.x, y: p.y - h / 2, w, h },
-        center: { x: p.x + w / 2, y: p.y },
+        rect: { x: minX, y: minY, w, h },
+        center: { x: minX + (maxX - minX) / 2, y: minY + (maxY - minY) / 2 },
         size: { w, h },
       };
     },
-    [targetLayout, STUB_ROOM],
+    [targetLayout],
   );
 
   const focusGroup = useCallback(

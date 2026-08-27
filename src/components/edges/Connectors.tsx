@@ -1,4 +1,3 @@
-import { NODE_W } from "../../graph/layout.ts";
 import type { Layout, Placement } from "../../graph/layout.ts";
 import type { Answer } from "../../graph/types.ts";
 
@@ -8,15 +7,16 @@ interface Props {
   onUndo: (questionId: string, answer: Answer) => void;
 }
 
-function anchorRight(p: Placement) {
-  return { x: p.x + (p.kind === "stub" ? p.w : NODE_W), y: p.y };
+/** Connectors run top-to-bottom: parent's lower edge to the child's upper edge. */
+function anchorBottom(p: Placement) {
+  return { x: p.x + p.w / 2, y: p.y + p.h / 2 };
 }
-function anchorLeft(p: Placement) {
-  return { x: p.x, y: p.y };
+function anchorTop(p: Placement) {
+  return { x: p.x + p.w / 2, y: p.y - p.h / 2 };
 }
 function curve(a: { x: number; y: number }, b: { x: number; y: number }) {
-  const mx = (a.x + b.x) / 2;
-  return `M ${a.x} ${a.y} C ${mx} ${a.y}, ${mx} ${b.y}, ${b.x} ${b.y}`;
+  const my = (a.y + b.y) / 2;
+  return `M ${a.x} ${a.y} C ${a.x} ${my}, ${b.x} ${my}, ${b.x} ${b.y}`;
 }
 
 export function Connectors({ layout, activeIds, onUndo }: Props) {
@@ -28,8 +28,8 @@ export function Connectors({ layout, activeIds, onUndo }: Props) {
     const to = layout.byId.get(c.toId);
     if (!from || !to) continue;
 
-    const a = anchorRight(from);
-    const b = anchorLeft(to);
+    const a = anchorBottom(from);
+    const b = anchorTop(to);
     const active = c.kind === "canonical" && activeIds.has(c.fromId) && activeIds.has(to.nodeId);
 
     links.push(
@@ -53,8 +53,8 @@ export function Connectors({ layout, activeIds, onUndo }: Props) {
       const answer = c.answer;
       const lx = a.x + (b.x - a.x) * 0.5;
       const ly = a.y + (b.y - a.y) * 0.5;
-      const text = answer === "yes" ? "YES" : "NO";
-      const width = answer === "yes" ? 30 : 24;
+      const text = answer === "yes" ? "Yes" : "No";
+      const width = answer === "yes" ? 40 : 34;
       labels.push(
         <g
           key={`${c.id}-label`}
@@ -74,7 +74,14 @@ export function Connectors({ layout, activeIds, onUndo }: Props) {
             }
           }}
         >
-          <rect className="dm-elabel__bg" x={-width / 2} y={-9} width={width} height={18} rx={4} />
+          <rect
+            className="dm-elabel__bg"
+            x={-width / 2}
+            y={-11}
+            width={width}
+            height={22}
+            rx={11}
+          />
           <text
             className="dm-elabel__text"
             x={0}

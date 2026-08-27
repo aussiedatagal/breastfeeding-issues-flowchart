@@ -54,6 +54,8 @@ export const domain = z
   .object({
     id: z.string().min(1),
     label: z.string().min(1),
+    /** a 2–4 word name for the column header on the map (falls back to `label`) */
+    short: z.string().min(1).optional(),
     entry: z.string().min(1),
   })
   .strict();
