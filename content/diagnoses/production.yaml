@@ -12,6 +12,10 @@
   seeAlso:
     - a1
     - dx-perceived
+  coexists:
+    - dx-oral
+    - dx-lac2
+    - dx-igt
 - id: dx-surg
   name: Post-surgical / structural production limit
   steps:
@@ -47,6 +51,8 @@
       feeding relationship.
     - Galactagogue trial only after removal is optimised.
     - Refer to an IBCLC; counsel that capacity often improves with each subsequent lactation.
+  coexists:
+    - dx-second
 - id: dx-lac2
   name: Delayed lactogenesis II
   steps:
@@ -56,3 +62,5 @@
     - Most establish over days to 2–3 weeks with support.
   seeAlso:
     - dx-endo
+  coexists:
+    - dx-second

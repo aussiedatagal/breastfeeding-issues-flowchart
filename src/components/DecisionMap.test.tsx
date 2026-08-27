@@ -89,4 +89,27 @@ describe("<DecisionMap> — user scenarios", () => {
     const questionCount = [...graph.nodes.values()].filter((n) => n.kind === "question").length;
     expect(screen.getAllByRole("button", { name: /^Question:/ }).length).toBe(questionCount);
   });
+
+  it("findings accumulate across two passes through the graph", () => {
+    render(<DecisionMap graph={graph} />);
+    const diagnoses = [...graph.nodes.values()].filter(
+      (n) => n.kind === "diagnosis" && !n.reference,
+    );
+    const [a, b] = [diagnoses[0]!, diagnoses.find((d) => d.id !== diagnoses[0]!.id)!];
+
+    const walkAndPin = (targetId: string) => {
+      for (const step of pathTo(graph, targetId)) {
+        fireEvent.click(stubFor(step.question.short, step.answer));
+      }
+      fireEvent.click(screen.getByRole("button", { name: "+ Add to findings" }));
+    };
+
+    walkAndPin(a.id);
+    fireEvent.click(screen.getByRole("button", { name: "Start over" }));
+    walkAndPin(b.id);
+
+    const tray = screen.getByRole("region", { name: /Findings \(2\)/ });
+    expect(within(tray).getByText(a.short)).toBeDefined();
+    expect(within(tray).getByText(b.short)).toBeDefined();
+  });
 });

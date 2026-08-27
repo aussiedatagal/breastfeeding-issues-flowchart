@@ -7,6 +7,9 @@
     - Skin-to-skin; offer when sleepy, drowsy or in motion; dark quiet room; feed lying down.
     - Express to protect supply and feed the milk; do not force the breast.
     - Usually resolves within days.
+  coexists:
+    - dx-oald
+    - dx-painrefuse
 - id: dx-painrefuse
   name: Pain-driven refusal (GORD / CMPA / thrush / otitis)
   steps:
@@ -16,6 +19,9 @@
     - "Positioning: more upright, paced feeds."
   seeAlso:
     - mim-cmpa
+  coexists:
+    - mim-cmpa
+    - dx-oald
 - id: dx-fastflow
   name: Fast-flow refusal (overactive let-down / oversupply)
   steps:
@@ -25,6 +31,9 @@
   seeAlso:
     - dx-oald
     - mim-flow
+  coexists:
+    - dx-plug
+    - dx-perc-over
 - id: dx-distract
   name: Distractible feeder (developmental)
   flag: likely-normal

@@ -15,11 +15,14 @@ interface Props {
   node: GraphNode | null;
   path: PathStep[];
   openIds: ReadonlySet<string>;
+  findings: string[];
   isOpen: boolean;
   compact: boolean;
   onClose: () => void;
   onAnswer: (questionId: string, choice: Answer) => void;
   onGoTo: (nodeId: string) => void;
+  onPin: (id: string) => void;
+  onUnpin: (id: string) => void;
 }
 
 export function DetailPanel({ isOpen, onClose, compact, ...rest }: Props) {
@@ -60,9 +63,12 @@ function PanelContent({
   node,
   path,
   openIds,
+  findings,
   onClose,
   onAnswer,
   onGoTo,
+  onPin,
+  onUnpin,
   closeRef,
 }: Omit<Props, "isOpen" | "compact"> & {
   node: GraphNode;
@@ -70,6 +76,21 @@ function PanelContent({
 }) {
   const question = isQuestion(node);
   const mergeParents = node.parents.filter((p) => p.merge);
+  const pinned = !question && findings.includes(node.id);
+
+  const NavChips = ({ ids }: { ids: string[] }) => (
+    <div className={styles.chips}>
+      {ids.map((id) => {
+        const target = graph.nodes.get(id);
+        if (!target) return null;
+        return (
+          <button key={id} className={styles.chip} onClick={() => onGoTo(id)}>
+            {target.kind === "question" ? target.short : target.name}
+          </button>
+        );
+      })}
+    </div>
+  );
 
   return (
     <>
@@ -127,6 +148,14 @@ function PanelContent({
           </>
         ) : (
           <>
+            <button
+              className={styles.pin}
+              data-pinned={pinned}
+              onClick={() => (pinned ? onUnpin(node.id) : onPin(node.id))}
+            >
+              {pinned ? "✓ In findings" : "+ Add to findings"}
+            </button>
+
             {path.length > 0 && (
               <>
                 <h3>Path taken</h3>
@@ -143,6 +172,15 @@ function PanelContent({
             {node.note && <p className={styles.note}>{node.note}</p>}
             <List title="What points to it" items={node.points} />
             <List title="First steps for the feeding problem" items={node.steps} />
+
+            {node.coexists.length > 0 && (
+              <>
+                <h3>Often occurs alongside — also check</h3>
+                <NavChips ids={node.coexists} />
+              </>
+            )}
+
+            {graph.multifactorialNote && <p className={styles.multi}>{graph.multifactorialNote}</p>}
           </>
         )}
 
@@ -164,18 +202,8 @@ function PanelContent({
 
         {!question && node.seeAlso.length > 0 && (
           <>
-            <h3>Related</h3>
-            <div className={styles.chips}>
-              {node.seeAlso.map((id) => {
-                const target = graph.nodes.get(id);
-                if (!target) return null;
-                return (
-                  <button key={id} className={styles.chip} onClick={() => onGoTo(id)}>
-                    {target.kind === "question" ? target.short : target.name}
-                  </button>
-                );
-              })}
-            </div>
+            <h3>Distinguish from</h3>
+            <NavChips ids={node.seeAlso} />
           </>
         )}
       </div>

@@ -10,6 +10,7 @@ import { useTheme } from "../hooks/useTheme.ts";
 import { useMediaQuery } from "../hooks/useMediaQuery.ts";
 import { Toolbar } from "./Toolbar.tsx";
 import { Breadcrumb } from "./Breadcrumb.tsx";
+import { FindingsTray } from "./FindingsTray.tsx";
 import { Canvas } from "./Canvas.tsx";
 import { DetailPanel } from "./DetailPanel.tsx";
 import { Legend } from "./Legend.tsx";
@@ -19,7 +20,7 @@ import styles from "./DecisionMap.module.css";
 const PANEL_WIDTH = 420;
 
 export function DecisionMap({ graph }: { graph: Graph }) {
-  const { open, selectedId, selected, path, actions } = useDecisionState(graph);
+  const { open, selectedId, selected, path, findings, actions } = useDecisionState(graph);
   const panZoom = usePanZoom();
   const theme = useTheme();
   const compact = useMediaQuery("(max-width: 720px)");
@@ -169,6 +170,16 @@ export function DecisionMap({ graph }: { graph: Graph }) {
           setPanelOpen(false);
         }}
       />
+      <FindingsTray
+        graph={graph}
+        findings={findings}
+        onOpen={(id) => {
+          actions.goTo(id);
+          setPanelOpen(true);
+        }}
+        onRemove={actions.unpinFinding}
+        onClear={actions.clearFindings}
+      />
       <div className={styles.stage}>
         <Canvas
           graph={graph}
@@ -205,11 +216,14 @@ export function DecisionMap({ graph }: { graph: Graph }) {
           node={selected}
           path={path}
           openIds={open}
+          findings={findings}
           isOpen={panelOpen && selected !== null}
           compact={compact}
           onClose={() => setPanelOpen(false)}
           onAnswer={actions.answer}
           onGoTo={actions.goTo}
+          onPin={actions.pinFinding}
+          onUnpin={actions.unpinFinding}
         />
       </div>
     </div>
