@@ -25,20 +25,28 @@
   ifYes: dx-surg
   ifNo: a12
 - id: a12
-  ask: An endocrine, drug, or pregnancy-related cause?
-  short: Endocrine / drug?
-  assess: "Supply-lowering drugs: combined oestrogen contraception, pseudoephedrine, high-dose
-    progestins, ergometrine, cabergoline or bromocriptine, heavy alcohol. Check TSH and free T4,
-    prolactin, and glucose; ask about lochia, a positive pregnancy test, and contraception
-    started recently."
+  ask: Did the supply drop after a new medication, a new pregnancy, or return of periods — or is
+    there a thyroid, PCOS, or retained-placenta history?
+  short: Drug / hormonal trigger?
+  assess: >
+    Tie the fall to a trigger. Supply-lowering drugs: combined oestrogen
+    contraception, pseudoephedrine, high-dose progestins, ergometrine,
+    cabergoline or bromocriptine, heavy alcohol. Hormonal: a new pregnancy,
+    return of menses, thyroid disease, PCOS, or retained placental fragments
+    (ongoing lochia, subinvolution). Check TSH and free T4, prolactin, glucose,
+    and a pregnancy test.
   ifYes: dx-endo
   ifNo: dx-idio
 - id: a8
-  ask: Signs of insufficient glandular tissue on breast exam?
-  short: Hypoplastic breasts?
-  assess: "Look for insufficient glandular tissue: breasts that did not enlarge in pregnancy or
-    after birth, no or minimal engorgement, a tubular or conical shape, an intermammary gap over
-    3–4 cm, bulbous areolae, or asymmetry greater than one cup size."
+  ask: Are the breasts tubular or cone-shaped, set more than 3–4 cm apart, or asymmetric by over a
+    cup size — with little growth in pregnancy and little engorgement after birth?
+  short: Tubular / widely-spaced breasts?
+  assess: >
+    The observable markers of insufficient glandular tissue: breasts that did
+    not enlarge in pregnancy or in the first days postpartum, minimal or absent
+    engorgement, a narrow tubular or conical shape, a wide intermammary gap
+    (>3–4 cm), bulbous or disproportionately large areolae, and asymmetry
+    greater than one cup size.
   ifYes: dx-igt
   ifNo: a9
 - id: a9

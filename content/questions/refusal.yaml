@@ -14,12 +14,29 @@
   ifNo:
     goto: ref3
 - id: ref3
-  ask: Signs of ongoing feed-associated pain (reflux, CMPA, thrush, otitis)?
-  short: Feed-associated pain?
-  assess: "Persistent (not sudden) refusal driven by discomfort: GORD or oesophagitis, cow's-milk
-    protein allergy (eczema, blood/mucus in stool, family atopy), oral thrush, or otitis media."
-  ifYes: dx-painrefuse
+  ask: Does the infant take the breast, then pull off crying, arch or stiffen, and stay windy or
+    unsettled between feeds?
+  short: Latches then pulls off crying?
+  assess: >
+    A discomfort pattern rather than a flow or distraction pattern: repeated
+    breaking off mid-feed with crying and back-arching, hiccups, frequent
+    posseting, disturbed sleep, and fussiness that continues away from the
+    breast. Look in the mouth (thrush — white plaques that do not wipe off) and
+    the ears (otitis) while you are there.
+  ifYes: ref3b
   ifNo: ref4
+- id: ref3b
+  ask: Blood or mucus in the stools, worsening eczema, or a strong first-degree family history of
+    allergy or asthma?
+  short: Blood/mucus stool or eczema?
+  assess: >
+    The cluster that separates cow's-milk protein allergy from uncomplicated
+    reflux: visible blood streaks or mucus in the stool, eczema that flares, a
+    first-degree family history of atopy, and often loose frequent stools.
+    Feed-linked discomfort without any of these is usually reflux, managed by
+    position and paced feeds alone.
+  ifYes: dx-cmpa
+  ifNo: dx-painrefuse
 - id: ref4
   ask: Does the infant fight the flow EARLY in the feed and settle later?
   short: Fast flow?

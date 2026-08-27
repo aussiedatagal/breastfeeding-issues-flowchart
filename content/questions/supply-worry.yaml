@@ -1,7 +1,11 @@
 - id: b5
-  ask: Are there forceful-flow / oversupply signs as well?
-  short: Oversupply signs?
-  assess: "The paradox worth naming: brisk flow makes the infant choke, clamp and pull off, one
-    breast drains poorly, and feeds look chaotic — which the parent reads as ‘not enough’."
+  ask: Does milk spray on release, with the infant choking or clamping at let-down, a gassy infant,
+    and green frothy explosive stools?
+  short: Forceful flow + gassy?
+  assess: >
+    The oversupply paradox worth naming: brisk flow makes the infant choke,
+    clamp and pull off, one breast drains poorly, feeds look chaotic, and the
+    infant is windy with green frothy stools — which the parent reads as "not
+    enough" when the problem is too much, too fast.
   ifYes: dx-perc-over
   ifNo: dx-perceived

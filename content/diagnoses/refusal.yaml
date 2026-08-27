@@ -11,17 +11,33 @@
     - dx-oald
     - dx-painrefuse
 - id: dx-painrefuse
-  name: Pain-driven refusal (GORD / CMPA / thrush / otitis)
+  name: Pain-driven refusal (reflux / thrush / otitis)
   steps:
     - Identify and treat the source of pain; examine ears and mouth.
-    - For suspected CMPA, a 2–4 week trial of maternal dairy (± soy) exclusion.
-    - Reserve acid suppression for confirmed pathological reflux.
-    - "Positioning: more upright, paced feeds."
+    - Reserve acid suppression for confirmed pathological reflux — most posseting is normal.
+    - "Positioning: more upright, paced feeds; treat oral thrush or otitis if found."
   seeAlso:
+    - dx-cmpa
     - mim-cmpa
   coexists:
-    - mim-cmpa
+    - dx-cmpa
     - dx-oald
+- id: dx-cmpa
+  name: Cow's-milk protein allergy
+  flag: often-mislabelled
+  note: >
+    Over-diagnosed on non-specific fussiness alone, under-diagnosed when blood
+    in the stool is missed. Base it on the cluster, and confirm it: symptoms
+    settle on exclusion, then return on reintroduction.
+  steps:
+    - 2–4 week trial of strict maternal dairy (± soy) exclusion, then reintroduce to confirm.
+    - Keep breastfeeding — it is protective; refer to dietetics for a nutritionally complete exclusion.
+    - Paediatric or allergy referral if blood loss is significant or growth falters.
+  seeAlso:
+    - mim-cmpa
+    - dx-painrefuse
+  coexists:
+    - dx-painrefuse
 - id: dx-fastflow
   name: Fast-flow refusal (overactive let-down / oversupply)
   steps:
