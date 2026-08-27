@@ -65,7 +65,22 @@ Import style: relative imports carry the `.ts` / `.tsx` extension
 - **Expand all** opens every node and fits it to the viewport. Breadcrumb chips
   rewind (`rewindTo`). A merge/`↗` jump is additive — it reveals the shared
   node's route without folding the branch you came from, and a dashed connector
-  shows the join. URL hash carries the path for sharing.
+  shows the join. URL hash carries the path _and_ the findings for sharing.
+
+## Multifactorial cases
+
+A single pass down a binary tree only characterises one problem; answering a
+question "yes" skips whatever the "no" branch would have surfaced. Handled by:
+
+- **Findings tray** (`FindingsTray`, below the breadcrumb): a pinned problem
+  list. Reaching a diagnosis shows "+ Add to findings"; the list persists across
+  `restart` and re-runs, and is encoded in the URL hash (`;f=id,id`).
+- **`coexists: [ids]`** on a diagnosis (educator-authored) → panel section
+  "Often occurs alongside — also check", so the reader is pointed at what the
+  tree skipped. Distinct from `seeAlso` ("distinguish from" — mimics).
+- **`multifactorialNote`** in `map.yaml` → standing note on every diagnosis.
+- Workflow: pin a finding → breadcrumb-rewind to a fork → take the other branch
+  → pin again. The output is a problem list, not a single diagnosis.
 - Camera: readable zoom by default (centres the current question + its stubs);
   pans to follow the selection only when it drifts out of view; wheel/pinch to
   zoom, drag to pan, ± buttons and Fit. Honours `prefers-reduced-motion`.

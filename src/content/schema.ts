@@ -36,7 +36,13 @@ export const rawDiagnosis = z
     note: z.string().min(1).optional(),
     points: z.array(z.string().min(1)).optional(),
     steps: z.array(z.string().min(1)).optional(),
+    /** distinguish-from links (look-alikes / mimics) */
     seeAlso: z.array(z.string().min(1)).optional(),
+    /**
+     * Factors that commonly occur *alongside* this one. Surfaced as "also check"
+     * so a multifactorial dyad isn't closed out at the first diagnosis.
+     */
+    coexists: z.array(z.string().min(1)).optional(),
     /** true = a look-alike / concept node, not on any yes/no path */
     reference: z.boolean().optional(),
   })
@@ -48,6 +54,8 @@ export const mapMeta = z
     title: z.string().min(1),
     subtitle: z.string().min(1).optional(),
     entry: z.string().min(1),
+    /** shown on every diagnosis: the reminder that cases are often multifactorial */
+    multifactorialNote: z.string().min(1).optional(),
   })
   .strict();
 export type MapMeta = z.infer<typeof mapMeta>;

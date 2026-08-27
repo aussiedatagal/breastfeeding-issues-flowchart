@@ -73,8 +73,24 @@ Add a block to a `diagnoses/*.yaml` file and point a question's branch at it.
     - Flare after a new cream, breast pad, or detergent.
   steps:
     - Remove candidate allergens; short course of a topical corticosteroid.
-  seeAlso: [nipple-trauma] # optional — shows as a tappable link in the panel
+  seeAlso: [nipple-trauma] # "distinguish from" — look-alikes, shown as links
+  coexists: [nipple-trauma, vasospasm] # "also check" — things that travel with it
 ```
+
+### Multifactorial cases
+
+A binary tree walks one path, so answering a question "yes" skips whatever the
+"no" branch would have found. A dyad often has more than one problem at once
+(e.g. a tongue restriction _and_ oversupply). Two things handle this:
+
+- **`coexists:`** on a diagnosis lists the factors that commonly occur
+  alongside it. They appear in the panel under "Often occurs alongside — also
+  check", so the reader is pointed at what the tree may have skipped.
+- The clinician pins each diagnosis to **Findings** and uses the breadcrumb to
+  go back and work the other branch. Findings persist across passes.
+
+`multifactorialNote` in `map.yaml` is the standing reminder shown on every
+diagnosis — edit it there.
 
 ### Send more than one branch to the same outcome (a shared step)
 

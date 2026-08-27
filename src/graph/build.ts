@@ -97,6 +97,7 @@ export function buildGraph(input: BuildInput): BuildResult {
       points: d.points ?? [],
       steps: d.steps ?? [],
       seeAlso: d.seeAlso ?? [],
+      coexists: d.coexists ?? [],
       reference: d.reference ?? false,
       depth: -1,
       parents: [],
@@ -119,6 +120,11 @@ export function buildGraph(input: BuildInput): BuildResult {
       for (const ref of node.seeAlso) {
         if (!nodes.has(ref)) {
           warnings.push(`diagnosis "${node.id}" seeAlso: unknown node "${ref}"`);
+        }
+      }
+      for (const ref of node.coexists) {
+        if (!nodes.has(ref)) {
+          warnings.push(`diagnosis "${node.id}" coexists: unknown node "${ref}"`);
         }
       }
     }
@@ -191,6 +197,9 @@ export function buildGraph(input: BuildInput): BuildResult {
   const graph: Graph = {
     title: meta.title,
     ...(meta.subtitle !== undefined ? { subtitle: meta.subtitle } : {}),
+    ...(meta.multifactorialNote !== undefined
+      ? { multifactorialNote: meta.multifactorialNote }
+      : {}),
     entry: meta.entry,
     nodes,
   };

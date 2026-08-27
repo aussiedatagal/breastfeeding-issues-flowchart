@@ -60,6 +60,9 @@
       MRSA per local rates).
     - Send a milk culture.
     - Continue feeding or expressing; adequate analgesia; escalate if no response in 48 h.
+  coexists:
+    - dx-trauma
+    - dx-oald
 - id: dx-inflammatory
   name: Inflammatory mastitis
   steps:
@@ -77,5 +80,8 @@
     - AVOID deep massage, heat, extra pumping, and saline soaks.
     - Treat the underlying oversupply.
   seeAlso:
+    - dx-oald
+    - dx-bleb
+  coexists:
     - dx-oald
     - dx-bleb

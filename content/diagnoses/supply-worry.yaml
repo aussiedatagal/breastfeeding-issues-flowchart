@@ -8,6 +8,8 @@
     - Reassure — most settles by ~12 weeks.
   seeAlso:
     - dx-oald
+  coexists:
+    - dx-oald
 - id: dx-perceived
   name: Perceived insufficient milk supply (normal)
   flag: likely-normal
@@ -19,6 +21,9 @@
     - A low pump yield is a poor proxy for supply — say so.
     - Offer a review to confirm the trajectory rather than leaving the worry open.
   seeAlso:
+    - dx-perc-over
+  coexists:
+    - dx-oald
     - dx-perc-over
 - id: dx-clarify
   name: Clarify the concern — re-take the history

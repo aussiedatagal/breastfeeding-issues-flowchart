@@ -1,3 +1,9 @@
 title: Breastfeeding Difficulty
 subtitle: A binary decision graph — diagnoses the breastfeeding problem, not the infant's clinical care.
 entry: q1
+multifactorialNote: >
+  Breastfeeding difficulty is frequently multifactorial. This is one contributing
+  factor — check that it explains the whole picture. If it does not, add it to
+  Findings, then use the breadcrumb to go back to an earlier question and work the
+  other branch as well. A dyad can have, say, a tongue restriction and oversupply
+  and a falling supply all at once.

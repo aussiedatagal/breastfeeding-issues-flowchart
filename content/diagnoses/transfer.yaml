@@ -6,6 +6,9 @@
     - If it recurs despite good technique, reassess for infant oral restriction.
   seeAlso:
     - a4
+  coexists:
+    - dx-oral
+    - dx-trauma
 - id: dx-oald-a
   name: Overactive let-down / oversupply disrupting feeding
   note: Usually causes rapid weight gain — but marked refusal or one-sided drainage can tip an
@@ -19,6 +22,10 @@
   seeAlso:
     - mim-cmpa
     - dx-fastflow
+  coexists:
+    - dx-plug
+    - dx-perc-over
+    - mim-cmpa
 - id: dx-oral
   name: Infant oral restriction / structural anomaly
   flag: often-mislabelled
@@ -29,6 +36,10 @@
     - ENT / plastics / genetics for cleft, marked micrognathia (Pierre Robin), or macroglossia.
   seeAlso:
     - mim-tie
+  coexists:
+    - dx-oald-a
+    - dx-second
+    - dx-trauma
 - id: dx-suck
   name: Weak or uncoordinated suck (immaturity or neuromotor)
   steps:

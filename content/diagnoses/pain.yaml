@@ -24,6 +24,10 @@
   seeAlso:
     - dx-position
     - cycle-damage
+  coexists:
+    - dx-position
+    - dx-oral
+    - dx-bacterial
 - id: dx-trauma
   name: Nipple trauma (mechanical)
   steps:
@@ -32,6 +36,11 @@
     - Reassess for oral restriction if it recurs.
   seeAlso:
     - a4
+  coexists:
+    - dx-position
+    - dx-oral
+    - dx-raynaud
+    - dx-bacterial
 - id: dx-derm
   name: Nipple / areolar dermatitis
   steps:
@@ -58,6 +67,9 @@
   seeAlso:
     - dx-plug
     - dx-oald
+  coexists:
+    - dx-plug
+    - dx-oald
 - id: dx-raynaud
   name: Vasospasm / Raynaud's of the nipple
   steps:
@@ -67,6 +79,9 @@
   seeAlso:
     - mim-thrush
     - dx-deeppain
+  coexists:
+    - dx-trauma
+    - dx-latchpain
 - id: dx-dmer
   name: D-MER (dysphoric milk ejection reflex)
   flag: often-mislabelled

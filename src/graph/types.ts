@@ -44,7 +44,10 @@ export interface DiagnosisNode extends NodeBase {
   note?: string;
   points: string[];
   steps: string[];
+  /** distinguish-from links (look-alikes) */
   seeAlso: string[];
+  /** factors that commonly occur alongside this one */
+  coexists: string[];
   /** a look-alike / concept node, reachable only from the detail panel */
   reference: boolean;
 }
@@ -54,6 +57,7 @@ export type GraphNode = QuestionNode | DiagnosisNode;
 export interface Graph {
   title: string;
   subtitle?: string;
+  multifactorialNote?: string;
   entry: string;
   nodes: ReadonlyMap<string, GraphNode>;
 }
