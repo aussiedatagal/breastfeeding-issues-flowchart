@@ -1,31 +1,20 @@
 title: Breastfeeding Difficulty
-subtitle: Diagnoses the breastfeeding problem, not the infant's clinical care.
-
-# The parent and baby may have several of these at once — they are separate
-# problems, not one. The clinician opens every area that applies and works each.
-rootPrompt: >
-  Start with the clearest problem — you can work through more than one. These
-  areas are not mutually exclusive: a tongue restriction, oversupply and cracked
-  nipples can all be in play at once, and one often causes another.
-
-domains:
+intro: Answer what you can observe — skip anything you're not sure of. Nothing
+  is ruled out unless your answers make it impossible. You get a ranked list of
+  what fits, with how much each matches and which findings don't.
+areas:
   - id: supply
     label: Not enough milk, poor weight gain, or supply feels low
     short: Milk supply & weight
-    entry: q1
   - id: pain
     label: Sore, cracked, burning, or a deep ache — at or between feeds
     short: Nipple & breast pain
-    entry: pain1
   - id: inflammation
     label: A breast lump, or a red, hot, or inflamed area
     short: Lump or inflammation
-    entry: inf1
   - id: refusal
     label: The baby fights, fusses at, or refuses the breast
     short: Fussing or refusing
-    entry: ref1
-
 multifactorialNote: >
   Treat each result as one contributing factor, not the whole answer. If it
   doesn't explain everything, pin it, revise an answer or two, or work another

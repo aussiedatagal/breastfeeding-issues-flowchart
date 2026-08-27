@@ -1,31 +1,33 @@
 /**
- * The session, encoded in the URL hash so a particular assessment (or its
- * findings list) can be linked or bookmarked:
+ * The session in the URL hash, so an assessment (or its findings list) can be
+ * linked or bookmarked:
  *
- *   #area=pain&a=pain1:no,pain2:yes&show=1&f=dx-vasospasm&view=summary
+ *   #area=pain&p=pain1,pain9&x=pain2&s=pain5&f=dx-vasospasm&view=summary
  *
- * Answers are stored as `questionId:answer` so a content edit can't silently
- * shift what an old link means.
+ * `p` = findings answered present, `x` = findings answered absent, `s` =
+ * skipped questions, keyed by id so a content edit can't silently change what
+ * an old link means.
  */
-import type { Answer, Graph } from "../graph/types.ts";
-import { isDiagnosis, isQuestion } from "../graph/types.ts";
-import type { Given, SessionState } from "./session.ts";
-import { emptySession } from "./session.ts";
+import type { Content, Presence } from "../content/model.ts";
+import type { SessionState } from "./session.ts";
+import { answeredFindings, emptySession, questionFindings } from "./session.ts";
 
-const isAnswer = (v: string): v is Answer => v === "yes" || v === "no";
-
-export function encode(state: SessionState): string {
+export function encode(content: Content, state: SessionState): string {
+  const answered = answeredFindings(content, state);
+  const present = answered.filter((f) => state.answers[f] === "present");
+  const absent = answered.filter((f) => state.answers[f] === "absent");
   const parts: string[] = [];
   if (state.areaId) parts.push(`area=${state.areaId}`);
-  if (state.given.length)
-    parts.push(`a=${state.given.map((g) => `${g.questionId}:${g.answer}`).join(",")}`);
+  if (present.length) parts.push(`p=${present.join(",")}`);
+  if (absent.length) parts.push(`x=${absent.join(",")}`);
+  if (state.skipped.length) parts.push(`s=${state.skipped.join(",")}`);
   if (state.revealed) parts.push("show=1");
   if (state.findings.length) parts.push(`f=${state.findings.join(",")}`);
   if (state.viewingSummary) parts.push("view=summary");
   return parts.length ? `#${parts.join("&")}` : "";
 }
 
-export function decode(graph: Graph, hash: string): SessionState {
+export function decode(content: Content, hash: string): SessionState {
   const params = new Map<string, string>();
   for (const seg of hash.replace(/^#/, "").split("&")) {
     const eq = seg.indexOf("=");
@@ -33,31 +35,51 @@ export function decode(graph: Graph, hash: string): SessionState {
   }
 
   const state = emptySession();
+  const csv = (key: string) => (params.get(key) ?? "").split(",").filter(Boolean);
+  const uniq = (list: string[]) => list.filter((v, i) => list.indexOf(v) === i);
 
   const areaId = params.get("area");
-  if (areaId && graph.domains.some((d) => d.id === areaId)) {
+  if (areaId && content.areas.some((a) => a.id === areaId)) {
     state.areaId = areaId;
-    const given: Given[] = [];
-    for (const pair of (params.get("a") ?? "").split(",")) {
-      const [qid, ans] = pair.split(":");
-      const node = qid ? graph.nodes.get(qid) : undefined;
-      if (qid && node && isQuestion(node) && ans && isAnswer(ans)) {
-        given.push({ questionId: qid, answer: ans });
+
+    const take = (key: string, value: Presence) => {
+      for (const f of csv(key)) {
+        if (content.finding.has(f) && state.answers[f] === undefined) {
+          state.answers[f] = value;
+        }
+      }
+    };
+    take("p", "present");
+    take("x", "absent");
+
+    state.skipped = uniq(
+      csv("s").filter((id) => {
+        const q = content.question.get(id);
+        return q !== undefined && q.area === areaId;
+      }),
+    );
+
+    // rebuild the handled order: questions whose findings are all answered,
+    // then the skipped ones
+    const answeredQ = new Set<string>();
+    for (const [fid] of Object.entries(state.answers)) {
+      const q = content.finding.get(fid)?.questionId;
+      const qq = q ? content.question.get(q) : undefined;
+      if (qq && questionFindings(qq).every((f) => state.answers[f] !== undefined)) {
+        answeredQ.add(qq.id);
       }
     }
-    state.given = given.slice(0, 40);
+    state.handled = uniq([...answeredQ, ...state.skipped]);
     state.revealed = params.get("show") === "1";
   }
 
-  state.findings = (params.get("f") ?? "")
-    .split(",")
-    .filter((id) => {
-      const node = graph.nodes.get(id);
-      return node !== undefined && isDiagnosis(node) && !node.reference;
-    })
-    .filter((id, i, all) => all.indexOf(id) === i);
+  state.findings = uniq(
+    csv("f").filter((id) => {
+      const d = content.diagnosis.get(id);
+      return d !== undefined && !d.reference;
+    }),
+  );
 
   state.viewingSummary = params.get("view") === "summary";
-
   return state;
 }

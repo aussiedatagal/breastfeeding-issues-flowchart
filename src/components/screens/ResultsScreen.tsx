@@ -1,5 +1,4 @@
-import type { Domain, Graph } from "../../graph/types.ts";
-import type { Answer, Given } from "../../quiz/session.ts";
+import type { Area, Content, Presence } from "../../content/model.ts";
 import type { Match } from "../../quiz/score.ts";
 import { Button } from "../ui/Button.tsx";
 import { Disclosure } from "../ui/Disclosure.tsx";
@@ -8,100 +7,141 @@ import { AnswerGrid } from "../quiz/AnswerGrid.tsx";
 import styles from "./ResultsScreen.module.css";
 
 interface Props {
-  graph: Graph;
-  area: Domain;
+  content: Content;
+  area: Area;
   matches: Match[];
-  given: Given[];
-  exhausted: boolean;
+  answers: Record<string, Presence>;
+  complete: boolean;
+  answeredCount: number;
+  skippedCount: number;
   pinned: (id: string) => boolean;
   multifactorialNote?: string;
-  onAnswer: (questionId: string, answer: Answer) => void;
+  onSetFinding: (finding: string, value: Presence) => void;
+  onClearFinding: (finding: string) => void;
   onPin: (id: string) => void;
   onUnpin: (id: string) => void;
-  onAnswerMore: () => void;
+  onResume: () => void;
   onCheckAnother: () => void;
 }
 
-const MAX_OTHERS = 6;
-const MAX_AGAINST = 30;
-
 export function ResultsScreen({
-  graph,
+  content,
   area,
   matches,
-  given,
-  exhausted,
+  answers,
+  complete,
+  answeredCount,
+  skippedCount,
   pinned,
   multifactorialNote,
-  onAnswer,
+  onSetFinding,
+  onClearFinding,
   onPin,
   onUnpin,
-  onAnswerMore,
+  onResume,
   onCheckAnother,
 }: Props) {
   const cardProps = (m: Match) => ({
-    graph,
+    content,
     match: m,
     pinned: pinned(m.diagnosis.id),
     onPin: () => onPin(m.diagnosis.id),
     onUnpin: () => onUnpin(m.diagnosis.id),
   });
 
-  const clean = matches.filter((m) => m.conflicting.length === 0);
-  const against = matches.filter((m) => m.conflicting.length > 0);
+  const strong = matches.filter((m) => m.tier === "strong");
+  const possible = matches.filter((m) => m.tier === "possible");
+  let unlikely = matches.filter((m) => m.tier === "unlikely");
+  const ruledOut = matches.filter((m) => m.tier === "ruled-out");
 
-  const best = clean[0];
-  const runnerUp = clean[1] && best && best.score - clean[1].score <= 2 ? clean[1] : undefined;
-  const others = clean.slice(runnerUp ? 2 : 1, (runnerUp ? 2 : 1) + MAX_OTHERS);
+  const nothingYet = answeredCount === 0;
 
-  const tentative = best && given.length < 3;
+  // when nothing rises to "possible", promote the closest weak matches so the
+  // reader always has something to look at rather than an empty screen
+  const closest = strong.length + possible.length === 0 ? unlikely.slice(0, 3) : [];
+  if (closest.length > 0) unlikely = unlikely.slice(closest.length);
 
   return (
     <section className={styles.section}>
       <h1 className={styles.kicker}>{area.short ?? area.label} · what fits</h1>
       <p className={styles.based}>
-        {best
-          ? `Based on your ${given.length} answer${given.length === 1 ? "" : "s"}.`
-          : "Answer a few questions to see what fits."}
+        {nothingYet
+          ? "Answer a few questions to see what fits."
+          : `Ranked against your ${answeredCount} answer${answeredCount === 1 ? "" : "s"}` +
+            (skippedCount ? ` (${skippedCount} skipped).` : ".") +
+            " Nothing is ruled out unless your answers make it impossible."}
       </p>
 
-      {best && <MatchCard variant="prominent" {...cardProps(best)} />}
-
-      {!exhausted && (
-        <button type="button" className={styles.more} onClick={onAnswerMore}>
-          {tentative ? "Answer more — this is only a first pass" : "Answer another question"}
-          {" →"}
+      {!complete && !nothingYet && (
+        <button type="button" className={styles.more} onClick={onResume}>
+          Keep answering — more questions sharpen the ranking →
         </button>
       )}
 
-      {runnerUp && (
+      {strong.length > 0 && (
         <>
-          <h2 className={styles.groupHead}>Also a close fit</h2>
-          <MatchCard variant="prominent" {...cardProps(runnerUp)} />
+          <h3 className={styles.groupHead}>Best fit</h3>
+          <div className={styles.stack}>
+            {strong.map((m, i) => (
+              <MatchCard key={m.diagnosis.id} prominent={i === 0} {...cardProps(m)} />
+            ))}
+          </div>
         </>
       )}
 
-      {others.length > 0 && (
+      {closest.length > 0 && (
         <>
-          <h2 className={styles.groupHead}>Other possibilities</h2>
+          <h3 className={styles.groupHead}>Closest so far</h3>
+          <p className={styles.based}>
+            Nothing stands out yet — these fit your answers best. Answer more to separate them.
+          </p>
           <div className={styles.stack}>
-            {others.map((m) => (
+            {closest.map((m) => (
               <MatchCard key={m.diagnosis.id} {...cardProps(m)} />
             ))}
           </div>
         </>
       )}
 
-      {against.length > 0 && (
+      {possible.length > 0 && (
+        <>
+          {strong.length > 0 && <h3 className={styles.groupHead}>Also possible</h3>}
+          <div className={styles.stack}>
+            {possible.map((m, i) => (
+              <MatchCard
+                key={m.diagnosis.id}
+                prominent={i === 0 && strong.length === 0 && !m.fallback}
+                {...cardProps(m)}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
+      {unlikely.length > 0 && (
         <div className={styles.against}>
-          <Disclosure summary={`Considered and set aside (${against.length})`}>
+          <Disclosure summary={`Weak matches (${unlikely.length})`}>
             <p className={styles.aside}>
-              Your answers point away from these — listed so nothing is silently dropped. The note
-              is the answer that argues against each.
+              Little in your answers points to these, but nothing rules them out.
             </p>
-            <div className={styles.minimalStack}>
-              {against.slice(0, MAX_AGAINST).map((m) => (
-                <MatchCard key={m.diagnosis.id} variant="minimal" {...cardProps(m)} />
+            <div className={styles.stack}>
+              {unlikely.map((m) => (
+                <MatchCard key={m.diagnosis.id} {...cardProps(m)} />
+              ))}
+            </div>
+          </Disclosure>
+        </div>
+      )}
+
+      {ruledOut.length > 0 && (
+        <div className={styles.against}>
+          <Disclosure summary={`Ruled out by your answers (${ruledOut.length})`}>
+            <p className={styles.aside}>
+              Not possible given what you answered — shown so nothing is silently dropped.
+            </p>
+            <div className={styles.stack}>
+              {ruledOut.map((m) => (
+                <MatchCard key={m.diagnosis.id} {...cardProps(m)} />
               ))}
             </div>
           </Disclosure>
@@ -111,7 +151,13 @@ export function ResultsScreen({
       {multifactorialNote && <p className={styles.multi}>{multifactorialNote}</p>}
 
       <div className={styles.answers}>
-        <AnswerGrid graph={graph} given={given} onChange={onAnswer} variant="open" />
+        <AnswerGrid
+          content={content}
+          answers={answers}
+          onChange={onSetFinding}
+          onClear={onClearFinding}
+          variant="open"
+        />
       </div>
 
       <div className={styles.actions}>

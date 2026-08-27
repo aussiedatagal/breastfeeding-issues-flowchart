@@ -1,104 +1,148 @@
 /**
- * The quiz session — a small, framework-free state machine. React binds to it in
- * `useQuizSession`; everything here is pure so it can be unit-tested on its own.
+ * The quiz session — a framework-free state machine. Pick an area, answer every
+ * question you can (or skip the ones you can't judge), then get a ranked list
+ * of what fits. React binds to it in `useQuizSession`.
  *
- * The reader picks an area, answers questions in any order, and gets a ranked
- * list of what fits. No answer ever gates a diagnosis out — see `score.ts`.
+ * There is no tree walk: order doesn't matter, and no answer removes a
+ * diagnosis unless a hard `excludes` rule fires (see `score.ts`).
+ *
+ * Pure.
  */
-import type { Answer, Domain, Graph, QuestionNode } from "../graph/types.ts";
-import { nextQuestion } from "./flow.ts";
-import type { Profile } from "./profiles.ts";
-import { rankMatches, type Answers, type Match } from "./score.ts";
+import type { Area, Content, Presence, Question } from "../content/model.ts";
+import { questionsInArea } from "../content/model.ts";
+import { rankArea, type Match } from "./score.ts";
 
-export type { Answer };
-
-export interface Given {
-  questionId: string;
-  answer: Answer;
-}
+export type { Presence };
 
 export interface SessionState {
-  /** the problem area being worked, or null on the start screen */
+  /** the area being worked, or null on the start screen */
   areaId: string | null;
-  /** answers given, in the order they were given */
-  given: Given[];
-  /** the reader asked to see results before a clear leader emerged */
+  /** question ids in the order they were answered or skipped */
+  handled: string[];
+  /** question ids the reader chose to skip ("not sure") */
+  skipped: string[];
+  /** findingId → present / absent (absent from the map === not assessed) */
+  answers: Record<string, Presence>;
+  /** the reader asked to see results before working through every question */
   revealed: boolean;
-  /** the reader asked for one more question from the results screen */
-  probe: boolean;
-  /** pinned diagnosis ids — the running problem list, order preserved */
+  /** pinned diagnosis ids — the running problem list */
   findings: string[];
-  /** the reader has explicitly opened the findings summary */
   viewingSummary: boolean;
 }
 
 export const emptySession = (): SessionState => ({
   areaId: null,
-  given: [],
+  handled: [],
+  skipped: [],
+  answers: {},
   revealed: false,
-  probe: false,
   findings: [],
   viewingSummary: false,
 });
 
-export const answersOf = (given: readonly Given[]): Answers =>
-  Object.fromEntries(given.map((g) => [g.questionId, g.answer]));
+/** which findings a question sets — one for boolean, several for multi */
+export const questionFindings = (q: Question): string[] => q.options.map((o) => o.finding);
+
+/** every finding the reader has answered, in the order the questions were handled */
+export function answeredFindings(content: Content, state: SessionState): string[] {
+  const out: string[] = [];
+  for (const qid of state.handled) {
+    if (state.skipped.includes(qid)) continue;
+    const q = content.question.get(qid);
+    if (!q) continue;
+    for (const f of questionFindings(q)) {
+      if (state.answers[f] !== undefined) out.push(f);
+    }
+  }
+  return out;
+}
+
+const isHandled = (q: Question, state: SessionState) =>
+  state.skipped.includes(q.id) ||
+  questionFindings(q).every((f) => state.answers[f] !== undefined);
+
+/** the next question the reader hasn't answered or skipped, in authored order */
+function nextPending(content: Content, areaId: string, state: SessionState): Question | null {
+  for (const q of questionsInArea(content, areaId)) {
+    if (!isHandled(q, state)) return q;
+  }
+  return null;
+}
 
 export type Screen =
   | { name: "start" }
   | {
       name: "question";
-      area: Domain;
-      question: QuestionNode;
-      answered: number;
-      minUseful: number;
-      given: Given[];
+      area: Area;
+      question: Question;
+      /** 1-based position of this question in the area */
+      index: number;
+      total: number;
+      answers: Record<string, Presence>;
+      /** something has been answered, so results are worth a peek */
+      canReveal: boolean;
     }
-  | { name: "results"; area: Domain; matches: Match[]; given: Given[]; exhausted: boolean }
+  | {
+      name: "results";
+      area: Area;
+      matches: Match[];
+      answered: string[];
+      answers: Record<string, Presence>;
+      /** every question in the area has been answered or skipped */
+      complete: boolean;
+      /** count of questions answered (not skipped) */
+      answeredCount: number;
+      skippedCount: number;
+    }
   | { name: "summary" };
 
-export function screenOf(graph: Graph, profiles: Profile[], state: SessionState): Screen {
+export function screenOf(content: Content, state: SessionState): Screen {
   if (state.viewingSummary) return { name: "summary" };
 
-  const area = state.areaId ? graph.domains.find((d) => d.id === state.areaId) : undefined;
+  const area = state.areaId ? content.areas.find((a) => a.id === state.areaId) : undefined;
   if (!area) return { name: "start" };
 
-  const answers = answersOf(state.given);
-  const step = nextQuestion(graph, profiles, area.id, answers);
+  const areaQuestions = questionsInArea(content, area.id);
+  const next = nextPending(content, area.id, state);
+  const answered = answeredFindings(content, state);
+  const answeredCount = areaQuestions.filter(
+    (q) => !state.skipped.includes(q.id) && questionFindings(q).every((f) => state.answers[f] !== undefined),
+  ).length;
 
-  const results = (): Screen => ({
-    name: "results",
-    area,
-    matches: rankMatches(graph, profiles, area.id, answers),
-    given: state.given,
-    exhausted: step.probeQuestion === null,
-  });
+  if (next === null || state.revealed) {
+    return {
+      name: "results",
+      area,
+      matches: rankArea(content, area.id, state.answers),
+      answered,
+      answers: state.answers,
+      complete: next === null,
+      answeredCount,
+      skippedCount: state.skipped.length,
+    };
+  }
 
-  const question = (q: QuestionNode): Screen => ({
+  return {
     name: "question",
     area,
-    question: q,
-    answered: step.answered,
-    minUseful: step.minUseful,
-    given: state.given,
-  });
-
-  // "answer another question" from results: offer any remaining area question
-  if (state.probe) return step.probeQuestion ? question(step.probeQuestion) : results();
-
-  // the flow: keep asking until a leader settles, unless the reader peeked
-  if (step.question === null || state.revealed || step.confident) return results();
-  return question(step.question);
+    question: next,
+    index: areaQuestions.indexOf(next) + 1,
+    total: areaQuestions.length,
+    answers: state.answers,
+    canReveal: answered.length > 0,
+  };
 }
 
 // --- transitions -----------------------------------------------------------
 
 export type SessionAction =
   | { type: "pickArea"; areaId: string }
-  | { type: "answer"; questionId: string; answer: Answer }
-  | { type: "unanswer"; questionId: string }
+  | { type: "answerQuestion"; questionId: string; findings: Record<string, Presence> }
+  | { type: "skipQuestion"; questionId: string }
+  | { type: "setFinding"; finding: string; value: Presence }
+  | { type: "clearFinding"; finding: string }
   | { type: "reveal" }
-  | { type: "probe" }
+  | { type: "resume" }
   | { type: "back" }
   | { type: "restart" }
   | { type: "openSummary" }
@@ -107,71 +151,95 @@ export type SessionAction =
   | { type: "unpinFinding"; id: string }
   | { type: "clearFindings" };
 
-function upsert(given: Given[], questionId: string, answer: Answer): Given[] {
-  const i = given.findIndex((g) => g.questionId === questionId);
-  if (i === -1) return [...given, { questionId, answer }];
-  const next = given.slice();
-  next[i] = { questionId, answer };
-  return next;
-}
+const without = <T,>(list: T[], value: T) => list.filter((v) => v !== value);
 
-export function reduce(state: SessionState, action: SessionState | SessionAction): SessionState {
+const dropAnswers = (answers: Record<string, Presence>, findings: string[]) =>
+  Object.fromEntries(Object.entries(answers).filter(([f]) => !findings.includes(f)));
+
+/** every finding a question could have set, so `back` fully undoes it */
+const findingsOf = (content: Content, questionId: string): string[] => {
+  const q = content.question.get(questionId);
+  return q ? questionFindings(q) : [questionId];
+};
+
+export function reduce(
+  content: Content,
+  state: SessionState,
+  action: SessionState | SessionAction,
+): SessionState {
   if (!("type" in action)) return action; // hydration from the URL
 
   switch (action.type) {
     case "pickArea":
+      return { ...emptySession(), findings: state.findings, areaId: action.areaId };
+
+    case "answerQuestion": {
+      const handled = state.handled.includes(action.questionId)
+        ? state.handled
+        : [...state.handled, action.questionId];
       return {
         ...state,
-        areaId: action.areaId,
-        given: [],
-        revealed: false,
-        probe: false,
+        handled,
+        skipped: without(state.skipped, action.questionId),
+        answers: { ...state.answers, ...action.findings },
+        viewingSummary: false,
+      };
+    }
+
+    case "skipQuestion": {
+      const handled = state.handled.includes(action.questionId)
+        ? state.handled
+        : [...state.handled, action.questionId];
+      return {
+        ...state,
+        handled,
+        skipped: state.skipped.includes(action.questionId)
+          ? state.skipped
+          : [...state.skipped, action.questionId],
+        viewingSummary: false,
+      };
+    }
+
+    case "setFinding":
+      return {
+        ...state,
+        answers: { ...state.answers, [action.finding]: action.value },
         viewingSummary: false,
       };
 
-    case "answer":
+    case "clearFinding":
       return {
         ...state,
-        given: upsert(state.given, action.questionId, action.answer),
-        probe: false, // one probe question answered → re-evaluate
-        viewingSummary: false,
-      };
-
-    case "unanswer":
-      return {
-        ...state,
-        given: state.given.filter((g) => g.questionId !== action.questionId),
+        answers: dropAnswers(state.answers, [action.finding]),
         viewingSummary: false,
       };
 
     case "reveal":
-      return { ...state, revealed: true, probe: false, viewingSummary: false };
+      return { ...state, revealed: true, viewingSummary: false };
 
-    case "probe":
-      // "answer another question" from the results screen
-      return { ...state, probe: true, revealed: false, viewingSummary: false };
+    case "resume":
+      return { ...state, revealed: false, viewingSummary: false };
 
-    case "back":
+    case "back": {
       if (state.viewingSummary) return { ...state, viewingSummary: false };
-      if (state.probe) return { ...state, probe: false };
       if (state.revealed) return { ...state, revealed: false };
-      if (state.given.length > 0) return { ...state, given: state.given.slice(0, -1) };
+      if (state.handled.length > 0) {
+        const last = state.handled[state.handled.length - 1]!;
+        return {
+          ...state,
+          handled: state.handled.slice(0, -1),
+          skipped: without(state.skipped, last),
+          answers: dropAnswers(state.answers, findingsOf(content, last)),
+        };
+      }
       return { ...state, areaId: null };
+    }
 
     case "restart":
-      // a fresh pass — the findings list is kept
-      return {
-        ...state,
-        areaId: null,
-        given: [],
-        revealed: false,
-        probe: false,
-        viewingSummary: false,
-      };
+      return { ...emptySession(), findings: state.findings };
 
     case "openSummary":
       return { ...state, viewingSummary: true };
-
     case "closeSummary":
       return { ...state, viewingSummary: false };
 
@@ -179,10 +247,8 @@ export function reduce(state: SessionState, action: SessionState | SessionAction
       return state.findings.includes(action.id)
         ? state
         : { ...state, findings: [...state.findings, action.id] };
-
     case "unpinFinding":
-      return { ...state, findings: state.findings.filter((id) => id !== action.id) };
-
+      return { ...state, findings: without(state.findings, action.id) };
     case "clearFindings":
       return { ...state, findings: [] };
   }

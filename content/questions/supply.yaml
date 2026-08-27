@@ -1,0 +1,165 @@
+- id: q1
+  area: supply
+  type: boolean
+  ask: Is the infant's weight gain and milk output adequate for age?
+  short: Intake adequate?
+  assess: "A diagnostic split, not a safety check — the infant's clinical
+    wellbeing (hydration, jaundice, weight, whether top-ups are needed) is
+    assessed and looked after separately, in parallel with this. Plot weight on
+    a growth chart: tracking its centile, roughly 25–35 g/day at 0–3 months,
+    back to birth weight by day 10–14. Output after day 4–5: at least 6 heavy
+    wet nappies and 3 yellow stools per 24 h (stool frequency falls after about
+    6 weeks — still normal); around 8–12 feeds per 24 h with audible swallowing.
+    ADEQUATE and the parent is worried about supply, ask about oversupply next.
+    INADEQUATE means milk is not getting in — the questions below work out why."
+- id: a7
+  area: supply
+  type: boolean
+  ask: Did copious milk ever “come in” (marked fullness / leaking) by about 72
+    hours?
+  short: Milk came in?
+  assess: Ask about breast fullness, heaviness, leaking, and a change in the
+    infant's swallowing pattern in the first 3–4 days. ‘Never really came in’
+    points to a primary or lactogenesis-II problem; ‘came in, then faded’ points
+    to a removal, drug, surgical or endocrine cause.
+- id: a10
+  area: supply
+  type: boolean
+  ask: Are feeds infrequent or restricted, or displaced by top-ups?
+  short: Feeds restricted?
+  assess: "This is the commonest reversible cause of an established supply
+    falling: anything that reduces the frequency or completeness of milk
+    removal. The supplementation spiral is the classic loop — top-ups displace
+    breast stimulation, which lowers supply, which prompts more top-ups."
+- id: a11
+  area: supply
+  type: boolean
+  ask: Prior breast or chest surgery, radiation, or major injury?
+  short: Breast surgery?
+  assess: Ask specifically about reduction (especially with a free-nipple graft),
+    augmentation with periareolar incisions, chest-wall radiation, burns or
+    degloving injury, and prior abscess drainage — all can sever ducts or
+    nerves. Note the interval since surgery and any prior successful lactation.
+- id: a12
+  area: supply
+  type: boolean
+  ask: Did the supply drop after a new medication, a new pregnancy, or return of
+    periods — or is there a thyroid, PCOS, or retained-placenta history?
+  short: Drug / hormonal trigger?
+  assess: >
+    Tie the fall to a trigger. Supply-lowering drugs: combined oestrogen
+    contraception, pseudoephedrine, high-dose progestins, ergometrine,
+    cabergoline or bromocriptine, heavy alcohol. Hormonal: a new pregnancy,
+    return of menses, thyroid disease, PCOS, or retained placental fragments
+    (ongoing lochia, subinvolution). Check TSH and free T4, prolactin, glucose,
+    and a pregnancy test.
+- id: a8
+  area: supply
+  type: boolean
+  ask: Are the breasts tubular or cone-shaped, set more than 3–4 cm apart, or
+    asymmetric by over a cup size — with little growth in pregnancy and little
+    engorgement after birth?
+  short: Tubular / widely-spaced breasts?
+  assess: >
+    The observable markers of insufficient glandular tissue: breasts that did
+    not enlarge in pregnancy or in the first days postpartum, minimal or absent
+    engorgement, a narrow tubular or conical shape, a wide intermammary gap
+    (>3–4 cm), bulbous or disproportionately large areolae, and asymmetry
+    greater than one cup size.
+- id: a9
+  area: supply
+  type: boolean
+  ask: Risk factors for delayed lactogenesis II present, with the infant still
+    under about 2 weeks old?
+  short: Delayed lactogenesis?
+  assess: "Risk factors: caesarean or long labour, PPH, retained placenta,
+    diabetes or GDM, obesity, PCOS, thyroid disease, severe stress or pain, flat
+    affect, theca-lutein cysts. The window to intervene is the first 1–2 weeks."
+- id: b5
+  area: supply
+  type: boolean
+  ask: Does milk spray on release, with the infant choking or clamping at
+    let-down, a gassy infant, and green frothy explosive stools?
+  short: Forceful flow + gassy?
+  assess: >
+    The oversupply paradox worth naming: brisk flow makes the infant choke,
+    clamp and pull off, one breast drains poorly, feeds look chaotic, and the
+    infant is windy with green frothy stools — which the parent reads as "not
+    enough" when the problem is too much, too fast.
+- id: a1
+  area: supply
+  type: boolean
+  ask: On a full feed observation, is milk transfer effective?
+  short: Transfer effective?
+  assess: Effective transfer = a deep comfortable latch, rhythmic suck with
+    audible/visible swallowing that continues for most of the feed, the breast
+    softening, and a contented infant with open hands afterwards. Ineffective =
+    fluttery non-nutritive sucking, few swallows, frequent slipping or clicking,
+    falling asleep early, no breast softening, still frantic after the feed.
+- id: a1b
+  area: supply
+  type: boolean
+  ask: Does the infant actively refuse or fight the breast (rather than attaching
+    but feeding weakly)?
+  short: Refusing?
+  assess: Distinguish an infant who latches but transfers poorly (work the
+    questions below) from one who arches, cries, turns away, or will not stay on
+    the breast (work the refusal branch).
+- id: a2
+  area: supply
+  type: boolean
+  ask: When a skilled helper optimises position and latch, does feeding become
+    effective?
+  short: Latch fixes it?
+  assess: Try cross-cradle and laid-back positions, an asymmetric / exaggerated
+    latch, and better head–body alignment and breast support. A positive answer
+    = the latch deepens, swallowing becomes rhythmic, and pain settles there and
+    then.
+- id: a3
+  area: supply
+  type: boolean
+  ask: Does the infant choke, clamp or pull off as milk sprays?
+  short: Forceful flow?
+  assess: "Overactive let-down and oversupply can defeat transfer: the infant
+    clamps to slow the flow, pulls off, swallows air, and may under-transfer
+    despite an abundant supply. Look for spraying milk on release, a gassy
+    infant, and frequent explosive green frothy stools."
+- id: a4
+  area: supply
+  type: boolean
+  ask: Functional tongue restriction, or a structural oral anomaly?
+  short: Oral restriction?
+  assess: Assess FUNCTION, not appearance — tongue elevation and extension,
+    cupping, the strength and rhythm of the suck, and whether a
+    lactation-trained clinician can improve transfer with an oral-motor
+    manoeuvre. Posterior tongue restriction is the commonly missed one; a
+    visible anterior frenulum alone is not a diagnosis. Check the palate and
+    jaw, and look for a bifid uvula (submucous cleft).
+- id: a5
+  area: supply
+  type: boolean
+  ask: Prematurity, abnormal tone, birth injury, jaundice, or sedation?
+  short: Immature / neuro?
+  assess: Late-preterm and early-term infants have a disorganised, fatigable
+    suck–swallow–breathe pattern. Also consider hypotonia (trisomy 21,
+    prematurity, hypothyroidism, neuromuscular disease), hypertonia, birth
+    injury (cephalohaematoma, clavicle fracture, torticollis, facial-nerve
+    palsy, brachial plexus injury, HIE), hyperbilirubinaemia causing sleepiness,
+    and sedating intrapartum drugs.
+- id: a6
+  area: supply
+  type: boolean
+  ask: Does the infant tire, sweat, or change colour during feeds?
+  short: Tires / cyanoses?
+  assess: A cardiorespiratory cause presents as an infant who feeds keenly for a
+    few minutes then fatigues, sweats on the forehead, becomes tachypnoeic or
+    dusky, and fails to thrive. Examine for a murmur, hepatomegaly, and
+    respiratory rate at rest and during a feed.
+- id: a6b
+  area: supply
+  type: boolean
+  ask: A physical barrier to latch — engorgement, or nipple shape?
+  short: Mechanical barrier?
+  assess: "A physical barrier to latch: an areola too firm to draw in
+    (engorgement, days 2–5), a nipple that will not evert on a pinch test, or a
+    nipple / breast disproportionate to a small or preterm mouth."

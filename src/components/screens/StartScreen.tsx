@@ -1,33 +1,33 @@
-import type { Graph } from "../../graph/types.ts";
+import type { Content } from "../../content/model.ts";
 import styles from "./StartScreen.module.css";
 
 interface Props {
-  graph: Graph;
+  content: Content;
   findingsCount: number;
   onPickArea: (areaId: string) => void;
   onOpenSummary: () => void;
 }
 
-export function StartScreen({ graph, findingsCount, onPickArea, onOpenSummary }: Props) {
+export function StartScreen({ content, findingsCount, onPickArea, onOpenSummary }: Props) {
   return (
     <section>
       <p className={styles.kicker}>Breastfeeding difficulty</p>
       <h1 className={styles.title}>Where is the problem showing up?</h1>
-      <p className={styles.lede}>{graph.rootPrompt}</p>
+      <p className={styles.lede}>{content.intro}</p>
 
       <ul className={styles.areas}>
-        {graph.domains.map((d) => (
-          <li key={d.id}>
+        {content.areas.map((a) => (
+          <li key={a.id}>
             <button
               type="button"
               className={styles.area}
-              data-area={d.id}
-              aria-label={d.short ?? d.label}
-              onClick={() => onPickArea(d.id)}
+              data-area={a.id}
+              aria-label={a.short ?? a.label}
+              onClick={() => onPickArea(a.id)}
             >
               <span className={styles.areaText}>
-                <span className={styles.areaName}>{d.short ?? d.label}</span>
-                <span className={styles.areaHint}>{d.label}</span>
+                <span className={styles.areaName}>{a.short ?? a.label}</span>
+                <span className={styles.areaHint}>{a.label}</span>
               </span>
               <span className={styles.go} aria-hidden="true" />
             </button>

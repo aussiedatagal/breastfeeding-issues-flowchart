@@ -1,27 +1,21 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
-import type { Graph } from "../graph/types.ts";
-import { buildProfiles } from "../quiz/profiles.ts";
-import type { Answer, SessionAction, SessionState } from "../quiz/session.ts";
+import type { Content, Presence } from "../content/model.ts";
+import type { SessionAction, SessionState } from "../quiz/session.ts";
 import { reduce, screenOf } from "../quiz/session.ts";
 import { decode, encode } from "../quiz/url.ts";
 
-/**
- * Binds the pure quiz session to React and to the URL hash. Returns the current
- * screen (already resolved against the graph) plus a flat set of actions.
- */
-export function useQuizSession(graph: Graph) {
-  const profiles = useMemo(() => buildProfiles(graph), [graph]);
-
+/** Binds the pure quiz session to React and the URL hash. */
+export function useQuizSession(content: Content) {
   const [state, dispatch] = useReducer(
-    (s: SessionState, a: SessionState | SessionAction) => reduce(s, a),
-    graph,
-    (g) => decode(g, window.location.hash),
+    (s: SessionState, a: SessionState | SessionAction) => reduce(content, s, a),
+    content,
+    (c) => decode(c, window.location.hash),
   );
 
   const lastHash = useRef(window.location.hash);
 
   useEffect(() => {
-    const next = encode(state);
+    const next = encode(content, state);
     if (next === lastHash.current) return;
     lastHash.current = next;
     window.history.replaceState(
@@ -29,13 +23,13 @@ export function useQuizSession(graph: Graph) {
       "",
       next || window.location.pathname + window.location.search,
     );
-  }, [state]);
+  }, [content, state]);
 
   useEffect(() => {
     const onPop = () => {
       if (window.location.hash === lastHash.current) return;
       lastHash.current = window.location.hash;
-      dispatch(decode(graph, window.location.hash));
+      dispatch(decode(content, window.location.hash));
     };
     window.addEventListener("hashchange", onPop);
     window.addEventListener("popstate", onPop);
@@ -43,18 +37,21 @@ export function useQuizSession(graph: Graph) {
       window.removeEventListener("hashchange", onPop);
       window.removeEventListener("popstate", onPop);
     };
-  }, [graph]);
+  }, [content]);
 
-  const screen = useMemo(() => screenOf(graph, profiles, state), [graph, profiles, state]);
+  const screen = useMemo(() => screenOf(content, state), [content, state]);
 
   const actions = useMemo(
     () => ({
       pickArea: (areaId: string) => dispatch({ type: "pickArea", areaId }),
-      answer: (questionId: string, answer: Answer) =>
-        dispatch({ type: "answer", questionId, answer }),
-      unanswer: (questionId: string) => dispatch({ type: "unanswer", questionId }),
+      answerQuestion: (questionId: string, findings: Record<string, Presence>) =>
+        dispatch({ type: "answerQuestion", questionId, findings }),
+      skipQuestion: (questionId: string) => dispatch({ type: "skipQuestion", questionId }),
+      setFinding: (finding: string, value: Presence) =>
+        dispatch({ type: "setFinding", finding, value }),
+      clearFinding: (finding: string) => dispatch({ type: "clearFinding", finding }),
       reveal: () => dispatch({ type: "reveal" }),
-      probe: () => dispatch({ type: "probe" }),
+      resume: () => dispatch({ type: "resume" }),
       back: () => dispatch({ type: "back" }),
       restart: () => dispatch({ type: "restart" }),
       openSummary: () => dispatch({ type: "openSummary" }),

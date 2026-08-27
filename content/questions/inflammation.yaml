@@ -1,75 +1,80 @@
 - id: inf1
-  ask: Is the swelling BILATERAL and diffuse — both breasts full, firm and tender — in the first
-    2–5 days?
+  area: inflammation
+  type: boolean
+  ask: Is the swelling BILATERAL and diffuse — both breasts full, firm and tender
+    — in the first 2–5 days?
   short: Bilateral, day 2–5?
-  assess: Physiological engorgement is bilateral, generalised, and time-locked to lactogenesis II.
-    A focal or unilateral problem is not this.
-  ifYes: dx-engorge
-  ifNo: inf2
+  assess: Physiological engorgement is bilateral, generalised, and time-locked to
+    lactogenesis II. A focal or unilateral problem is not this.
 - id: inf2
+  area: inflammation
+  type: boolean
   ask: Is there a discrete LUMP (rather than an area of firmness and inflammation)?
   short: Discrete lump?
-  assess: Separate a well-defined mass you can get your fingers around (abscess, galactocele,
-    cyst, tumour) from a diffuse zone of firm, inflamed tissue (the mastitis continuum).
-  ifYes: inf7
-  ifNo: inf3
+  assess: Separate a well-defined mass you can get your fingers around (abscess,
+    galactocele, cyst, tumour) from a diffuse zone of firm, inflamed tissue (the
+    mastitis continuum).
 - id: inf7
-  ask: Is the lump fluctuant and exquisitely tender, ± overlying erythema or pointing?
+  area: inflammation
+  type: boolean
+  ask: Is the lump fluctuant and exquisitely tender, ± overlying erythema or
+    pointing?
   short: Fluctuant + tender?
-  assess: A tense, fluid-feeling, very tender mass, often with red thinned overlying skin — an
-    abscess until proven otherwise. Confirm with ultrasound.
-  ifYes:
-    goto: dx-abscess
-  ifNo: inf8
+  assess: A tense, fluid-feeling, very tender mass, often with red thinned
+    overlying skin — an abscess until proven otherwise. Confirm with ultrasound.
 - id: inf8
+  area: inflammation
+  type: boolean
   ask: A smooth, non-tender, cystic swelling, often after weaning?
   short: Cystic, post-wean?
-  assess: "A galactocele is a milk-filled cyst: soft or tense but not hot or tender, common as
-    feeds reduce, with milk-density fluid on ultrasound and a milky aspirate."
-  ifYes: dx-galac
-  ifNo: inf9
+  assess: "A galactocele is a milk-filled cyst: soft or tense but not hot or
+    tender, common as feeds reduce, with milk-density fluid on ultrasound and a
+    milky aspirate."
 - id: inf9
+  area: inflammation
+  type: boolean
   ask: Not settling on antibiotics, or features atypical for mastitis?
   short: Not settling?
-  assess: "The features that separate inflammatory breast cancer from mastitis: no clear
-    improvement after an appropriate antibiotic course, skin oedema and thickening (peau
-    d'orange), nipple retraction, a fixed mass, palpable nodes, and a time course or age that
-    does not fit lactational mastitis."
-  ifYes: dx-ibc
-  ifNo: inf10
+  assess: "The features that separate inflammatory breast cancer from mastitis: no
+    clear improvement after an appropriate antibiotic course, skin oedema and
+    thickening (peau d'orange), nipple retraction, a fixed mass, palpable nodes,
+    and a time course or age that does not fit lactational mastitis."
 - id: inf10
+  area: inflammation
+  type: boolean
   ask: Is this recurrent inflammation or a recurrent lump at the SAME site?
   short: Recurrent, same site?
-  assess: Repeated episodes in one quadrant suggest a fixed local factor — an obstructing lesion,
-    a persistent bleb, a duct anomaly, or an underlying mass.
-  ifYes: dx-recur
-  ifNo: dx-lump
+  assess: Repeated episodes in one quadrant suggest a fixed local factor — an
+    obstructing lesion, a persistent bleb, a duct anomaly, or an underlying
+    mass.
 - id: inf3
-  ask: Are there systemic features — fever ≥38.5°C, rigors, myalgia, tachycardia, malaise?
+  area: inflammation
+  type: boolean
+  ask: Are there systemic features — fever ≥38.5°C, rigors, myalgia, tachycardia,
+    malaise?
   short: Systemic features?
-  assess: Distinguish simple ductal inflammation (a tender lumpy area, feels well) from mastitis
-    with a systemic inflammatory response.
-  ifYes: inf4
-  ifNo: dx-plug
+  assess: Distinguish simple ductal inflammation (a tender lumpy area, feels well)
+    from mastitis with a systemic inflammatory response.
 - id: inf4
+  area: inflammation
+  type: boolean
   ask: Failing 24–48 h of conservative care, septic, or spreading cellulitis?
   short: Failing / septic?
-  assess: This is the decision point for antibiotics. Early inflammatory mastitis that is
-    improving does not need them; a non-responder, a septic parent, or an obvious bacterial
-    portal of entry does.
-  ifYes: inf5
-  ifNo: dx-inflammatory
+  assess: This is the decision point for antibiotics. Early inflammatory mastitis
+    that is improving does not need them; a non-responder, a septic parent, or
+    an obvious bacterial portal of entry does.
 - id: inf5
+  area: inflammation
+  type: boolean
   ask: On ultrasound (or exam) is there a drainable fluid collection?
   short: Drainable collection?
-  assess: Image a non-responding or severe presentation. A discrete collection is an abscess; a
-    solid ill-defined mass is a phlegmon; neither is simple bacterial mastitis.
-  ifYes: dx-abscess
-  ifNo: inf6
+  assess: Image a non-responding or severe presentation. A discrete collection is
+    an abscess; a solid ill-defined mass is a phlegmon; neither is simple
+    bacterial mastitis.
 - id: inf6
+  area: inflammation
+  type: boolean
   ask: An enlarging, firm, ill-defined mass despite antibiotics, no collection?
   short: Enlarging solid mass?
-  assess: A phlegmon is a mass of inflamed, oedematous tissue without a drainable pocket — it
-    worsens if incised.
-  ifYes: dx-phlegmon
-  ifNo: dx-bacterial
+  assess: A phlegmon is a mass of inflamed, oedematous tissue without a drainable
+    pocket — it worsens if incised.
