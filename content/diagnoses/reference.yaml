@@ -1,0 +1,126 @@
+- id: dx-oald
+  name: Oversupply & overactive let-down
+  flag: often-mislabelled
+  note: One physiology — excess production with brisk ejection — that presents as reflux, CMPA,
+    colic, refusal, recurrent blocked ducts, and even perceived low supply.
+  points:
+    - Choking, gulping, clamping, pulling off as milk sprays; short efficient feeds; refusing
+      the second breast.
+    - Gassy, straining, frequent large explosive green frothy stools; rapid weight gain.
+    - Recurrent engorgement and blocked ducts; forceful spray on release.
+  steps:
+    - Finish the first breast before offering the second; block feeding (one breast per 2–4 h)
+      if marked.
+    - Laid-back or side-lying positioning; brief pre-latch expression.
+    - Stop rescue pumping — it feeds the loop.
+    - Most self-corrects by ~12 weeks.
+  seeAlso:
+    - mim-cmpa
+    - dx-plug
+    - dx-fastflow
+    - dx-perc-over
+  reference: true
+- id: cycle-damage
+  name: "Cycle: nipple damage → infection"
+  flag: often-mislabelled
+  note: poor latch → fissure → S. aureus colonisation → pain + poor healing → shallower latch to
+    avoid pain → more damage.
+  steps:
+    - "BREAK IT: latch correction + wound care + treat / decolonise S. aureus together — fixing
+      only one arm lets the loop continue."
+  seeAlso:
+    - dx-trauma-inf
+    - dx-position
+  reference: true
+- id: mim-cmpa
+  name: "Mimic: oversupply stools vs CMPA"
+  flag: often-mislabelled
+  note: Both give a gassy, unsettled infant with green frothy or mucousy stools and back-arching.
+  points:
+    - "Oversupply: rapid weight gain, forceful spray, recurrent engorgement, well between times."
+    - "CMPA: blood or visible mucus in stool, eczema, faltering or poor weight gain, family
+      atopy, other allergic signs."
+  steps:
+    - Manage flow first; trial maternal dairy exclusion (2–4 weeks) only if CMPA features are
+      present.
+  seeAlso:
+    - dx-oald
+    - dx-painrefuse
+  reference: true
+- id: mim-thrush
+  name: "Mimic: vasospasm vs ‘ductal thrush’"
+  flag: often-mislabelled
+  note: Both present as deep, burning, often bilateral pain with a near-normal exam.
+  points:
+    - "Vasospasm: visible white → blue → red colour change, a cold trigger, relief with warmth."
+    - "Candidiasis of the lactating breast: a contested entity — require corroborating signs
+      (infant oral thrush, satellite areolar rash, or culture) before antifungals."
+  steps:
+    - Trial vasospasm management; re-check latch and flange; consider persistent-pain pathways.
+      Avoid reflexive empirical antifungals.
+  seeAlso:
+    - dx-raynaud
+    - dx-deeppain
+  reference: true
+- id: mim-tie
+  name: "Mimic: posterior tongue restriction vs immaturity"
+  flag: often-mislabelled
+  note: Both give a disorganised early latch that ‘might just need practice’.
+  points:
+    - "Restriction: persistent maternal pain, clicking, milk spilling, poor weight gain,
+      reflux-like symptoms from aerophagia, restricted tongue elevation on a structured
+      assessment."
+    - "Immaturity: late-preterm / early-term, improving week on week, adequate transfer, less
+      maternal pain."
+  steps:
+    - Use a validated oral-function assessment plus the weight trajectory; frenotomy only for
+      demonstrated functional restriction.
+  seeAlso:
+    - dx-oral
+    - dx-suck
+  reference: true
+- id: mim-dmer
+  name: "Mimic: D-MER vs postnatal depression"
+  flag: often-mislabelled
+  note: Both involve low mood in a breastfeeding parent.
+  points:
+    - "D-MER: an abrupt wave of dysphoria seconds before let-down, clearing within 30–90 s,
+      every ejection, otherwise well."
+    - "PND / anxiety: pervasive low mood, anhedonia or anxiety not tied to let-down."
+  steps:
+    - "Track the timing against feeds. D-MER: validate and reassure. Pervasive symptoms: screen
+      and refer (the two can coexist)."
+  seeAlso:
+    - dx-dmer
+  reference: true
+- id: mim-ibc
+  name: "Mimic: non-resolving mastitis vs breast cancer"
+  flag: do-not-miss
+  note: Both give a red, swollen, warm breast.
+  points:
+    - "Mastitis: onset over hours to a day or two, systemic symptoms, responds to conservative
+      care ± antibiotics within 48 h."
+    - "IBC: does not settle on antibiotics, peau d'orange, skin thickening, nipple retraction, a
+      fixed mass, axillary nodes; may arise outside the postpartum window."
+  steps:
+    - If a breast has not clearly improved after an appropriate antibiotic course → imaging and
+      core biopsy, NOT another prescription.
+  seeAlso:
+    - dx-ibc
+    - dx-bacterial
+  reference: true
+- id: mim-flow
+  name: "Mimic: fast-flow vs low-supply refusal"
+  flag: often-mislabelled
+  note: Both look like ‘fussing and fighting at the breast’.
+  points:
+    - "Fast flow: fights at the START of the feed, coughs / pulls off as milk sprays, settles
+      later or laid-back, gains weight fast."
+    - "Low supply: calm at first then escalates THROUGH the feed, roots frantically, calmer and
+      takes more from a bottle, gains weight slowly."
+  steps:
+    - Watch a full feed and check the growth chart before deciding which loop you are in.
+  seeAlso:
+    - dx-fastflow
+    - dx-slowflow
+  reference: true

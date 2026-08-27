@@ -1,0 +1,95 @@
+- id: dx-latchpain
+  name: Latch / positioning pain
+  steps:
+    - Optimise latch and positioning; asymmetric latch, deeper gape.
+    - Expect rapid improvement — review in a few days.
+    - If pain persists despite a good latch, reassess for infant oral restriction and reconsider
+      the pain axes below.
+  seeAlso:
+    - a4
+- id: dx-hsv
+  name: HSV or bullous impetigo of the nipple
+  flag: do-not-miss
+  steps:
+    - "HSV: do NOT feed from the affected breast until lesions crust — express and discard that
+      side; systemic aciclovir."
+    - Neonatal HSV is life-threatening — urgent paediatric advice.
+    - "Impetigo: topical or oral antibiotics per severity; can usually keep feeding."
+- id: dx-trauma-inf
+  name: Nipple trauma with S. aureus infection
+  steps:
+    - Swab; start empirical anti-staphylococcal treatment (cover MRSA per local rates).
+    - Fix the mechanical cause in parallel — latch, flange size.
+    - Moist wound healing; review healing at 48–72 h.
+  seeAlso:
+    - dx-position
+    - cycle-damage
+- id: dx-trauma
+  name: Nipple trauma (mechanical)
+  steps:
+    - Correct the cause — latch, positioning, pump-flange fit.
+    - Moist wound healing; short-term analgesia.
+    - Reassess for oral restriction if it recurs.
+  seeAlso:
+    - a4
+- id: dx-derm
+  name: Nipple / areolar dermatitis
+  steps:
+    - Remove candidate allergens (lanolin, fragrances, topical antibiotics).
+    - Short course of a topical corticosteroid; wipe before feeds if advised.
+    - Patch testing if recurrent; treat any secondary infection.
+- id: dx-paget
+  name: Other nipple skin lesion — exclude Paget's disease
+  flag: often-mislabelled
+  note: A unilateral, persistent, eczema-like change of the nipple that does not respond to
+    topical treatment must be biopsied — Paget's disease of the nipple.
+  steps:
+    - Dermatology / breast referral; full-thickness biopsy of persistent unilateral change.
+    - Treat the likely benign cause meanwhile, with a firm review date.
+    - Do not attribute a non-resolving unilateral lesion to ‘thrush’ or dermatitis indefinitely.
+- id: dx-bleb
+  name: Bleb (milk blister) ± blocked duct
+  steps:
+    - Warm soak then feed; do NOT routinely unroof.
+    - Treat as ductal inflammation — cold, NSAIDs, gentle lymphatic drainage; avoid deep massage
+      and extra pumping.
+    - Address the underlying oversupply; check bra and flange fit.
+    - Recurrent → review, consider lecithin, image if fixed.
+  seeAlso:
+    - dx-plug
+    - dx-oald
+- id: dx-raynaud
+  name: Vasospasm / Raynaud's of the nipple
+  steps:
+    - Warmth immediately after feeds; avoid cold exposure, caffeine and nicotine.
+    - Correct any latch component — compression provokes vasospasm.
+    - Nifedipine if severe and persistent.
+  seeAlso:
+    - mim-thrush
+    - dx-deeppain
+- id: dx-dmer
+  name: D-MER (dysphoric milk ejection reflex)
+  flag: often-mislabelled
+  steps:
+    - Name it and validate it — recognition alone helps.
+    - Distinguish from postnatal depression / anxiety (pervasive, not time-locked) and from
+      intrusive thoughts.
+    - Most improves with time; refer for mood support if severe, persistent, or coexisting with
+      depression.
+  seeAlso:
+    - mim-dmer
+- id: dx-deeppain
+  name: Deep pain with a normal exam (persistent / functional)
+  flag: often-mislabelled
+  note: A diagnosis in its own right once mechanics, skin, vascular and infective causes are
+    excluded — not a place-holder for ‘unexplained thrush’.
+  steps:
+    - Re-verify latch and pump-flange size.
+    - Treat vasospasm empirically if any features fit.
+    - Consider mammary dysbiosis and central-sensitisation pain; screen mood; multidisciplinary
+      pain approach.
+    - Empirical antifungal or antibiotic is NOT recommended without corroborating signs — infant
+      oral thrush, satellite areolar rash, or a positive culture.
+  seeAlso:
+    - mim-thrush
+    - dx-raynaud

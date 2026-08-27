@@ -1,0 +1,13 @@
+- id: q1
+  ask: Is the infant's weight gain and milk output adequate for age?
+  short: Intake adequate?
+  assess: "A diagnostic split, not a safety check — the infant's clinical wellbeing (hydration,
+    jaundice, weight, whether top-ups are needed) is assessed and looked after separately, in
+    parallel with this. Plot weight on a growth chart: tracking its centile, roughly 25–35 g/day
+    at 0–3 months, back to birth weight by day 10–14. Output after day 4–5: at least 6 heavy wet
+    nappies and 3 yellow stools per 24 h (stool frequency falls after about 6 weeks — still
+    normal); around 8–12 feeds per 24 h with audible swallowing. ADEQUATE means the milk-making
+    and milk-moving machinery is working, so the problem is pain, a lump, refusal, or a supply
+    worry. INADEQUATE means milk is not getting in — the questions below work out why."
+  ifYes: b1
+  ifNo: a1

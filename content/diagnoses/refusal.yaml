@@ -1,0 +1,64 @@
+- id: dx-strike
+  name: Nursing strike
+  flag: often-mislabelled
+  note: Almost always time-limited and reversible.
+  steps:
+    - Treat the trigger — pain, thrush, congestion.
+    - Skin-to-skin; offer when sleepy, drowsy or in motion; dark quiet room; feed lying down.
+    - Express to protect supply and feed the milk; do not force the breast.
+    - Usually resolves within days.
+- id: dx-painrefuse
+  name: Pain-driven refusal (GORD / CMPA / thrush / otitis)
+  steps:
+    - Identify and treat the source of pain; examine ears and mouth.
+    - For suspected CMPA, a 2–4 week trial of maternal dairy (± soy) exclusion.
+    - Reserve acid suppression for confirmed pathological reflux.
+    - "Positioning: more upright, paced feeds."
+  seeAlso:
+    - mim-cmpa
+- id: dx-fastflow
+  name: Fast-flow refusal (overactive let-down / oversupply)
+  steps:
+    - Finish the first breast before switching; block feeding if marked.
+    - Laid-back or side-lying positioning; brief pre-latch expression.
+    - Stop rescue pumping. Most settles by ~12 weeks.
+  seeAlso:
+    - dx-oald
+    - mim-flow
+- id: dx-distract
+  name: Distractible feeder (developmental)
+  flag: likely-normal
+  steps:
+    - Feed in a calm, low-stimulation setting; feed at early cues and during naps.
+    - A nursing necklace or gentle counter-pressure can help.
+    - Reassure — it passes; supply is maintained by the efficient feeds.
+- id: dx-teat
+  name: Teat / flow preference
+  steps:
+    - Paced bottle-feeding with the slowest teat; reduce bottle and dummy use.
+    - Offer the breast at early hunger cues and when sleepy; skin-to-skin.
+    - An at-breast supplementer rewards latching with immediate flow.
+- id: dx-aversion
+  name: Oral aversion
+  steps:
+    - Gentle, non-pressured re-introduction; responsive feeding; never force.
+    - Feeding therapy (SLT / OT); treat any underlying pain.
+    - Positive oral experiences away from hunger; skin-to-skin.
+- id: dx-slowflow
+  name: Slow-flow / low-supply frustration
+  note: If weight gain is faltering, this belongs in the low-intake branch — confirm intake and
+    supply.
+  steps:
+    - Watch a full feed and check the growth chart.
+    - Support latch and transfer; an at-breast supplementer while building supply.
+    - Work the production questions if supply is the issue.
+  seeAlso:
+    - a7
+    - mim-flow
+- id: dx-refuse-unk
+  name: Breast refusal — cause not yet identified
+  steps:
+    - IBCLC review with a full feed observation.
+    - Protect the parent's supply with regular expression while investigating.
+    - Trial skin-to-skin, bath-feeding, and feeding in motion.
+    - Reassess in a few days — most declare a cause or resolve.

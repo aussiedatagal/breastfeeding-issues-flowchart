@@ -1,0 +1,64 @@
+- id: b3
+  ask: Is the infant fussing at, fighting, or refusing the breast?
+  short: Refusing the breast?
+  assess: Arching, crying, turning away, latching then pulling off, or refusing to latch — in an
+    infant whose weight is adequate.
+  ifYes: ref1
+  ifNo: b4
+- id: ref1
+  ask: Was the refusal SUDDEN, in an infant who had been feeding well?
+  short: Sudden onset?
+  assess: A discrete change from established, effective feeding — as opposed to feeding that was
+    never comfortable or effective.
+  ifYes: ref2
+  ifNo: ref3
+- id: ref2
+  ask: Is there an identifiable acute trigger?
+  short: Acute trigger?
+  assess: Nursing strikes almost always have a proximate cause. Examine ears, mouth and nose; ask
+    about recent changes at home and a recent choking or spraying episode at the breast.
+  ifYes: dx-strike
+  ifNo:
+    goto: ref3
+- id: ref3
+  ask: Signs of ongoing feed-associated pain (reflux, CMPA, thrush, otitis)?
+  short: Feed-associated pain?
+  assess: "Persistent (not sudden) refusal driven by discomfort: GORD or oesophagitis, cow's-milk
+    protein allergy (eczema, blood/mucus in stool, family atopy), oral thrush, or otitis media."
+  ifYes: dx-painrefuse
+  ifNo: ref4
+- id: ref4
+  ask: Does the infant fight the flow EARLY in the feed and settle later?
+  short: Fast flow?
+  assess: "Fast-flow refusal: the infant is overwhelmed by the ejection, clamps or pulls off as
+    milk sprays, and feeds better once the flow slows."
+  ifYes: dx-fastflow
+  ifNo: ref5
+- id: ref5
+  ask: ~3–4 months old, feeding well only when sleepy or in a calm room?
+  short: Distractible age?
+  assess: "Developmental distractibility peaks around 3–4 months: efficient feeds when drowsy,
+    frequent pulling off with the nipple still in the mouth, better feeding at night."
+  ifYes: dx-distract
+  ifNo: ref6
+- id: ref6
+  ask: Did refusal emerge after regular bottle use, with the infant preferring a fast teat flow?
+  short: Teat preference?
+  assess: "Flow preference: the infant roots and will take a bottle eagerly but fusses and pulls
+    at the breast, especially before let-down."
+  ifYes: dx-teat
+  ifNo: ref7
+- id: ref7
+  ask: An aversive oral history, with defensive behaviour at the breast?
+  short: Aversive history?
+  assess: "Oral aversion follows negative oral experiences: the infant is otherwise well and
+    growing on an alternative route but defends against anything approaching the mouth."
+  ifYes: dx-aversion
+  ifNo: ref8
+- id: ref8
+  ask: Does the infant fuss and escalate THROUGH the feed, calmer on a bottle?
+  short: Escalates through feed?
+  assess: The pattern of frustration at a slow or falling supply — as opposed to fighting a fast
+    flow at the start. If weight gain is also slipping, work the low-supply branch.
+  ifYes: dx-slowflow
+  ifNo: dx-refuse-unk
