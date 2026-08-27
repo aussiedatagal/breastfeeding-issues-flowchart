@@ -1,0 +1,109 @@
+.card {
+  padding: var(--space-4);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.card[data-prominent="true"] {
+  border-width: 1.5px;
+  border-color: var(--accent);
+  padding: var(--space-5);
+}
+.card[data-prominent="true"][data-tier="unlikely"],
+.card[data-tier="unlikely"] {
+  border-color: var(--hairline);
+}
+
+.card > * + * {
+  margin-top: var(--space-3);
+}
+
+.kicker {
+  font-size: var(--step--2);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.card[data-tier="best"] .kicker {
+  color: var(--accent);
+}
+.card[data-tier="unlikely"] .kicker {
+  color: var(--ink-faint);
+}
+
+.name {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.15;
+  text-wrap: pretty;
+  font-size: var(--step-1);
+}
+.card[data-prominent="true"] .name {
+  font-size: var(--step-3);
+  color: var(--accent);
+}
+.card[data-tier="unlikely"] .name {
+  color: var(--ink-muted);
+}
+
+.because,
+.missing,
+.against {
+  font-size: var(--step--1);
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+.against {
+  color: var(--ink);
+}
+.against strong,
+.because strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.detail {
+  margin-top: var(--space-4);
+}
+
+/* minimal — a set-aside diagnosis, one line */
+.minimal {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--hairline);
+}
+.minimal:last-child {
+  border-bottom: none;
+}
+.minimalName {
+  font-size: var(--step--1);
+  font-weight: 600;
+  color: var(--ink);
+}
+.minimal[data-flag="do-not-miss"] .minimalName {
+  color: var(--danger);
+}
+.minimalWhy {
+  font-weight: 400;
+  color: var(--ink-faint);
+}
+.minimalPin {
+  flex: none;
+  font-size: var(--step--2);
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.minimalPin:hover {
+  text-decoration: underline;
+}
+.minimalPinned {
+  flex: none;
+  font-size: var(--step--2);
+  color: var(--ink-faint);
+  white-space: nowrap;
+}

@@ -1,14 +1,15 @@
 /**
- * Integration checks against the real /content: the quiz must be able to reach
- * every diagnosis, and a walk must always terminate.
+ * Integration checks against the real /content: every diagnosis must be
+ * reachable as a symptom profile, and answering an area's whole question set
+ * one way or another must always surface a best match.
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { buildFromFiles } from "../content/load.ts";
 import { isDiagnosis } from "../graph/types.ts";
-import { reachableDiagnoses } from "./analysis.ts";
-import { walk } from "./session.ts";
+import { buildProfiles, areaQuestionOrder } from "./profiles.ts";
+import { rankMatches } from "./score.ts";
 
 const contentDir = resolve(__dirname, "../../content");
 function readContent(dir = contentDir): Record<string, string> {
@@ -30,35 +31,31 @@ describe("content", () => {
     expect(graph).toBeDefined();
   });
 
-  it("every non-reference diagnosis is reachable from some area", () => {
+  it("every non-reference diagnosis has at least one symptom profile", () => {
     if (!graph) throw new Error("no graph");
-    const reached = new Set<string>();
-    for (const area of graph.domains) {
-      for (const d of reachableDiagnoses(graph, area.entry)) reached.add(d.id);
-    }
-    const unreachable = [...graph.nodes.values()]
+    const profiled = new Set(buildProfiles(graph).map((p) => p.diagnosisId));
+    const missing = [...graph.nodes.values()]
       .filter((n) => isDiagnosis(n) && !n.reference)
-      .filter((n) => !reached.has(n.id))
+      .filter((n) => !profiled.has(n.id))
       .map((n) => n.id);
-    expect(unreachable).toEqual([]);
+    expect(missing).toEqual([]);
   });
 
-  it("a walk down any branch combination terminates at a diagnosis", () => {
+  it("answering an area produces a coherent ranking with a clear best match", () => {
     if (!graph) throw new Error("no graph");
+    const profiles = buildProfiles(graph);
+
     for (const area of graph.domains) {
-      // depth-first over every yes/no combination, capped
-      const stack: ("yes" | "no")[][] = [[]];
-      let visited = 0;
-      while (stack.length && visited < 5000) {
-        const answers = stack.pop()!;
-        visited += 1;
-        const route = walk(graph, area, answers);
-        if (route.current.kind === "question" && answers.length < 40) {
-          stack.push([...answers, "yes"], [...answers, "no"]);
-        } else {
-          expect(route.current.kind).toBe("diagnosis");
-        }
-      }
+      const questions = areaQuestionOrder(graph, profiles, area.id);
+      expect(questions.length).toBeGreaterThan(0);
+
+      // answer every question of the area "no", then check the ranking holds up
+      const answers = Object.fromEntries(questions.map((q) => [q.id, "no" as const]));
+      const ranked = rankMatches(graph, profiles, area.id, answers);
+      expect(ranked.length).toBeGreaterThan(0);
+      expect(ranked[0]!.score).toBeGreaterThanOrEqual(ranked[ranked.length - 1]!.score);
+      // the top match for an all-"no" walk should not itself be contradicted
+      expect(ranked[0]!.conflicting).toHaveLength(0);
     }
   });
 });

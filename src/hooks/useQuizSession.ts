@@ -1,22 +1,23 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import type { Graph } from "../graph/types.ts";
+import { buildProfiles } from "../quiz/profiles.ts";
 import type { Answer, SessionAction, SessionState } from "../quiz/session.ts";
 import { reduce, screenOf } from "../quiz/session.ts";
 import { decode, encode } from "../quiz/url.ts";
 
 /**
  * Binds the pure quiz session to React and to the URL hash. Returns the current
- * screen (already resolved against the graph) plus a flat set of actions the
- * screens call.
+ * screen (already resolved against the graph) plus a flat set of actions.
  */
 export function useQuizSession(graph: Graph) {
+  const profiles = useMemo(() => buildProfiles(graph), [graph]);
+
   const [state, dispatch] = useReducer(
     (s: SessionState, a: SessionState | SessionAction) => reduce(s, a),
     graph,
     (g) => decode(g, window.location.hash),
   );
 
-  // keep the hash in step with state, and react to back/forward navigation
   const lastHash = useRef(window.location.hash);
 
   useEffect(() => {
@@ -44,16 +45,17 @@ export function useQuizSession(graph: Graph) {
     };
   }, [graph]);
 
-  const screen = useMemo(() => screenOf(graph, state), [graph, state]);
+  const screen = useMemo(() => screenOf(graph, profiles, state), [graph, profiles, state]);
 
   const actions = useMemo(
     () => ({
       pickArea: (areaId: string) => dispatch({ type: "pickArea", areaId }),
-      answer: (answer: Answer) => dispatch({ type: "answer", answer }),
+      answer: (questionId: string, answer: Answer) =>
+        dispatch({ type: "answer", questionId, answer }),
+      unanswer: (questionId: string) => dispatch({ type: "unanswer", questionId }),
+      reveal: () => dispatch({ type: "reveal" }),
+      probe: () => dispatch({ type: "probe" }),
       back: () => dispatch({ type: "back" }),
-      goToStep: (index: number) => dispatch({ type: "goToStep", index }),
-      changeAnswer: (index: number, answer: Answer) =>
-        dispatch({ type: "changeAnswer", index, answer }),
       restart: () => dispatch({ type: "restart" }),
       openSummary: () => dispatch({ type: "openSummary" }),
       closeSummary: () => dispatch({ type: "closeSummary" }),

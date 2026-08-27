@@ -1,114 +1,123 @@
 import { describe, expect, it } from "vitest";
 import { buildFromFiles } from "../content/load.ts";
 import type { Graph } from "../graph/types.ts";
-import { emptySession, reduce, screenOf, walk } from "./session.ts";
+import { buildProfiles } from "./profiles.ts";
+import { rankMatches } from "./score.ts";
+import { nextQuestion } from "./flow.ts";
+import { emptySession, reduce, screenOf, type SessionState } from "./session.ts";
 
-/** A tiny two-question area: q1 → (yes) q2 → (yes) dB / (no) dC, (no) → dA. */
+/**
+ *   q1 ─yes→ q2 ─yes→ dA
+ *    │        └─no──→ dB
+ *    └─no──→ q3 ─yes→ dC
+ *             └─no──→ dD
+ */
 function miniGraph(): Graph {
   const { graph, errors } = buildFromFiles({
-    "map.yaml": "title: T\nrootPrompt: p\ndomains:\n  - { id: a, label: Area A, entry: q1 }\n",
+    "map.yaml": "title: T\nrootPrompt: p\ndomains:\n  - { id: a, label: A, entry: q1 }\n",
     "questions/q.yaml":
-      "- { id: q1, ask: Q1?, ifYes: q2, ifNo: dA }\n- { id: q2, ask: Q2?, ifYes: dB, ifNo: dC }\n",
+      "- { id: q1, ask: Q1?, ifYes: q2, ifNo: q3 }\n" +
+      "- { id: q2, ask: Q2?, ifYes: dA, ifNo: dB }\n" +
+      "- { id: q3, ask: Q3?, ifYes: dC, ifNo: dD }\n",
     "diagnoses/d.yaml":
-      "- { id: dA, name: Dx A }\n- { id: dB, name: Dx B }\n- { id: dC, name: Dx C }\n",
+      "- { id: dA, name: A }\n- { id: dB, name: B }\n- { id: dC, name: C }\n- { id: dD, name: D }\n",
   });
   if (!graph) throw new Error(errors.join("; "));
   return graph;
 }
 
 const graph = miniGraph();
-const areaA = graph.domains[0]!;
+const profiles = buildProfiles(graph);
 
-describe("walk", () => {
-  it("lands on the entry question with no answers", () => {
-    const route = walk(graph, areaA, []);
-    expect(route.current.id).toBe("q1");
-    expect(route.steps).toHaveLength(0);
-  });
+const after = (...actions: Parameters<typeof reduce>[1][]) =>
+  actions.reduce<SessionState>((s, a) => reduce(s, a), emptySession());
 
-  it("follows answers to a diagnosis and records the steps", () => {
-    const route = walk(graph, areaA, ["yes", "no"]);
-    expect(route.current.id).toBe("dC");
-    expect(route.steps.map((s) => [s.question.id, s.answer])).toEqual([
-      ["q1", "yes"],
-      ["q2", "no"],
+describe("buildProfiles", () => {
+  it("reads every root→leaf path as a symptom profile", () => {
+    const dA = profiles.find((p) => p.diagnosisId === "dA")!;
+    expect(dA.findings).toEqual([
+      { questionId: "q1", answer: "yes" },
+      { questionId: "q2", answer: "yes" },
     ]);
-  });
-
-  it("ignores answers given past a diagnosis", () => {
-    const route = walk(graph, areaA, ["no", "yes", "yes"]);
-    expect(route.current.id).toBe("dA");
-    expect(route.steps).toHaveLength(1);
+    expect(profiles.map((p) => p.diagnosisId).sort()).toEqual(["dA", "dB", "dC", "dD"]);
   });
 });
 
-describe("screenOf", () => {
-  it("is the start screen with no area", () => {
-    expect(screenOf(graph, emptySession()).name).toBe("start");
+describe("rankMatches — nothing is gated out", () => {
+  it("a contradicted diagnosis stays in the list, just scored down", () => {
+    const m = rankMatches(graph, profiles, "a", { q1: "yes" });
+    const ids = m.map((x) => x.diagnosis.id);
+    expect(ids).toContain("dC"); // q1=yes contradicts dC's profile, but it's still here
+    const dC = m.find((x) => x.diagnosis.id === "dC")!;
+    expect(dC.conflicting).toHaveLength(1);
+    expect(dC.tier).toBe("unlikely");
   });
 
-  it("is a question screen mid-walk", () => {
-    const s = reduce(reduce(emptySession(), { type: "pickArea", areaId: "a" }), {
-      type: "answer",
-      answer: "yes",
-    });
-    const screen = screenOf(graph, s);
-    expect(screen.name).toBe("question");
-    if (screen.name === "question") expect(screen.question.id).toBe("q2");
-  });
-
-  it("is a result screen at a diagnosis", () => {
-    let s = reduce(emptySession(), { type: "pickArea", areaId: "a" });
-    s = reduce(s, { type: "answer", answer: "no" });
-    const screen = screenOf(graph, s);
-    expect(screen.name).toBe("result");
-    if (screen.name === "result") expect(screen.diagnosis.id).toBe("dA");
-  });
-
-  it("is the summary screen when viewingSummary", () => {
-    expect(screenOf(graph, { ...emptySession(), viewingSummary: true }).name).toBe("summary");
+  it("ranks the profile that matches the answers first", () => {
+    const m = rankMatches(graph, profiles, "a", { q1: "yes", q2: "yes" });
+    expect(m[0]!.diagnosis.id).toBe("dA");
+    expect(m[0]!.tier).toBe("best");
+    expect(m.find((x) => x.diagnosis.id === "dB")!.conflicting).toHaveLength(1);
   });
 });
 
-describe("reduce", () => {
-  const start = reduce(emptySession(), { type: "pickArea", areaId: "a" });
-
-  it("back pops the last answer, then leaves the area", () => {
-    const answered = reduce(start, { type: "answer", answer: "yes" });
-    expect(reduce(answered, { type: "back" }).answers).toEqual([]);
-    expect(reduce(start, { type: "back" }).areaId).toBeNull();
+describe("nextQuestion — adaptive", () => {
+  it("asks a question a front-runner still needs", () => {
+    expect(nextQuestion(graph, profiles, "a", {}).question?.id).toBe("q1");
+    expect(nextQuestion(graph, profiles, "a", { q1: "yes" }).question?.id).toBe("q2");
   });
 
-  it("goToStep truncates answers to that fork", () => {
-    let s = start;
-    s = reduce(s, { type: "answer", answer: "yes" });
-    s = reduce(s, { type: "answer", answer: "no" });
-    expect(reduce(s, { type: "goToStep", index: 1 }).answers).toEqual(["yes"]);
+  it("stops once no front-runner needs another answer", () => {
+    const step = nextQuestion(graph, profiles, "a", { q1: "yes", q2: "yes" });
+    expect(step.question).toBeNull();
+  });
+});
+
+describe("screenOf + reduce", () => {
+  it("start → question → results", () => {
+    expect(screenOf(graph, profiles, emptySession()).name).toBe("start");
+
+    const picked = after({ type: "pickArea", areaId: "a" });
+    expect(screenOf(graph, profiles, picked).name).toBe("question");
+
+    const done = after(
+      { type: "pickArea", areaId: "a" },
+      { type: "answer", questionId: "q1", answer: "yes" },
+      { type: "answer", questionId: "q2", answer: "yes" },
+    );
+    const screen = screenOf(graph, profiles, done);
+    expect(screen.name).toBe("results");
+    if (screen.name === "results") expect(screen.matches[0]!.diagnosis.id).toBe("dA");
   });
 
-  it("changeAnswer rewinds to a fork and takes the other branch", () => {
-    let s = start;
-    s = reduce(s, { type: "answer", answer: "yes" });
-    s = reduce(s, { type: "answer", answer: "yes" });
-    const changed = reduce(s, { type: "changeAnswer", index: 0, answer: "no" });
-    expect(changed.answers).toEqual(["no"]);
-    expect(screenOf(graph, changed).name).toBe("result");
+  it("answering the same question again replaces it, order preserved", () => {
+    const s = after(
+      { type: "pickArea", areaId: "a" },
+      { type: "answer", questionId: "q1", answer: "yes" },
+      { type: "answer", questionId: "q1", answer: "no" },
+    );
+    expect(s.given).toEqual([{ questionId: "q1", answer: "no" }]);
+  });
+
+  it("reveal shows results before the questions run out", () => {
+    const s = after(
+      { type: "pickArea", areaId: "a" },
+      { type: "answer", questionId: "q1", answer: "yes" },
+      { type: "reveal" },
+    );
+    expect(screenOf(graph, profiles, s).name).toBe("results");
+    expect(screenOf(graph, profiles, reduce(s, { type: "back" })).name).toBe("question");
   });
 
   it("restart clears the walk but keeps findings", () => {
-    const withFinding = reduce(start, { type: "pinFinding", id: "dA" });
-    const restarted = reduce(reduce(withFinding, { type: "answer", answer: "no" }), {
-      type: "restart",
-    });
-    expect(restarted.areaId).toBeNull();
-    expect(restarted.answers).toEqual([]);
-    expect(restarted.findings).toEqual(["dA"]);
-  });
-
-  it("pinning is idempotent and unpinning removes", () => {
-    let s = reduce(emptySession(), { type: "pinFinding", id: "dA" });
-    s = reduce(s, { type: "pinFinding", id: "dA" });
+    const s = after(
+      { type: "pickArea", areaId: "a" },
+      { type: "pinFinding", id: "dA" },
+      { type: "answer", questionId: "q1", answer: "yes" },
+      { type: "restart" },
+    );
+    expect(s.areaId).toBeNull();
+    expect(s.given).toEqual([]);
     expect(s.findings).toEqual(["dA"]);
-    expect(reduce(s, { type: "unpinFinding", id: "dA" }).findings).toEqual([]);
   });
 });
