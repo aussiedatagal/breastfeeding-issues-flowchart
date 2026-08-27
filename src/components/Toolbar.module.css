@@ -4,6 +4,9 @@
   align-items: baseline;
   gap: 16px;
   padding: 12px 18px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  padding-left: max(18px, env(safe-area-inset-left));
+  padding-right: max(18px, env(safe-area-inset-right));
   background: var(--surface);
   border-bottom: 1px solid var(--hairline);
   z-index: 10;
@@ -84,15 +87,29 @@ button.action:hover {
   background: var(--surface-sunken);
 }
 
-@media (max-width: 720px) {
+@media (max-width: 720px), (max-height: 560px) {
   .bar {
-    padding: 10px 14px;
-    gap: 10px;
+    padding: 8px 12px;
+    padding-top: max(8px, env(safe-area-inset-top));
+    gap: 8px;
+    align-items: center;
   }
   .subtitle {
     display: none;
   }
   .title {
     font-size: var(--step-0);
+    letter-spacing: -0.015em;
+  }
+  button.action {
+    padding: 7px 10px;
+    font-size: var(--step--2);
+  }
+  .actions {
+    gap: 4px;
+  }
+  .menu button {
+    padding: 11px 12px;
+    font-size: var(--step--1);
   }
 }

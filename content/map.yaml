@@ -4,9 +4,9 @@ subtitle: Diagnoses the breastfeeding problem, not the infant's clinical care.
 # The dyad may be dealing with several of these at once — they are separate
 # problems, not one. The clinician opens every area that applies and works each.
 rootPrompt: >
-  What is the parent–infant dyad dealing with? Open every area that applies. These
-  are not mutually exclusive — a tongue restriction, oversupply, and cracked
-  nipples can all be in play at once, and one often causes another.
+  Open every area that applies — they are not mutually exclusive. A tongue
+  restriction, oversupply and cracked nipples can all be in play at once, and one
+  often causes another.
 
 domains:
   - id: supply

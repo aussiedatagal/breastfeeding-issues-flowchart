@@ -36,23 +36,12 @@ export function Toolbar({
 
   useEffect(() => {
     if (!menuOpen) return;
-    const onDoc = (e: MouseEvent) => {
+    const onDoc = (e: Event) => {
       if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
     };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
+    document.addEventListener("pointerdown", onDoc);
+    return () => document.removeEventListener("pointerdown", onDoc);
   }, [menuOpen]);
-
-  const primary = (
-    <>
-      <button type="button" className={styles.action} onClick={onRestart}>
-        Start over
-      </button>
-      <button type="button" className={styles.action} onClick={onExpandAll}>
-        Expand all
-      </button>
-    </>
-  );
 
   return (
     <header className={styles.bar}>
@@ -62,7 +51,21 @@ export function Toolbar({
       </div>
 
       <div className={styles.actions} ref={menuRef}>
-        {primary}
+        <button
+          type="button"
+          className={styles.action}
+          onClick={() => {
+            setMenuOpen(false);
+            onRestart();
+          }}
+        >
+          Start over
+        </button>
+        {!compact && (
+          <button type="button" className={styles.action} onClick={onExpandAll}>
+            Expand all
+          </button>
+        )}
         {compact ? (
           <>
             <button
@@ -76,6 +79,9 @@ export function Toolbar({
             </button>
             {menuOpen && (
               <div className={styles.menu} role="menu">
+                <button role="menuitem" onClick={() => run(onExpandAll, setMenuOpen)}>
+                  Show the whole map
+                </button>
                 <button role="menuitem" onClick={() => run(onFit, setMenuOpen)}>
                   Fit to screen
                 </button>

@@ -30,3 +30,16 @@
 .hint:hover {
   border-color: var(--accent);
 }
+
+@media (max-width: 720px), (max-height: 560px) {
+  .hint {
+    left: 12px;
+    right: 12px;
+    top: 10px;
+    bottom: auto;
+    max-width: none;
+    text-align: center;
+    font-size: var(--step--2);
+    padding: 7px 12px;
+  }
+}

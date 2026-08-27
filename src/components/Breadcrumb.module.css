@@ -7,8 +7,16 @@
   background: var(--surface-sunken);
   border-bottom: 1px solid var(--hairline);
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   white-space: nowrap;
   scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+/* the last chip should be able to scroll fully into view */
+.bar::after {
+  content: "";
+  flex: none;
+  width: 8px;
 }
 .lead {
   flex: none;
@@ -42,4 +50,19 @@
   border: 1px solid var(--accent);
   font-size: var(--step--1);
   font-weight: 600;
+}
+
+@media (max-width: 720px), (max-height: 560px) {
+  .bar {
+    gap: 5px;
+    padding: 5px 12px;
+  }
+  .lead {
+    display: none;
+  }
+  .crumb,
+  .terminal {
+    padding: 4px 9px;
+    font-size: var(--step--2);
+  }
 }

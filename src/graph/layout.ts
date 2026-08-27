@@ -170,14 +170,14 @@ export function computeLayout(graph: Graph, open: ReadonlySet<string>): Layout {
   };
 
   // Problem areas sit side by side; the root sits above them.
-  const rootLines = wrap(ROOT_LABEL, WRAP_CHARS);
+  const rootLines = wrap(ROOT_LABEL, 21);
   const root: Placement = {
     id: ROOT_ID,
     kind: "root",
     x: 0,
     y: 0,
     w: NODE_W,
-    h: Math.max(56, 24 + rootLines.length * LINE_H),
+    h: nodeHeight(rootLines) + 6,
     lines: rootLines,
     nodeId: "",
   };
