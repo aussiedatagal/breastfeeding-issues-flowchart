@@ -1,23 +1,36 @@
-import type { Answer, QuestionNode } from "../../graph/types.ts";
-import type { Route } from "../../quiz/session.ts";
+import type { Domain, Graph, QuestionNode } from "../../graph/types.ts";
+import type { Answer, Given } from "../../quiz/session.ts";
 import { Disclosure } from "../ui/Disclosure.tsx";
-import { AnswerTrail } from "../quiz/AnswerTrail.tsx";
+import { AnswerGrid } from "../quiz/AnswerGrid.tsx";
 import styles from "./QuestionScreen.module.css";
 
 interface Props {
-  route: Route;
+  graph: Graph;
+  area: Domain;
   question: QuestionNode;
-  onAnswer: (answer: Answer) => void;
-  onGoToStep: (index: number) => void;
+  answered: number;
+  minUseful: number;
+  given: Given[];
+  onAnswer: (questionId: string, answer: Answer) => void;
+  onReveal: () => void;
 }
 
-export function QuestionScreen({ route, question, onAnswer, onGoToStep }: Props) {
-  const step = route.steps.length + 1;
+export function QuestionScreen({
+  graph,
+  area,
+  question,
+  answered,
+  minUseful,
+  given,
+  onAnswer,
+  onReveal,
+}: Props) {
+  const canReveal = answered >= minUseful;
 
   return (
     <section className={styles.section}>
       <p className={styles.progress}>
-        {route.area.short ?? route.area.label} · question {step}
+        {area.short ?? area.label} · question {answered + 1}
       </p>
 
       <h1 className={styles.question}>{question.ask}</h1>
@@ -30,9 +43,9 @@ export function QuestionScreen({ route, question, onAnswer, onGoToStep }: Props)
         </div>
       )}
 
-      {route.steps.length > 0 && (
+      {given.length > 0 && (
         <div className={styles.trail}>
-          <AnswerTrail steps={route.steps} onGoToStep={onGoToStep} />
+          <AnswerGrid graph={graph} given={given} onChange={onAnswer} />
         </div>
       )}
 
@@ -43,7 +56,7 @@ export function QuestionScreen({ route, question, onAnswer, onGoToStep }: Props)
           type="button"
           className={styles.answer}
           data-answer="yes"
-          onClick={() => onAnswer("yes")}
+          onClick={() => onAnswer(question.id, "yes")}
         >
           Yes
         </button>
@@ -51,11 +64,16 @@ export function QuestionScreen({ route, question, onAnswer, onGoToStep }: Props)
           type="button"
           className={styles.answer}
           data-answer="no"
-          onClick={() => onAnswer("no")}
+          onClick={() => onAnswer(question.id, "no")}
         >
           No
         </button>
       </div>
+      {canReveal && (
+        <button type="button" className={styles.reveal} onClick={onReveal}>
+          See what fits so far ({answered} answered) →
+        </button>
+      )}
     </section>
   );
 }

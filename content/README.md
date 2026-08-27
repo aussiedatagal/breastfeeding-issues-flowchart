@@ -99,21 +99,24 @@ Add a block to a `diagnoses/*.yaml` file and point a question's branch at it.
   coexists: [nipple-trauma, vasospasm] # "also check" — things that travel with it
 ```
 
-### Multifactorial cases
+### How the tree is used — and multifactorial cases
 
-A single walk down the tree characterises one problem and skips whatever the
-other branch would have found. A parent often has more than one problem at once
-(e.g. a tongue restriction _and_ oversupply). This is handled by:
+You author each area as a Yes/No tree, but the app **doesn't walk it as a
+decision path**. Every route from the entry question to a diagnosis is treated
+as a list of findings that indicate that diagnosis. When the clinician answers
+questions, _every_ diagnosis in the area is scored against those answers — so a
+single "no" early on can't quietly remove a whole branch of possibilities. The
+result screen shows a ranked list plus everything "considered and set aside".
 
-- **`coexists:`** on a diagnosis lists factors that commonly occur alongside it.
-  They show on the result screen under "Often occurs alongside".
-- **`seeAlso:`** lists look-alikes, shown under "Distinguish from".
-- The result screen's **"What this path didn't check"** is generated
-  automatically — for each fork on the path it names what the other answer would
-  have investigated. You don't author this; keeping branches well-populated with
-  real diagnoses is what makes it useful.
-- The clinician pins each diagnosis to **Findings**, then "checks another area".
-  `multifactorialNote` in `map.yaml` frames the findings summary — edit it there.
+What this means for authoring:
+
+- Keep each route a genuine, complete symptom picture for its diagnosis. The
+  more real the findings on a path, the better it scores when they're present.
+- **`coexists:`** — factors that commonly occur _alongside_ this one. Shown on
+  the best-fit result under "Often occurs alongside".
+- **`seeAlso:`** — look-alikes to tell apart. Shown under "Distinguish from".
+- `multifactorialNote` in `map.yaml` is the standing reminder on the findings
+  summary — edit it there.
 
 ### Send more than one branch to the same outcome (a shared step)
 

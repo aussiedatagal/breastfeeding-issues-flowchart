@@ -27,7 +27,6 @@ domains:
     entry: ref1
 
 multifactorialNote: >
-  This is one contributing factor — check that it explains the whole picture. If
-  it does not, add it to Findings and open another area (or go back and work the
-  other branch of this one). The result should be a problem list, not a single
-  answer.
+  Treat each result as one contributing factor, not the whole answer. If it
+  doesn't explain everything, pin it, revise an answer or two, or work another
+  area — the aim is a problem list.

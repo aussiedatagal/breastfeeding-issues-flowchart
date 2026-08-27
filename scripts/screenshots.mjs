@@ -24,14 +24,21 @@ const VIEWPORTS = [
   { name: "desktop", width: 1280, height: 900, isMobile: false },
 ];
 
+const onResults = (page) =>
+  page
+    .getByText(/· what fits/i)
+    .count()
+    .then((n) => n > 0);
+
 /** Walk from the start screen to a result and shoot every screen on the way. */
 async function walkAndShoot(page, dir, shot) {
   await page.goto(dir.base, { waitUntil: "networkidle" });
   await page.waitForTimeout(400);
   await shot("01-start");
 
-  // open the first problem area
-  await page.locator("[data-area]").first().click();
+  // open the "nipple & breast pain" area (or fall back to the first)
+  const pain = page.locator('[data-area="pain"]');
+  await ((await pain.count()) ? pain : page.locator("[data-area]").first()).click();
   await page.waitForTimeout(300);
   await shot("02-question");
 
@@ -44,25 +51,34 @@ async function walkAndShoot(page, dir, shot) {
     await help.click();
   }
 
-  // answer "No" until the walk reaches a result
-  for (let i = 0; i < 15; i += 1) {
-    const no = page.getByRole("button", { name: /^No$/ }).first();
-    if ((await no.count()) === 0) break;
-    await no.click();
+  // answer the first question "yes", the rest "no" until results are ready
+  const yes = page.getByRole("button", { name: /^Yes$/ }).first();
+  if (await yes.count()) {
+    await yes.click();
     await page.waitForTimeout(220);
   }
-  await page.waitForTimeout(200);
-  await shot("04-result", { fullPage: true });
-
-  // expand "what this path didn't check"
-  const notChecked = page.getByRole("button", { name: /didn't check/i }).first();
-  if (await notChecked.count()) {
-    await notChecked.click();
+  for (let i = 0; i < 20 && !(await onResults(page)); i += 1) {
+    const reveal = page.getByRole("button", { name: /see what fits so far/i }).first();
+    const no = page.getByRole("button", { name: /^No$/ }).first();
+    if (i === 3 && (await reveal.count())) {
+      await shot("04-question-can-see-results");
+    }
+    if ((await no.count()) === 0) break;
+    await no.click();
     await page.waitForTimeout(200);
-    await shot("05-result-what-not-checked", { fullPage: true });
+  }
+  await page.waitForTimeout(200);
+  await shot("05-results", { fullPage: true });
+
+  // expand "considered and set aside"
+  const setAside = page.getByRole("button", { name: /considered and set aside/i }).first();
+  if (await setAside.count()) {
+    await setAside.click();
+    await page.waitForTimeout(200);
+    await shot("06-results-set-aside", { fullPage: true });
   }
 
-  // pin the finding, start another area, then open the findings summary
+  // pin the top match, start another area, open the findings summary
   const pin = page.getByRole("button", { name: /add to my findings/i }).first();
   if (await pin.count()) await pin.click();
   await page.waitForTimeout(150);
@@ -71,14 +87,14 @@ async function walkAndShoot(page, dir, shot) {
   if (await another.count()) {
     await another.click();
     await page.waitForTimeout(300);
-    await shot("06-start-with-a-finding");
+    await shot("07-start-with-a-finding");
   }
 
   const findings = page.getByRole("button", { name: /^Findings/ }).first();
   if (await findings.count()) {
     await findings.click();
     await page.waitForTimeout(300);
-    await shot("07-findings-summary", { fullPage: true });
+    await shot("08-findings-summary", { fullPage: true });
   }
 }
 

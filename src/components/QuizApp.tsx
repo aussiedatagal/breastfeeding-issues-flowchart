@@ -5,7 +5,7 @@ import { useTheme } from "../hooks/useTheme.ts";
 import { TopBar } from "./ui/TopBar.tsx";
 import { StartScreen } from "./screens/StartScreen.tsx";
 import { QuestionScreen } from "./screens/QuestionScreen.tsx";
-import { ResultScreen } from "./screens/ResultScreen.tsx";
+import { ResultsScreen } from "./screens/ResultsScreen.tsx";
 import { SummaryScreen } from "./screens/SummaryScreen.tsx";
 import styles from "./QuizApp.module.css";
 
@@ -13,29 +13,24 @@ export function QuizApp({ graph }: { graph: Graph }) {
   const { screen, findings, pinned, actions } = useQuizSession(graph);
   const theme = useTheme();
 
-  // scroll to the top of the column whenever the screen changes
+  // scroll to the top of the column whenever the screen meaningfully changes
   const mainRef = useRef<HTMLElement>(null);
   const signature =
     screen.name === "question"
-      ? `q:${screen.question.id}:${screen.route.steps.length}`
-      : screen.name === "result"
-        ? `r:${screen.diagnosis.id}`
+      ? `q:${screen.question.id}`
+      : screen.name === "results"
+        ? `r:${screen.area.id}`
         : screen.name;
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0 });
     window.scrollTo({ top: 0 });
   }, [signature]);
 
-  const onBack =
-    screen.name === "start"
-      ? undefined
-      : screen.name === "summary"
-        ? actions.closeSummary
-        : actions.back;
+  const onBack = screen.name === "start" ? undefined : actions.back;
 
   const eyebrow =
-    screen.name === "question" || screen.name === "result"
-      ? (screen.route.area.short ?? screen.route.area.label)
+    screen.name === "question" || screen.name === "results"
+      ? (screen.area.short ?? screen.area.label)
       : screen.name === "summary"
         ? "Findings"
         : undefined;
@@ -64,25 +59,31 @@ export function QuizApp({ graph }: { graph: Graph }) {
 
           {screen.name === "question" && (
             <QuestionScreen
-              route={screen.route}
+              graph={graph}
+              area={screen.area}
               question={screen.question}
+              answered={screen.answered}
+              minUseful={screen.minUseful}
+              given={screen.given}
               onAnswer={actions.answer}
-              onGoToStep={actions.goToStep}
+              onReveal={actions.reveal}
             />
           )}
 
-          {screen.name === "result" && (
-            <ResultScreen
+          {screen.name === "results" && (
+            <ResultsScreen
               graph={graph}
-              route={screen.route}
-              diagnosis={screen.diagnosis}
-              pinned={pinned(screen.diagnosis.id)}
+              area={screen.area}
+              matches={screen.matches}
+              given={screen.given}
+              exhausted={screen.exhausted}
+              pinned={pinned}
               multifactorialNote={graph.multifactorialNote}
-              onPin={() => actions.pinFinding(screen.diagnosis.id)}
-              onUnpin={() => actions.unpinFinding(screen.diagnosis.id)}
-              onGoToStep={actions.goToStep}
+              onAnswer={actions.answer}
+              onPin={actions.pinFinding}
+              onUnpin={actions.unpinFinding}
+              onAnswerMore={actions.probe}
               onCheckAnother={actions.restart}
-              onOpenSummary={actions.openSummary}
             />
           )}
 

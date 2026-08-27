@@ -71,6 +71,20 @@
   color: var(--accent);
 }
 
+.reveal {
+  position: sticky;
+  bottom: 0;
+  width: 100%;
+  padding: 0 0 calc(var(--space-4) + env(safe-area-inset-bottom));
+  font-size: var(--step--1);
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--bg);
+}
+.reveal:hover {
+  text-decoration: underline;
+}
+
 @media (min-width: 40rem) {
   .section {
     min-height: 0;
@@ -83,5 +97,11 @@
     margin-top: var(--space-6);
     padding: 0;
     background: none;
+  }
+  .reveal {
+    position: static;
+    margin-top: var(--space-3);
+    padding: 0;
+    text-align: center;
   }
 }

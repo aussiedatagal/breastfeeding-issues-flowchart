@@ -2,11 +2,14 @@
  * The session, encoded in the URL hash so a particular assessment (or its
  * findings list) can be linked or bookmarked:
  *
- *   #area=pain&a=yes,no,no&f=dx-vasospasm,dx-oversupply&view=summary
+ *   #area=pain&a=pain1:no,pain2:yes&show=1&f=dx-vasospasm&view=summary
+ *
+ * Answers are stored as `questionId:answer` so a content edit can't silently
+ * shift what an old link means.
  */
 import type { Answer, Graph } from "../graph/types.ts";
-import { isDiagnosis } from "../graph/types.ts";
-import type { SessionState } from "./session.ts";
+import { isDiagnosis, isQuestion } from "../graph/types.ts";
+import type { Given, SessionState } from "./session.ts";
 import { emptySession } from "./session.ts";
 
 const isAnswer = (v: string): v is Answer => v === "yes" || v === "no";
@@ -14,9 +17,11 @@ const isAnswer = (v: string): v is Answer => v === "yes" || v === "no";
 export function encode(state: SessionState): string {
   const parts: string[] = [];
   if (state.areaId) parts.push(`area=${state.areaId}`);
-  if (state.answers.length) parts.push(`a=${state.answers.join(",")}`);
+  if (state.given.length)
+    parts.push(`a=${state.given.map((g) => `${g.questionId}:${g.answer}`).join(",")}`);
+  if (state.revealed) parts.push("show=1");
   if (state.findings.length) parts.push(`f=${state.findings.join(",")}`);
-  if (state.viewingSummary) parts.push(`view=summary`);
+  if (state.viewingSummary) parts.push("view=summary");
   return parts.length ? `#${parts.join("&")}` : "";
 }
 
@@ -32,7 +37,16 @@ export function decode(graph: Graph, hash: string): SessionState {
   const areaId = params.get("area");
   if (areaId && graph.domains.some((d) => d.id === areaId)) {
     state.areaId = areaId;
-    state.answers = (params.get("a") ?? "").split(",").filter(isAnswer).slice(0, 60);
+    const given: Given[] = [];
+    for (const pair of (params.get("a") ?? "").split(",")) {
+      const [qid, ans] = pair.split(":");
+      const node = qid ? graph.nodes.get(qid) : undefined;
+      if (qid && node && isQuestion(node) && ans && isAnswer(ans)) {
+        given.push({ questionId: qid, answer: ans });
+      }
+    }
+    state.given = given.slice(0, 40);
+    state.revealed = params.get("show") === "1";
   }
 
   state.findings = (params.get("f") ?? "")

@@ -4,16 +4,17 @@
 
 A React + TypeScript single-page app (Vite, deployed to GitHub Pages) — a
 **guided quiz** for working up breastfeeding difficulty. The clinician picks a
-problem area, answers one Yes/No question at a time, and lands on a working
-diagnosis with what points to it, first steps, look-alikes, and — importantly —
-what the path _didn't_ check. Audience: clinicians (IBCLCs, GPs, midwives, NPs,
-RNs), often chairside with a parent. Educational, not a substitute for
-hands-on assessment.
+problem area, answers Yes/No questions, and gets a **ranked list of what fits**:
+best fit, other possibilities, and everything considered and set aside (with the
+answer that argues against each). No answer removes a diagnosis from
+consideration — it only changes the score. Audience: clinicians (IBCLCs, GPs,
+midwives, NPs, RNs), often chairside with a parent. Educational, not a
+substitute for hands-on assessment.
 
 The clinical content is the durable asset. The UI has been rebuilt more than
-once; the decision graph in `content/` and the pure model in `src/graph/` are
-what carry over. Predecessors are in `legacy/` (research/reference only, not
-build artifacts).
+once; the decision tree in `content/` and the model in `src/graph/` are what
+carry over. Predecessors are in `legacy/` (research/reference only, not build
+artifacts).
 
 ## Layout
 
@@ -24,17 +25,19 @@ src/content/        zod schema + loader (YAML → validated Graph)
 src/graph/          framework-free graph model, unit-tested:
                       build.ts   flat YAML nodes → validated Graph (cycle checks, reachability)
                       types.ts   Graph / QuestionNode / DiagnosisNode + guards
-src/quiz/           framework-free quiz logic, unit-tested:
-                      session.ts   walk() + screenOf() + the reducer (pure state machine)
-                      analysis.ts  reachableDiagnoses(), untakenBranches() — the "what wasn't checked" analysis
+src/quiz/           framework-free quiz engine, unit-tested:
+                      profiles.ts  root→leaf paths → symptom profiles + question priority
+                      score.ts     rankMatches() — score every diagnosis vs the answers
+                      flow.ts      nextQuestion() — adaptive questioning
+                      session.ts   screenOf() + the reducer (pure state machine)
                       url.ts       session <-> URL hash
-src/hooks/          useQuizSession (session + hash), useTheme
+src/hooks/          useQuizSession (session + profiles + hash), useTheme
 src/components/     React, no UI framework. Plain CSS Modules + tokens.
-                      QuizApp.tsx            orchestrator: TopBar + the current screen
-                      screens/               StartScreen · QuestionScreen · ResultScreen · SummaryScreen
-                      quiz/                  AnswerTrail · DetailList · RelatedList · OtherPossibilities
-                      ui/                    Button · Disclosure · Badge · Chip · TopBar
-scripts/            validate-content.mjs (used by `npm run build` and CI)
+                      QuizApp.tsx   orchestrator: TopBar + the current screen
+                      screens/      StartScreen · QuestionScreen · ResultsScreen · SummaryScreen
+                      quiz/         MatchCard · AnswerGrid · DetailList · RelatedList
+                      ui/           Button · Disclosure · Badge · TopBar
+scripts/            validate-content.mjs (build + CI), screenshots.mjs (npm run screenshots)
 .github/workflows/  deploy.yml (push to main → Pages), ci.yml (PRs)
 ```
 
@@ -45,58 +48,76 @@ Import style: relative imports carry the `.ts` / `.tsx` extension
 ## The decision model
 
 - `map.yaml` lists **problem areas** (`domains`), each with an `entry` question.
-  They are independent — the clinician works one at a time and can come back for
-  another. Findings from all of them build one problem list.
-- Within an area, `content/` is a flat set of questions and diagnoses.
-  A question's `ifYes` / `ifNo` name the next node's `id` (or `{ goto: id }` for
-  an explicit convergence — several routes reaching one diagnosis).
-- `build.ts` validates: every branch resolves, no real branch loops back onto an
-  ancestor, everything is reachable. It also assigns `depth`/`parents` (unused by
-  the quiz, kept for tooling).
+  They are independent — the clinician works one at a time, pins the result, and
+  comes back for another. Findings from all areas build one problem list.
+- Within an area, `content/` is authored as a Yes/No **tree** (`ifYes` / `ifNo`,
+  or `{ goto: id }` for a convergence). Educators think in trees; it is the
+  natural way to write "if this finding, look towards these diagnoses".
+- **The app does not walk the tree as a strict decision path.** That is what
+  lets one early answer gate whole families of diagnoses out. Instead every
+  root→leaf path is read as a _symptom profile_ — see below.
+- `build.ts` validates: every branch resolves, no real branch loops onto an
+  ancestor, everything is reachable. `depth`/`parents` are assigned for tooling.
 - `reference: true` diagnoses (`diagnoses/reference.yaml`) are look-alike /
-  concept notes — never on a Yes/No path, surfaced only through `seeAlso`.
+  concept notes — never a profile, surfaced only through `seeAlso` / `coexists`.
 
-## The quiz (`src/quiz/`)
+## The quiz engine (`src/quiz/`) — scoring, not walking
 
-- **`walk(graph, area, answers)`** follows the graph from an area's entry,
-  applying answers one by one. Stops at a diagnosis, a dead end, or a revisited
-  node (loop guard). Returns `{ area, steps, current }`.
-- **`screenOf(graph, state)`** resolves the current `SessionState` to one of
-  `start | question | result | summary`.
-- **`reduce`** is the only place state changes: `pickArea`, `answer`, `back`,
-  `goToStep` (jump back to a fork), `changeAnswer`, `restart` (new pass, keeps
-  findings), `pin/unpinFinding`, `open/closeSummary`.
-- All pure. `useQuizSession` binds it to React + syncs the URL hash
-  (`#area=pain&a=yes,no&f=dx-a,dx-b`).
+- **`profiles.ts` — `buildProfiles(graph)`**: every root→leaf path in every area
+  becomes a `Profile { diagnosisId, areaId, findings: {questionId, answer}[] }`.
+  A diagnosis reached by several paths gets several profiles.
+- **`score.ts` — `rankMatches(graph, profiles, areaId, answers)`**: scores every
+  diagnosis in the area against the answers so far. Each profile finding is
+  `matched` (answer agrees), `conflicting` (answer disagrees), or `missing` (not
+  answered). `score = matched − 3·conflicting − 0.15·missing`, best profile per
+  diagnosis wins. **Nothing is removed** — a contradicted diagnosis just scores
+  low and shows under "considered and set aside" with the answer that argues
+  against it.
+- **`flow.ts` — `nextQuestion(...)`**: adaptive. Asks the highest-priority
+  question a still-plausible diagnosis is `missing`; stops (`confident`) once a
+  clear leader emerges; `probeQuestion` offers any remaining question for
+  "answer another question" from the results screen.
+- **`session.ts`**: `SessionState { areaId, given: {questionId,answer}[], revealed,
+probe, findings, viewingSummary }`. `screenOf` → `start | question | results |
+summary`. `reduce` handles `pickArea`, `answer` (upsert — order doesn't matter),
+  `unanswer`, `reveal` ("see what fits so far"), `probe` ("answer another"),
+  `back`, `restart`, `pin/unpinFinding`, `open/closeSummary`.
+- All pure. `useQuizSession` binds it to React + the URL hash
+  (`#area=pain&a=pain1:yes,pain2:no&show=1&f=dx-a`).
 
 ## Not cutting off other explanations (do not regress without asking)
 
-A single Yes/No walk characterises one problem and skips whatever the other
-branch would have found. Four things keep that visible:
+The whole point of the scoring model above: an answer lowers a diagnosis's
+score, it never deletes it. On top of that:
 
-1. **`OtherPossibilities`** on the result screen — for every fork on the path,
-   `untakenBranches()` names the diagnoses the un-taken answer would have
-   investigated, with a one-tap "revisit that question".
-2. **`AnswerTrail`** — the path is always shown and every answer is tappable to
-   go back and re-answer it.
-3. **`coexists: [ids]`** on a diagnosis → "Often occurs alongside" (common
-   companions). Distinct from **`seeAlso`** → "Distinguish from" (mimics).
-   Both render as peek-able disclosures.
-4. **Findings** — pin a result, "check another area", build a problem list.
-   `multifactorialNote` in `map.yaml` frames the summary. Findings persist
-   across `restart` and live in the URL hash.
+1. **Results screen** shows the ranked list — best fit, other possibilities, and
+   a collapsed **"Considered and set aside (N)"** listing every contradicted
+   diagnosis with the answer that argued against it, each still pinnable ("add
+   anyway").
+2. **"Answer more"** keeps offering questions (any remaining in the area, not
+   just the leader's) so a _second_ problem in the same area can surface.
+3. **The answer grid** on the results screen — every answer is a Yes/No toggle,
+   re-scored live, no "rewind".
+4. **`coexists`** → "Often occurs alongside"; **`seeAlso`** → "Distinguish from"
+   (mimics). Both are peek-able disclosures on the best-fit card.
+5. **Findings** — pin any match, "check another area", build a problem list.
+   `multifactorialNote` in `map.yaml` frames the summary.
+
+Known limitation: profiles are only as rich as the tree. A pathognomonic first
+question (e.g. "pain ONLY in the first 30s of latch") still narrows hard,
+because no other diagnosis's tree path includes that answer. Fixing that means
+enriching diagnoses with `supports` / `against` findings beyond the tree — a
+content change, deferred.
 
 ## Interaction
 
-- One screen, one job. The panel/flowchart/pan-zoom of earlier versions is
-  gone — nothing auto-opens, nothing needs to be dragged.
-- Mobile-first: full-bleed column, sticky Yes/No at the thumb line. Desktop
-  (`min-width: 40rem`) puts the same column in a contained card; the answer
-  buttons flow in place.
-- Opt-in detail everywhere: "How do I check this?" and the look-alikes are
-  collapsed `Disclosure`s.
-- `do-not-miss` diagnoses get a red badge and a red note callout — but still
-  nothing pops up on its own.
+- One screen, one job. Nothing auto-opens, nothing is dragged. No flowchart.
+- Mobile-first: full-bleed column, sticky Yes/No at the thumb line, a "see what
+  fits so far" shortcut once a few questions are answered. Desktop
+  (`min-width: 40rem`) puts the same column in a contained card; buttons flow.
+- Opt-in detail everywhere — "How do I check this?", per-match detail, and the
+  look-alikes are collapsed `Disclosure`s.
+- `do-not-miss` diagnoses get a red badge / note — but still nothing pops up.
 
 ## Scope boundary (user-set)
 
@@ -110,11 +131,12 @@ endpoints, flagged `do-not-miss`.
 
 `npm test` runs vitest:
 
-- `src/quiz/session.test.ts`, `analysis.test.ts` — pure logic on a tiny fixture graph.
-- `src/quiz/content.test.ts` — against real `/content`: every diagnosis
-  reachable, every walk terminates.
+- `src/quiz/session.test.ts` — profiles, scoring (incl. "contradicted stays in
+  the list"), the adaptive flow, and the reducer, on a tiny fixture graph.
+- `src/quiz/content.test.ts` — against real `/content`: every diagnosis has a
+  profile; answering an area produces a coherent, uncontradicted top match.
 - `src/components/QuizApp.test.tsx` — happy-dom render + full interaction
-  (pick area → answer → result → pin → summary; two-area findings list).
+  (pick area → answer → results → pin → summary; two-area findings list).
 
 `npm run screenshots` (`scripts/screenshots.mjs`, Playwright + your installed
 Chrome) serves the build and walks the whole quiz at phone / small-phone /
