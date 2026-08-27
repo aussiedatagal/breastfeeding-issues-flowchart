@@ -1,0 +1,44 @@
+.legend {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  width: 260px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 14px 16px;
+  font-size: var(--step--1);
+  line-height: 1.5;
+  z-index: 15;
+}
+.title {
+  margin: 0 0 8px;
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0;
+}
+.row span:first-child {
+  flex: none;
+}
+.swatch {
+  width: 22px;
+  height: 15px;
+  border-radius: 3px;
+  border: 1.5px solid var(--hairline-strong);
+  flex: none;
+}
+.hint {
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--hairline);
+  color: var(--ink-muted);
+}

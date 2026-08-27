@@ -1,0 +1,83 @@
+- id: b1
+  ask: Is the main problem PARENTAL nipple or breast pain?
+  short: Parental pain?
+  assess: Take the predominant complaint. If there is more than one problem (for example pain and
+    a lump), work the tree once for each.
+  ifYes: pain1
+  ifNo: b2
+- id: pain1
+  ask: Does the pain occur ONLY in the first ~30 seconds of latch, then ease as milk flows?
+  short: Pain at latch only?
+  assess: "Classic mechanical pattern: a sharp pinch as the infant draws the nipple in, gone once
+    milk is flowing, with the nipple rounded (not creased or blanched) on release."
+  ifYes: dx-latchpain
+  ifNo: pain2
+- id: pain2
+  ask: Is there a focal wedge or area of redness with firmness and warmth (± fever)?
+  short: Red firm wedge?
+  assess: A segment of the breast that is red, indurated, hot and tender — as opposed to pain
+    confined to the nipple or felt deep and diffuse. This is the mastitis spectrum.
+  ifYes:
+    goto: inf3
+  ifNo: pain3
+- id: pain3
+  ask: Is there a VISIBLE skin change on the nipple or areola?
+  short: Skin change?
+  assess: "Inspect in good light: erythema, scale, a rash, a discrete wound, vesicles or crusting,
+    a white spot at the tip, or a colour change. ‘No’ means the nipple and areola look
+    essentially normal."
+  ifYes: pain4
+  ifNo: pain8
+- id: pain4
+  ask: Grouped vesicles, punched-out ulcers, or honey-coloured crusting?
+  short: Vesicles / crusting?
+  assess: Grouped vesicles or shallow ‘punched-out’ ulcers with prodromal tingling suggest HSV.
+    Golden-crusted erosions suggest bullous impetigo.
+  ifYes: dx-hsv
+  ifNo: pain5
+- id: pain5
+  ask: Is there a discrete wound — a crack, fissure, abrasion, bruise, or scab?
+  short: Nipple wound?
+  assess: A localised break in the skin, with pain that maps to the wound. Distinguish from a
+    diffuse rash or dermatitis.
+  ifYes: pain6
+  ifNo: pain7
+- id: pain6
+  ask: Is the wound failing to heal after 48–72 h, spreading redness, or purulent / honey-crusted?
+  short: Wound infected?
+  assess: Signs of bacterial superinfection of a nipple fissure — usually Staphylococcus aureus,
+    sometimes MRSA.
+  ifYes: dx-trauma-inf
+  ifNo: dx-trauma
+- id: pain7
+  ask: A well-demarcated, scaly, itchy rash (dermatitis pattern)?
+  short: Rash / dermatitis?
+  assess: Look for a sharply marginated, scaly, itchy or burning area of the areola or nipple.
+    Contact dermatitis flares with lanolin, fragrances, topical antibiotics, breast pads or
+    detergents; atopic and psoriatic forms have clues elsewhere on the skin.
+  ifYes: dx-derm
+  ifNo: dx-paget
+- id: pain8
+  ask: A white or yellow spot at one point on the nipple, with a tender cord behind it?
+  short: Bleb?
+  assess: "A milk bleb (blister): a pinpoint blocked nipple pore, often recurrent at the same
+    spot, with a tender duct proximally, usually on a background of oversupply."
+  ifYes: dx-bleb
+  ifNo: pain9
+- id: pain9
+  ask: Does the nipple blanch and change colour, triggered by cold?
+  short: Colour change?
+  assess: "Nipple vasospasm / Raynaud's: a biphasic or triphasic colour change, a clear cold
+    trigger, pain between feeds (not just during), and relief with heat. Ask about Raynaud's
+    elsewhere and precipitating drugs (beta-blockers, fluconazole, the combined pill)."
+  ifYes: dx-raynaud
+  ifNo: pain10
+- id: pain10
+  ask: A brief wave of dysphoria at let-down, clearing within ~90 seconds?
+  short: Dysphoria at let-down?
+  assess: "D-MER (dysphoric milk ejection reflex): an abrupt, time-locked wave of dread,
+    hollowness or sadness immediately before each ejection (including on the pump), resolving
+    within 30–90 seconds. The parent is well between feeds. It is a dopamine-drop phenomenon,
+    not a mood disorder — though the two can coexist."
+  ifYes: dx-dmer
+  ifNo: dx-deeppain

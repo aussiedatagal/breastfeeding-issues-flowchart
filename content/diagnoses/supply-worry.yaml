@@ -1,0 +1,29 @@
+- id: dx-perc-over
+  name: Perceived low supply due to oversupply
+  flag: often-mislabelled
+  steps:
+    - Show the growth chart; explain the physiology.
+    - Manage as oversupply — finish the first breast, block feeding, stop rescue pumping.
+    - Do NOT add pumping or galactagogues.
+    - Reassure — most settles by ~12 weeks.
+  seeAlso:
+    - dx-oald
+- id: dx-perceived
+  name: Perceived insufficient milk supply (normal)
+  flag: likely-normal
+  note: A positive diagnosis made on normal growth and output — not a label of exclusion.
+  steps:
+    - Reassure with the objective data; show the growth chart.
+    - Teach normal infant behaviour, hunger cues, cluster feeding, and the weeks 6–12 regulation
+      changes (softer breasts, shorter feeds, less leaking are all normal).
+    - A low pump yield is a poor proxy for supply — say so.
+    - Offer a review to confirm the trajectory rather than leaving the worry open.
+  seeAlso:
+    - dx-perc-over
+- id: dx-clarify
+  name: Clarify the concern — re-take the history
+  steps:
+    - Re-take a focused history and observe a full feed.
+    - Screen again for pain, a lump, refusal, low mood, and social stressors.
+    - Confirm the growth and output data with the parent.
+    - Book a review rather than discharging an unexplained concern.

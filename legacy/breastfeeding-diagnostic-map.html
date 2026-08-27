@@ -1,0 +1,1724 @@
+<title>Breastfeeding Decision Tree</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --bg: #F3F0EA; --canvas: #F6F3ED; --surface: #FCFAF5; --surface-2: #ECE6DB;
+    --ink: #221E19; --ink-soft: #6A6357; --ink-faint: #9A9184;
+    --rule: #D6CEC0; --link: #B9AF9D;
+    --accent: #0E6E77; --accent-2: #12525A; --accent-soft: #DBE9E9;
+    --red: #A83A2A; --red-soft: #F1DCD6;
+    --green: #3A7550; --green-soft: #DBE8DC;
+    --amber: #97671E; --amber-soft: #F0E3CB;
+    --panel-shadow: rgba(30, 26, 20, 0.22);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14120E; --canvas: #17150F; --surface: #201C16; --surface-2: #2B261F;
+      --ink: #ECE5D8; --ink-soft: #A79E8D; --ink-faint: #6F6656;
+      --rule: #37322A; --link: #4A4436;
+      --accent: #5BB8C0; --accent-2: #8CD3D9; --accent-soft: #123B40;
+      --red: #E58474; --red-soft: #3B211B;
+      --green: #74B58A; --green-soft: #1E3225;
+      --amber: #D8A055; --amber-soft: #3A2E19;
+      --panel-shadow: rgba(0, 0, 0, 0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14120E; --canvas: #17150F; --surface: #201C16; --surface-2: #2B261F;
+    --ink: #ECE5D8; --ink-soft: #A79E8D; --ink-faint: #6F6656;
+    --rule: #37322A; --link: #4A4436;
+    --accent: #5BB8C0; --accent-2: #8CD3D9; --accent-soft: #123B40;
+    --red: #E58474; --red-soft: #3B211B;
+    --green: #74B58A; --green-soft: #1E3225;
+    --amber: #D8A055; --amber-soft: #3A2E19;
+    --panel-shadow: rgba(0, 0, 0, 0.5);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased; overflow: hidden;
+  }
+  .app { position: fixed; inset: 0; display: flex; flex-direction: column; }
+
+  header.bar {
+    flex: none; display: flex; align-items: center; gap: 14px;
+    padding: 9px 15px; background: var(--surface);
+    border-bottom: 1px solid var(--rule); z-index: 5;
+  }
+  .bar h1 {
+    font-family: "Spectral", Georgia, serif; font-size: 1.02rem; font-weight: 600;
+    margin: 0; letter-spacing: -0.01em; white-space: nowrap;
+  }
+  .bar .sub {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.66rem;
+    color: var(--ink-faint); white-space: nowrap;
+  }
+  .bar .spacer { flex: 1; }
+  .bar .tools { display: flex; gap: 6px; flex-wrap: wrap; }
+  button {
+    font-family: "IBM Plex Sans", sans-serif; font-size: 0.78rem; color: var(--ink);
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 7px;
+    padding: 6px 11px; cursor: pointer; white-space: nowrap;
+    transition: border-color .15s, background .15s, color .15s;
+  }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button.ghost { border-color: transparent; }
+
+  .crumbs {
+    flex: none; display: flex; align-items: center; gap: 6px;
+    padding: 8px 14px; background: var(--surface-2);
+    border-bottom: 1px solid var(--rule); overflow-x: auto; white-space: nowrap;
+    font-size: 0.75rem;
+  }
+  .crumbs.empty { display: none; }
+  .crumbs .lead {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.64rem;
+    text-transform: uppercase; letter-spacing: 0.09em; color: var(--ink-faint);
+    flex: none;
+  }
+  .crumb {
+    flex: none; border: 1px solid var(--rule); background: var(--surface);
+    border-radius: 999px; padding: 4px 10px; cursor: pointer; color: var(--ink);
+  }
+  .crumb:hover { border-color: var(--accent); }
+  .crumb b { color: var(--accent); font-weight: 600; }
+  .crumb.dx { border-color: var(--accent); background: var(--accent-soft); }
+
+  .stage { position: relative; flex: 1; overflow: hidden; background: var(--canvas); }
+  svg.map { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; display: block; }
+  svg.map.panning { cursor: grabbing; }
+
+  .link { fill: none; stroke: var(--link); stroke-width: 1.6; }
+  .link.on-path { stroke: var(--accent); stroke-width: 2.4; }
+  .elbl { font-family: "IBM Plex Mono", monospace; font-size: 10px; font-weight: 500; }
+  .elbl.yes { fill: var(--green); }
+  .elbl.no { fill: var(--ink-faint); }
+  .elbl-bg { fill: var(--canvas); }
+
+  .node { cursor: pointer; }
+  .node .box { fill: var(--surface); stroke: var(--rule); stroke-width: 1.5; }
+  .node:hover .box { stroke: var(--accent); }
+  .node.sel .box { stroke: var(--accent); stroke-width: 2.6; }
+  .node .lbl { fill: var(--ink); font-size: 12.5px; font-weight: 500; }
+  .node .tagword {
+    font-family: "IBM Plex Mono", monospace; font-size: 9px; font-weight: 500;
+    letter-spacing: 0.08em; fill: var(--ink-faint);
+  }
+  .node .chev { fill: none; stroke: var(--ink-soft); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .node .meta { fill: var(--ink-faint); font-size: 10px; font-family: "IBM Plex Mono", monospace; }
+
+  .node.kind-q .box { fill: var(--surface); }
+  .node.q1 .box, .node.kind-q.root .box { }
+  .node.kind-dx .box { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+  .node.kind-dx .lbl { font-weight: 600; }
+  .node.kind-dx .tagword { fill: var(--accent); }
+  .node.kind-jump .box { fill: none; stroke: var(--ink-faint); stroke-dasharray: 4 3; }
+  .node.kind-jump .lbl { fill: var(--ink-soft); font-style: italic; }
+
+  /* Yes / No stub nodes (an un-expanded branch) */
+  .node.stub .box { fill: var(--surface-2); stroke: var(--rule); stroke-width: 1.4; }
+  .node.stub .lbl { font-size: 12.5px; font-weight: 600; fill: var(--ink-soft); }
+  .node.stub .tagword { display: none; }
+  .node.stub.br-yes .box { stroke: var(--green); }
+  .node.stub.br-yes .lbl { fill: var(--green); }
+  .node.stub.br-cross .box { border: none; stroke: var(--accent); stroke-dasharray: 4 3; }
+  .node.stub.br-cross .lbl { fill: var(--accent); }
+  .node.stub:hover .box { stroke: var(--accent); }
+  .node.stub:hover .lbl { fill: var(--accent); }
+
+  /* the answer that has been taken sits on its edge, click to collapse it */
+  .elabel { cursor: pointer; }
+  .elabel-bg { fill: var(--surface); stroke: var(--rule); stroke-width: 1; }
+  .elabel-t { font-family: "IBM Plex Mono", monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.04em; }
+  .elabel.yes .elabel-t { fill: var(--green); }
+  .elabel.no .elabel-t { fill: var(--ink-soft); }
+  .elabel:hover .elabel-bg { stroke: var(--accent); }
+  .link.to-stub { stroke-dasharray: 2 3; opacity: 0.6; }
+  .link.cross { stroke: var(--accent); stroke-dasharray: 5 4; stroke-width: 1.5; opacity: 0.6; }
+
+  .node.t-red .box { fill: var(--red-soft); stroke: var(--red); }
+  .node.t-red .lbl { fill: var(--red); }
+  .node.t-red .tagword { fill: var(--red); }
+  .node.t-green .box { fill: var(--green-soft); stroke: var(--green); }
+  .node.t-green .lbl { fill: var(--green); }
+  .node.t-green .tagword { fill: var(--green); }
+  .node.t-amber .box { stroke: var(--amber); }
+  .node.t-amber .tagword { fill: var(--amber); }
+
+  .node.flash .box { animation: flashk 1.3s ease; }
+  @keyframes flashk { 0%,100% { filter: none; } 45% { filter: drop-shadow(0 0 8px var(--accent)); } }
+
+  .hint {
+    position: absolute; left: 14px; bottom: 12px;
+    font-family: "IBM Plex Mono", monospace; font-size: 0.66rem; color: var(--ink-faint);
+    background: color-mix(in srgb, var(--canvas) 82%, transparent);
+    padding: 5px 9px; border-radius: 6px; pointer-events: none;
+  }
+  .legend {
+    position: absolute; right: 14px; top: 12px; background: var(--surface);
+    border: 1px solid var(--rule); border-radius: 9px; padding: 11px 13px;
+    font-size: 0.74rem; line-height: 1.5; max-width: 240px;
+    box-shadow: 0 4px 16px var(--panel-shadow);
+  }
+  .legend.hidden { display: none; }
+  .legend b { display: block; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); margin-bottom: 6px; font-family: "IBM Plex Mono", monospace; }
+  .legend .row { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+  .swatch { width: 22px; height: 14px; border-radius: 4px; flex: none; border: 1.5px solid var(--rule); }
+  .sw-q { background: var(--surface); }
+  .sw-dx { background: var(--accent-soft); border-color: var(--accent); }
+  .sw-jump { background: transparent; border-style: dashed; border-color: var(--ink-faint); }
+  .sw-red { background: var(--red-soft); border-color: var(--red); }
+  .sw-green { background: var(--green-soft); border-color: var(--green); }
+  .sw-amber { background: var(--surface); border-color: var(--amber); }
+
+  aside.panel {
+    position: fixed; top: 0; right: 0; height: 100%; width: min(420px, 93vw);
+    background: var(--surface); border-left: 1px solid var(--rule);
+    box-shadow: -8px 0 30px var(--panel-shadow);
+    transform: translateX(101%); transition: transform .28s cubic-bezier(.4,0,.2,1);
+    z-index: 20; display: flex; flex-direction: column;
+  }
+  aside.panel.open { transform: none; }
+  .panel .phead {
+    flex: none; padding: 17px 20px 13px; border-bottom: 1px solid var(--rule);
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .panel .phead h2 {
+    font-family: "Spectral", Georgia, serif; font-size: 1.16rem; font-weight: 600;
+    margin: 0; line-height: 1.24; flex: 1;
+  }
+  .panel .kicker {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.62rem; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--ink-faint); margin: 0 0 5px;
+  }
+  .panel .pclose { flex: none; border: none; background: none; font-size: 1.2rem; color: var(--ink-soft); padding: 0 4px; line-height: 1; }
+  .panel .pclose:hover { color: var(--accent); }
+  .panel .badge {
+    display: inline-block; font-family: "IBM Plex Mono", monospace; font-size: 0.6rem;
+    text-transform: uppercase; letter-spacing: 0.09em; padding: 3px 7px; border-radius: 5px;
+    margin-top: 8px; border: 1px solid var(--rule); color: var(--ink-soft);
+  }
+  .panel .badge.red { color: var(--red); border-color: var(--red); background: var(--red-soft); }
+  .panel .badge.green { color: var(--green); border-color: var(--green); background: var(--green-soft); }
+  .panel .badge.amber { color: var(--amber); border-color: var(--amber); background: var(--amber-soft); }
+
+  .panel .pbody { flex: 1; overflow-y: auto; padding: 15px 20px 40px; }
+  .panel .choices { display: flex; gap: 10px; margin: 4px 0 6px; }
+  .panel .choices button {
+    flex: 1; padding: 13px 10px; font-size: 0.94rem; font-weight: 600; border-radius: 9px;
+  }
+  .panel .choices .yes { border-color: var(--green); color: var(--green); }
+  .panel .choices .yes:hover { background: var(--green-soft); }
+  .panel .choices .no { border-color: var(--ink-soft); }
+  .panel .choices .no:hover { background: var(--surface-2); }
+  .panel .choices button.picked { background: var(--accent); border-color: var(--accent); color: #fff; }
+  :root:not([data-theme="light"]) .panel .choices button.picked { color: #0d1a1c; }
+
+  .panel .pbody h3 {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.66rem; text-transform: uppercase;
+    letter-spacing: 0.11em; color: var(--accent); margin: 20px 0 8px;
+  }
+  .panel .pbody h3:first-child { margin-top: 4px; }
+  .panel .pbody p { margin: 0 0 10px; font-size: 0.9rem; line-height: 1.55; }
+  .panel .pbody ul { margin: 0 0 10px; padding-left: 18px; }
+  .panel .pbody li { font-size: 0.9rem; line-height: 1.5; margin-bottom: 5px; }
+  .panel .assess {
+    font-size: 0.87rem; line-height: 1.55; color: var(--ink-soft);
+    background: var(--surface-2); border-radius: 8px; padding: 11px 13px; margin: 2px 0 12px;
+  }
+  .panel .note {
+    font-size: 0.85rem; line-height: 1.5; color: var(--ink-soft);
+    border-left: 2px solid var(--rule); padding-left: 12px; margin: 4px 0 10px;
+  }
+  .panel .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .panel .chip {
+    font-size: 0.78rem; padding: 5px 10px; border: 1px solid var(--rule); border-radius: 999px;
+    background: var(--surface); color: var(--accent); cursor: pointer;
+  }
+  .panel .chip:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .panel .cont {
+    width: 100%; margin-top: 8px; padding: 12px; font-weight: 600; font-size: 0.92rem;
+    border-color: var(--accent); color: var(--accent);
+  }
+  .panel .cont:hover { background: var(--accent-soft); }
+
+  .scrim { position: fixed; inset: 0; background: rgba(20,17,13,0.28); opacity: 0; pointer-events: none; transition: opacity .28s; z-index: 15; }
+  .scrim.on { opacity: 1; pointer-events: auto; }
+
+  @media (max-width: 640px) {
+    .bar h1 { font-size: 0.9rem; } .bar .sub { display: none; }
+    aside.panel { width: 100vw; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    aside.panel, .scrim { transition: none; }
+    .node.flash .box { animation: none; }
+  }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+
+<div class="app">
+  <header class="bar">
+    <h1>Breastfeeding Difficulty &mdash; Decision Tree</h1>
+    <span class="sub">diagnoses the breastfeeding problem &middot; the infant's clinical care runs separately</span>
+    <span class="spacer"></span>
+    <div class="tools">
+      <button id="btn-restart">Start over</button>
+      <button id="btn-expand">Expand all</button>
+      <button id="btn-collapse">Collapse</button>
+      <button id="btn-fit">Fit</button>
+      <button id="btn-legend" class="ghost">Legend</button>
+    </div>
+  </header>
+  <div class="crumbs empty" id="crumbs"></div>
+  <div class="stage" id="stage">
+    <svg class="map" id="map" aria-label="Interactive binary decision tree for breastfeeding difficulty. Each question has a Yes branch and a No branch leading to a working diagnosis."></svg>
+    <div class="legend hidden" id="legend">
+      <b>How to read it</b>
+      <div class="row"><span class="swatch sw-q"></span> A question. Its branches show as</div>
+      <div class="row"><span class="swatch" style="background:var(--surface-2);border-color:var(--green)"></span> clickable <b>Yes</b> / <b>No</b> nodes — tap one to open that branch</div>
+      <div class="row"><span class="swatch" style="background:var(--surface);border-color:var(--rule)"></span> once open, the answer moves to the <b>edge</b> — tap it to undo</div>
+      <div class="row"><span class="swatch sw-jump"></span> <b>↗</b> a branch that jumps to a shared node (a DAG: several paths, one outcome)</div>
+      <div class="row"><span class="swatch sw-dx"></span> Working diagnosis (end of a path)</div>
+      <div class="row"><span class="swatch sw-red"></span> Do not miss</div>
+      <div class="row"><span class="swatch sw-green"></span> Likely normal</div>
+      <div class="row"><span class="swatch sw-amber"></span> Commonly mislabelled</div>
+    </div>
+    <div class="hint" id="hint">tap a Yes / No node to open a branch &middot; tap an edge label to undo it &middot; drag to pan, scroll to zoom</div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="panel" id="panel" aria-live="polite">
+  <div class="phead">
+    <div style="flex:1">
+      <p class="kicker" id="p-kicker"></p>
+      <h2 id="p-title"></h2>
+      <span class="badge" id="p-badge"></span>
+    </div>
+    <button class="pclose" id="p-close" aria-label="Close panel">&times;</button>
+  </div>
+  <div class="pbody" id="p-body"></div>
+</aside>
+
+<noscript><p style="padding:24px;font-family:sans-serif">This decision tree needs JavaScript to run.</p></noscript>
+
+<script>
+"use strict";
+(function () {
+
+/* ============================================================
+   BINARY DECISION GRAPH (a DAG, not just a tree)
+   question:  { id, q, help, short?, yes:<edge>, no:<edge> }
+   diagnosis: { id, dx, tag?, detail:{ note?, clue?[], step?[], also?[] } }
+   edge value is either an inline question/diagnosis spec, OR
+   { goto:<existing id>, note? } — a convergent edge to a shared node,
+   which is what makes this a DAG (several paths reaching one outcome).
+   ============================================================ */
+
+const T = {
+  id: "q1",
+  q: "Is the infant's weight gain and milk output adequate for age?",
+  short: "Intake adequate?",
+  help: "A diagnostic split, not a safety check — the infant's clinical wellbeing (hydration, jaundice, weight, whether top-ups are needed) is assessed and looked after separately, in parallel with this. Plot weight on a growth chart: tracking its centile, roughly 25–35 g/day at 0–3 months, back to birth weight by day 10–14. Output after day 4–5: at least 6 heavy wet nappies and 3 yellow stools per 24 h (stool frequency falls after about 6 weeks — still normal); around 8–12 feeds per 24 h with audible swallowing. ADEQUATE means the milk-making and milk-moving machinery is working, so the problem is pain, a lump, refusal, or a supply worry. INADEQUATE means milk is not getting in — the questions below work out why.",
+    no: {
+      id: "a1",
+      q: "On a full feed observation, is milk transfer effective?",
+      short: "Transfer effective?",
+      help: "Effective transfer = a deep comfortable latch, rhythmic suck with audible/visible swallowing that continues for most of the feed, the breast softening, and a contented infant with open hands afterwards. Ineffective = fluttery non-nutritive sucking, few swallows, frequent slipping or clicking, falling asleep early, no breast softening, still frantic after the feed.",
+      yes: {
+        id: "a7",
+        q: "Did copious milk ever “come in” (marked fullness / leaking) by about 72 hours?",
+        short: "Milk came in?",
+        help: "Ask about breast fullness, heaviness, leaking, and a change in the infant's swallowing pattern in the first 3–4 days. ‘Never really came in’ points to a primary or lactogenesis-II problem; ‘came in, then faded’ points to a removal, drug, surgical or endocrine cause.",
+        no: {
+          id: "a8",
+          q: "Signs of insufficient glandular tissue on breast exam?",
+          short: "Hypoplastic breasts?",
+          help: "Look for insufficient glandular tissue: breasts that did not enlarge in pregnancy or after birth, no or minimal engorgement, a tubular or conical shape, an intermammary gap over 3–4 cm, bulbous areolae, or asymmetry greater than one cup size.",
+          yes: {
+            id: "dx-igt", dx: "Primary glandular insufficiency (IGT)", tag: "amber",
+            detail: {
+              note: "A production ceiling, present from the outset despite good technique and frequency. Partial supply is still valuable.",
+              step: [
+                "Optimise removal (8–12 effective feeds/expressions per 24 h).",
+                "An at-breast supplementer bridges the shortfall while preserving stimulation and the feeding relationship.",
+                "Galactagogue trial only after removal is optimised.",
+                "Refer to an IBCLC; counsel that capacity often improves with each subsequent lactation."
+              ]
+            }
+          },
+          no: {
+            id: "a9",
+            q: "Risk factors for delayed lactogenesis II present, with the infant still under about 2 weeks old?",
+            short: "Delayed lactogenesis?",
+            help: "Risk factors: caesarean or long labour, PPH, retained placenta, diabetes or GDM, obesity, PCOS, thyroid disease, severe stress or pain, flat affect, theca-lutein cysts. The window to intervene is the first 1–2 weeks.",
+            yes: {
+              id: "dx-lac2", dx: "Delayed lactogenesis II",
+              detail: {
+                step: [
+                  "Intensive effective removal — feed plus express, 8–12×/24 h; skin-to-skin.",
+                  "Treat the contributing factor (glycaemic control, thyroid, pain, retained products).",
+                  "Bridge with an at-breast supplementer while supply builds; reassess transfer in 24–48 h.",
+                  "Most establish over days to 2–3 weeks with support."
+                ],
+                also: ["dx-endo"]
+              }
+            },
+            no: { goto: "a10", note: "Same endpoint as an established supply that later fell." }
+          }
+        },
+        yes: {
+          id: "a10",
+          q: "Are feeds infrequent or restricted, or displaced by top-ups?",
+          short: "Feeds restricted?",
+          help: "This is the commonest reversible cause of an established supply falling: anything that reduces the frequency or completeness of milk removal. The supplementation spiral is the classic loop — top-ups displace breast stimulation, which lowers supply, which prompts more top-ups.",
+          yes: {
+            id: "dx-second", dx: "Secondary downregulation / supplementation spiral", tag: "amber",
+            detail: {
+              note: "Almost always a removal problem, often iatrogenic. Fix the frequency and the completeness of removal and supply usually recovers.",
+              step: [
+                "Increase feed and expression frequency; make sure transfer is effective.",
+                "Wean unnecessary supplements gradually to a written plan; trigger top-ups by weight, not anxiety.",
+                "At-breast supplementer; power-pumping; correct the root latch or transfer problem.",
+                "Reduce dummy use; feed at early cues."
+              ],
+              also: ["a1", "dx-perceived"]
+            }
+          },
+          no: {
+            id: "a11",
+            q: "Prior breast or chest surgery, radiation, or major injury?",
+            short: "Breast surgery?",
+            help: "Ask specifically about reduction (especially with a free-nipple graft), augmentation with periareolar incisions, chest-wall radiation, burns or degloving injury, and prior abscess drainage — all can sever ducts or nerves. Note the interval since surgery and any prior successful lactation.",
+            yes: {
+              id: "dx-surg", dx: "Post-surgical / structural production limit",
+              detail: {
+                step: [
+                  "Assess for ductal and nerve disruption; check nipple sensation.",
+                  "An at-breast supplementer plus a galactagogue trial.",
+                  "Realistic counselling — supply is often partial and better with each subsequent lactation."
+                ]
+              }
+            },
+            no: {
+              id: "a12",
+              q: "An endocrine, drug, or pregnancy-related cause?",
+              short: "Endocrine / drug?",
+              help: "Supply-lowering drugs: combined oestrogen contraception, pseudoephedrine, high-dose progestins, ergometrine, cabergoline or bromocriptine, heavy alcohol. Check TSH and free T4, prolactin, and glucose; ask about lochia, a positive pregnancy test, and contraception started recently.",
+              yes: {
+                id: "dx-endo", dx: "Endocrine / drug / pregnancy-related low supply",
+                detail: {
+                  step: [
+                    "Check TSH and free T4, prolactin, and glucose; endocrinology if abnormal.",
+                    "Obstetric referral for suspected retained products — supply usually recovers after evacuation.",
+                    "Stop or switch the offending drug where possible (progestogen-only or non-hormonal contraception; avoid decongestants).",
+                    "If pregnant, counsel that some decline is expected."
+                  ]
+                }
+              },
+              no: {
+                id: "dx-idio", dx: "Idiopathic low supply",
+                detail: {
+                  note: "No primary, removal, surgical, endocrine or drug cause identified.",
+                  step: [
+                    "Optimise removal and confirm effective transfer with an IBCLC.",
+                    "Trial a galactagogue only after removal is optimised.",
+                    "Bridge with an at-breast supplementer; reassess in 1–2 weeks.",
+                    "Re-screen for a subtle cause (posterior tongue restriction, occult thyroid disease, retained products)."
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      no: {
+        id: "a1b",
+        q: "Does the infant actively refuse or fight the breast (rather than attaching but feeding weakly)?",
+        short: "Refusing?",
+        help: "Distinguish an infant who latches but transfers poorly (work the questions below) from one who arches, cries, turns away, or will not stay on the breast (work the refusal branch).",
+        yes: { goto: "ref1", note: "An infant who fights or refuses the breast is worked up the same way whether or not weight is faltering." },
+        no: {
+          id: "a2",
+          q: "When a skilled helper optimises position and latch, does feeding become effective?",
+          short: "Latch fixes it?",
+          help: "Try cross-cradle and laid-back positions, an asymmetric / exaggerated latch, and better head–body alignment and breast support. A positive answer = the latch deepens, swallowing becomes rhythmic, and pain settles there and then.",
+          yes: {
+            id: "dx-position", dx: "Positioning & attachment problem",
+            detail: {
+              step: [
+                "Hands-on latch and positioning correction; teach the parent to reproduce it.",
+                "Review within a few days.",
+                "If it recurs despite good technique, reassess for infant oral restriction."
+              ],
+              also: ["a4"]
+            }
+          },
+          no: {
+            id: "a3",
+            q: "Does the infant choke, clamp or pull off as milk sprays?",
+            short: "Forceful flow?",
+            help: "Overactive let-down and oversupply can defeat transfer: the infant clamps to slow the flow, pulls off, swallows air, and may under-transfer despite an abundant supply. Look for spraying milk on release, a gassy infant, and frequent explosive green frothy stools.",
+            yes: {
+              id: "dx-oald-a", dx: "Overactive let-down / oversupply disrupting feeding",
+              detail: {
+                note: "Usually causes rapid weight gain — but marked refusal or one-sided drainage can tip an infant into poor gain.",
+                step: [
+                  "Finish the first breast before offering the second; block feeding if marked.",
+                  "Laid-back or side-lying positioning; brief pre-latch expression to take the initial force off.",
+                  "Stop rescue pumping. Most settles by ~12 weeks.",
+                  "If gain stays poor, reassess transfer and consider a coexisting problem."
+                ],
+                also: ["mim-cmpa", "dx-fastflow"]
+              }
+            },
+            no: {
+              id: "a4",
+              q: "Functional tongue restriction, or a structural oral anomaly?",
+              short: "Oral restriction?",
+              help: "Assess FUNCTION, not appearance — tongue elevation and extension, cupping, the strength and rhythm of the suck, and whether a lactation-trained clinician can improve transfer with an oral-motor manoeuvre. Posterior tongue restriction is the commonly missed one; a visible anterior frenulum alone is not a diagnosis. Check the palate and jaw, and look for a bifid uvula (submucous cleft).",
+              yes: {
+                id: "dx-oral", dx: "Infant oral restriction / structural anomaly", tag: "amber",
+                detail: {
+                  step: [
+                    "Structured oral-function assessment (e.g. Hazelbaker) by an IBCLC or feeding team.",
+                    "Positional compensation and pacing while deciding.",
+                    "Frenotomy only for demonstrated functional restriction — not for appearance.",
+                    "ENT / plastics / genetics for cleft, marked micrognathia (Pierre Robin), or macroglossia."
+                  ],
+                  also: ["mim-tie"]
+                }
+              },
+              no: {
+                id: "a5",
+                q: "Prematurity, abnormal tone, birth injury, jaundice, or sedation?",
+                short: "Immature / neuro?",
+                help: "Late-preterm and early-term infants have a disorganised, fatigable suck–swallow–breathe pattern. Also consider hypotonia (trisomy 21, prematurity, hypothyroidism, neuromuscular disease), hypertonia, birth injury (cephalohaematoma, clavicle fracture, torticollis, facial-nerve palsy, brachial plexus injury, HIE), hyperbilirubinaemia causing sleepiness, and sedating intrapartum drugs.",
+                yes: {
+                  id: "dx-suck", dx: "Weak or uncoordinated suck (immaturity or neuromotor)",
+                  detail: {
+                    step: [
+                      "Support tone and head position; external pacing; breast compression; shorter, more frequent feeds.",
+                      "Physiotherapy / OT / SLT; paediatric review for abnormal neurology.",
+                      "Recheck as the infant matures or the cause resolves."
+                    ],
+                    also: ["dx-cardio"]
+                  }
+                },
+                no: {
+                  id: "a6",
+                  q: "Does the infant tire, sweat, or change colour during feeds?",
+                  short: "Tires / cyanoses?",
+                  help: "A cardiorespiratory cause presents as an infant who feeds keenly for a few minutes then fatigues, sweats on the forehead, becomes tachypnoeic or dusky, and fails to thrive. Examine for a murmur, hepatomegaly, and respiratory rate at rest and during a feed.",
+                  yes: {
+                    id: "dx-cardio", dx: "Cardiorespiratory disease", tag: "red",
+                    detail: {
+                      step: [
+                        "Paediatric or cardiology assessment; measure SpO₂ at rest and during a feed.",
+                        "Pace feeds and allow breaks; fortify or supplement to reduce the work of feeding.",
+                        "Overlaps the infant red-flag list — escalate if unwell."
+                      ]
+                    }
+                  },
+                  no: {
+                    id: "a6b",
+                    q: "A physical barrier to latch — engorgement, or nipple shape?",
+                    short: "Mechanical barrier?",
+                    help: "A physical barrier to latch: an areola too firm to draw in (engorgement, days 2–5), a nipple that will not evert on a pinch test, or a nipple / breast disproportionate to a small or preterm mouth.",
+                    yes: {
+                      id: "dx-barrier", dx: "Mechanical barrier — engorgement or nipple shape",
+                      detail: {
+                        step: [
+                          "Reverse-pressure softening and a little hand expression before latching.",
+                          "Laid-back positioning; cold packs between feeds; NSAIDs for engorgement.",
+                          "Nipple-everting techniques; a shield as a short-term bridge with a plan and weight monitoring.",
+                          "Reassess as the infant grows and engorgement settles."
+                        ]
+                      }
+                    },
+                    no: {
+                      id: "dx-transfer-unk", dx: "Ineffective transfer — cause not yet identified",
+                      detail: {
+                        note: "Transfer is poor but no single cause stands out.",
+                        step: [
+                          "Refer to an IBCLC for repeated structured feed assessment.",
+                          "Re-screen for subtle posterior tongue restriction, disorganised state regulation, and feeding frequency.",
+                          "Reassess within days — the picture often declares itself."
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    yes: {
+      id: "b1",
+      q: "Is the main problem PARENTAL nipple or breast pain?",
+      short: "Parental pain?",
+      help: "Take the predominant complaint. If there is more than one problem (for example pain and a lump), work the tree once for each.",
+      yes: {
+        id: "pain1",
+        q: "Does the pain occur ONLY in the first ~30 seconds of latch, then ease as milk flows?",
+        short: "Pain at latch only?",
+        help: "Classic mechanical pattern: a sharp pinch as the infant draws the nipple in, gone once milk is flowing, with the nipple rounded (not creased or blanched) on release.",
+        yes: {
+          id: "dx-latchpain", dx: "Latch / positioning pain",
+          detail: {
+            step: [
+              "Optimise latch and positioning; asymmetric latch, deeper gape.",
+              "Expect rapid improvement — review in a few days.",
+              "If pain persists despite a good latch, reassess for infant oral restriction and reconsider the pain axes below."
+            ],
+            also: ["a4"]
+          }
+        },
+        no: {
+          id: "pain2",
+          q: "Is there a focal wedge or area of redness with firmness and warmth (± fever)?",
+          short: "Red firm wedge?",
+          help: "A segment of the breast that is red, indurated, hot and tender — as opposed to pain confined to the nipple or felt deep and diffuse. This is the mastitis spectrum.",
+          yes: { goto: "inf3", note: "A red, firm, hot wedge enters the mastitis-spectrum ladder — the same node reached from the lump / redness branch." },
+          no: {
+            id: "pain3",
+            q: "Is there a VISIBLE skin change on the nipple or areola?",
+            short: "Skin change?",
+            help: "Inspect in good light: erythema, scale, a rash, a discrete wound, vesicles or crusting, a white spot at the tip, or a colour change. ‘No’ means the nipple and areola look essentially normal.",
+            yes: {
+              id: "pain4",
+              q: "Grouped vesicles, punched-out ulcers, or honey-coloured crusting?",
+              short: "Vesicles / crusting?",
+              help: "Grouped vesicles or shallow ‘punched-out’ ulcers with prodromal tingling suggest HSV. Golden-crusted erosions suggest bullous impetigo.",
+              yes: {
+                id: "dx-hsv", dx: "HSV or bullous impetigo of the nipple", tag: "red",
+                detail: {
+                  step: [
+                    "HSV: do NOT feed from the affected breast until lesions crust — express and discard that side; systemic aciclovir.",
+                    "Neonatal HSV is life-threatening — urgent paediatric advice.",
+                    "Impetigo: topical or oral antibiotics per severity; can usually keep feeding."
+                  ]
+                }
+              },
+              no: {
+                id: "pain5",
+                q: "Is there a discrete wound — a crack, fissure, abrasion, bruise, or scab?",
+                short: "Nipple wound?",
+                help: "A localised break in the skin, with pain that maps to the wound. Distinguish from a diffuse rash or dermatitis.",
+                yes: {
+                  id: "pain6",
+                  q: "Is the wound failing to heal after 48–72 h, spreading redness, or purulent / honey-crusted?",
+                  short: "Wound infected?",
+                  help: "Signs of bacterial superinfection of a nipple fissure — usually Staphylococcus aureus, sometimes MRSA.",
+                  yes: {
+                    id: "dx-trauma-inf", dx: "Nipple trauma with S. aureus infection",
+                    detail: {
+                      step: [
+                        "Swab; start empirical anti-staphylococcal treatment (cover MRSA per local rates).",
+                        "Fix the mechanical cause in parallel — latch, flange size.",
+                        "Moist wound healing; review healing at 48–72 h."
+                      ],
+                      also: ["dx-position", "cycle-damage"]
+                    }
+                  },
+                  no: {
+                    id: "dx-trauma", dx: "Nipple trauma (mechanical)",
+                    detail: {
+                      step: [
+                        "Correct the cause — latch, positioning, pump-flange fit.",
+                        "Moist wound healing; short-term analgesia.",
+                        "Reassess for oral restriction if it recurs."
+                      ],
+                      also: ["a4"]
+                    }
+                  }
+                },
+                no: {
+                  id: "pain7",
+                  q: "A well-demarcated, scaly, itchy rash (dermatitis pattern)?",
+                  short: "Rash / dermatitis?",
+                  help: "Look for a sharply marginated, scaly, itchy or burning area of the areola or nipple. Contact dermatitis flares with lanolin, fragrances, topical antibiotics, breast pads or detergents; atopic and psoriatic forms have clues elsewhere on the skin.",
+                  yes: {
+                    id: "dx-derm", dx: "Nipple / areolar dermatitis",
+                    detail: {
+                      step: [
+                        "Remove candidate allergens (lanolin, fragrances, topical antibiotics).",
+                        "Short course of a topical corticosteroid; wipe before feeds if advised.",
+                        "Patch testing if recurrent; treat any secondary infection."
+                      ]
+                    }
+                  },
+                  no: {
+                    id: "dx-paget", dx: "Other nipple skin lesion — exclude Paget's disease", tag: "amber",
+                    detail: {
+                      note: "A unilateral, persistent, eczema-like change of the nipple that does not respond to topical treatment must be biopsied — Paget's disease of the nipple.",
+                      step: [
+                        "Dermatology / breast referral; full-thickness biopsy of persistent unilateral change.",
+                        "Treat the likely benign cause meanwhile, with a firm review date.",
+                        "Do not attribute a non-resolving unilateral lesion to ‘thrush’ or dermatitis indefinitely."
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            no: {
+              id: "pain8",
+              q: "A white or yellow spot at one point on the nipple, with a tender cord behind it?",
+              short: "Bleb?",
+              help: "A milk bleb (blister): a pinpoint blocked nipple pore, often recurrent at the same spot, with a tender duct proximally, usually on a background of oversupply.",
+              yes: {
+                id: "dx-bleb", dx: "Bleb (milk blister) ± blocked duct",
+                detail: {
+                  step: [
+                    "Warm soak then feed; do NOT routinely unroof.",
+                    "Treat as ductal inflammation — cold, NSAIDs, gentle lymphatic drainage; avoid deep massage and extra pumping.",
+                    "Address the underlying oversupply; check bra and flange fit.",
+                    "Recurrent → review, consider lecithin, image if fixed."
+                  ],
+                  also: ["dx-plug", "dx-oald"]
+                }
+              },
+              no: {
+                id: "pain9",
+                q: "Does the nipple blanch and change colour, triggered by cold?",
+                short: "Colour change?",
+                help: "Nipple vasospasm / Raynaud's: a biphasic or triphasic colour change, a clear cold trigger, pain between feeds (not just during), and relief with heat. Ask about Raynaud's elsewhere and precipitating drugs (beta-blockers, fluconazole, the combined pill).",
+                yes: {
+                  id: "dx-raynaud", dx: "Vasospasm / Raynaud's of the nipple",
+                  detail: {
+                    step: [
+                      "Warmth immediately after feeds; avoid cold exposure, caffeine and nicotine.",
+                      "Correct any latch component — compression provokes vasospasm.",
+                      "Nifedipine if severe and persistent."
+                    ],
+                    also: ["mim-thrush", "dx-deeppain"]
+                  }
+                },
+                no: {
+                  id: "pain10",
+                  q: "A brief wave of dysphoria at let-down, clearing within ~90 seconds?",
+                  short: "Dysphoria at let-down?",
+                  help: "D-MER (dysphoric milk ejection reflex): an abrupt, time-locked wave of dread, hollowness or sadness immediately before each ejection (including on the pump), resolving within 30–90 seconds. The parent is well between feeds. It is a dopamine-drop phenomenon, not a mood disorder — though the two can coexist.",
+                  yes: {
+                    id: "dx-dmer", dx: "D-MER (dysphoric milk ejection reflex)", tag: "amber",
+                    detail: {
+                      step: [
+                        "Name it and validate it — recognition alone helps.",
+                        "Distinguish from postnatal depression / anxiety (pervasive, not time-locked) and from intrusive thoughts.",
+                        "Most improves with time; refer for mood support if severe, persistent, or coexisting with depression."
+                      ],
+                      also: ["mim-dmer"]
+                    }
+                  },
+                  no: {
+                    id: "dx-deeppain", dx: "Deep pain with a normal exam (persistent / functional)", tag: "amber",
+                    detail: {
+                      note: "A diagnosis in its own right once mechanics, skin, vascular and infective causes are excluded — not a place-holder for ‘unexplained thrush’.",
+                      step: [
+                        "Re-verify latch and pump-flange size.",
+                        "Treat vasospasm empirically if any features fit.",
+                        "Consider mammary dysbiosis and central-sensitisation pain; screen mood; multidisciplinary pain approach.",
+                        "Empirical antifungal or antibiotic is NOT recommended without corroborating signs — infant oral thrush, satellite areolar rash, or a positive culture."
+                      ],
+                      also: ["mim-thrush", "dx-raynaud"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      no: {
+        id: "b2",
+        q: "Is there a breast LUMP, focal swelling, or area of redness / inflammation?",
+        short: "Lump or redness?",
+        help: "Any discrete lump, focal firm area, or region of erythema and swelling in the breast.",
+        yes: {
+          id: "inf1",
+          q: "Is the swelling BILATERAL and diffuse — both breasts full, firm and tender — in the first 2–5 days?",
+          short: "Bilateral, day 2–5?",
+          help: "Physiological engorgement is bilateral, generalised, and time-locked to lactogenesis II. A focal or unilateral problem is not this.",
+          yes: {
+            id: "dx-engorge", dx: "Physiological engorgement", tag: "green",
+            detail: {
+              step: [
+                "Feed frequently and responsively; cold packs between feeds; reverse-pressure softening; NSAIDs.",
+                "Avoid aggressive pumping — it prolongs it.",
+                "Settles over 24–48 h."
+              ]
+            }
+          },
+          no: {
+            id: "inf2",
+            q: "Is there a discrete LUMP (rather than an area of firmness and inflammation)?",
+            short: "Discrete lump?",
+            help: "Separate a well-defined mass you can get your fingers around (abscess, galactocele, cyst, tumour) from a diffuse zone of firm, inflamed tissue (the mastitis continuum).",
+            yes: {
+              id: "inf7",
+              q: "Is the lump fluctuant and exquisitely tender, ± overlying erythema or pointing?",
+              short: "Fluctuant + tender?",
+              help: "A tense, fluid-feeling, very tender mass, often with red thinned overlying skin — an abscess until proven otherwise. Confirm with ultrasound.",
+              yes: { goto: "dx-abscess", note: "A fluctuant, tender, well-defined mass is an abscess whether found on the lump branch or the failing-mastitis branch." },
+              no: {
+                id: "inf8",
+                q: "A smooth, non-tender, cystic swelling, often after weaning?",
+                short: "Cystic, post-wean?",
+                help: "A galactocele is a milk-filled cyst: soft or tense but not hot or tender, common as feeds reduce, with milk-density fluid on ultrasound and a milky aspirate.",
+                yes: {
+                  id: "dx-galac", dx: "Galactocele",
+                  detail: {
+                    step: [
+                      "Confirm on ultrasound; aspirate if symptomatic or for diagnosis.",
+                      "Recurrence is common while lactating.",
+                      "Send fluid for analysis if atypical."
+                    ]
+                  }
+                },
+                no: {
+                  id: "inf9",
+                  q: "Not settling on antibiotics, or features atypical for mastitis?",
+                  short: "Not settling?",
+                  help: "The features that separate inflammatory breast cancer from mastitis: no clear improvement after an appropriate antibiotic course, skin oedema and thickening (peau d'orange), nipple retraction, a fixed mass, palpable nodes, and a time course or age that does not fit lactational mastitis.",
+                  yes: {
+                    id: "dx-ibc", dx: "Exclude inflammatory breast cancer", tag: "red",
+                    detail: {
+                      note: "The exit that must stay in mind at every rung of the mastitis ladder.",
+                      step: [
+                        "Urgent breast imaging (ultrasound and mammography) and core biopsy of skin and any mass.",
+                        "Do NOT repeat antibiotic courses without imaging.",
+                        "Refer on a 2-week cancer pathway."
+                      ],
+                      also: ["mim-ibc"]
+                    }
+                  },
+                  no: {
+                    id: "inf10",
+                    q: "Is this recurrent inflammation or a recurrent lump at the SAME site?",
+                    short: "Recurrent, same site?",
+                    help: "Repeated episodes in one quadrant suggest a fixed local factor — an obstructing lesion, a persistent bleb, a duct anomaly, or an underlying mass.",
+                    yes: {
+                      id: "dx-recur", dx: "Recurrent focal mastitis — image the site", tag: "amber",
+                      detail: {
+                        step: [
+                          "Ultrasound the affected area for an obstructing lesion, mass, or persistent bleb.",
+                          "Treat the underlying oversupply; review bra and pump-flange fit.",
+                          "If persistent or atypical, exclude malignancy."
+                        ],
+                        also: ["dx-ibc", "dx-oald"]
+                      }
+                    },
+                    no: {
+                      id: "dx-lump", dx: "Persistent breast lump — triple assessment", tag: "amber",
+                      detail: {
+                        note: "A discrete lump that is not an abscess, galactocele, or resolving inflammation.",
+                        step: [
+                          "Triple assessment: clinical exam + imaging (ultrasound ± mammography) ± core biopsy.",
+                          "Differential: fibroadenoma, simple cyst, lactating adenoma, and non-lactational disease (periductal or idiopathic granulomatous mastitis, TB where endemic).",
+                          "Do not attribute a persistent lump to lactation without imaging."
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            no: {
+              id: "inf3",
+              q: "Are there systemic features — fever ≥38.5°C, rigors, myalgia, tachycardia, malaise?",
+              short: "Systemic features?",
+              help: "Distinguish simple ductal inflammation (a tender lumpy area, feels well) from mastitis with a systemic inflammatory response.",
+              no: {
+                id: "dx-plug", dx: "Ductal narrowing / inflammation (‘plugged duct’)",
+                detail: {
+                  note: "Reframed in 2022 as duct-wall oedema and inflammation on a hyperlactation background — not a discrete ‘plug’ to push out.",
+                  step: [
+                    "Keep to the NORMAL feeding schedule — do not try to ‘empty’ the breast.",
+                    "Ice, NSAIDs, gentle lymphatic drainage toward the axilla, therapeutic ultrasound.",
+                    "AVOID deep massage, heat, extra pumping, and saline soaks.",
+                    "Treat the underlying oversupply."
+                  ],
+                  also: ["dx-oald", "dx-bleb"]
+                }
+              },
+              yes: {
+                id: "inf4",
+                q: "Failing 24–48 h of conservative care, septic, or spreading cellulitis?",
+                short: "Failing / septic?",
+                help: "This is the decision point for antibiotics. Early inflammatory mastitis that is improving does not need them; a non-responder, a septic parent, or an obvious bacterial portal of entry does.",
+                no: {
+                  id: "dx-inflammatory", dx: "Inflammatory mastitis",
+                  detail: {
+                    step: [
+                      "Conservative measures as for ductal inflammation, plus NSAIDs, adequate analgesia, and rest.",
+                      "Review at 24 h.",
+                      "Antibiotics are NOT first-line if symptoms are under 24 h and improving."
+                    ]
+                  }
+                },
+                yes: {
+                  id: "inf5",
+                  q: "On ultrasound (or exam) is there a drainable fluid collection?",
+                  short: "Drainable collection?",
+                  help: "Image a non-responding or severe presentation. A discrete collection is an abscess; a solid ill-defined mass is a phlegmon; neither is simple bacterial mastitis.",
+                  yes: {
+                    id: "dx-abscess", dx: "Breast abscess",
+                    detail: {
+                      step: [
+                        "Ultrasound-guided needle aspiration (repeat as needed) or drainage; send pus for culture.",
+                        "Antibiotics covering S. aureus.",
+                        "Keep removing milk; surgical referral."
+                      ]
+                    }
+                  },
+                  no: {
+                    id: "inf6",
+                    q: "An enlarging, firm, ill-defined mass despite antibiotics, no collection?",
+                    short: "Enlarging solid mass?",
+                    help: "A phlegmon is a mass of inflamed, oedematous tissue without a drainable pocket — it worsens if incised.",
+                    yes: {
+                      id: "dx-phlegmon", dx: "Phlegmon",
+                      detail: {
+                        step: [
+                          "Ultrasound to confirm no abscess.",
+                          "Continue or broaden antibiotics (IV if unwell).",
+                          "Do NOT incise; watchful management with breast-surgery involvement."
+                        ]
+                      }
+                    },
+                    no: {
+                      id: "dx-bacterial", dx: "Bacterial mastitis",
+                      detail: {
+                        step: [
+                          "Anti-staphylococcal antibiotics (e.g. dicloxacillin / flucloxacillin, or cephalexin; cover MRSA per local rates).",
+                          "Send a milk culture.",
+                          "Continue feeding or expressing; adequate analgesia; escalate if no response in 48 h."
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        no: {
+          id: "b3",
+          q: "Is the infant fussing at, fighting, or refusing the breast?",
+          short: "Refusing the breast?",
+          help: "Arching, crying, turning away, latching then pulling off, or refusing to latch — in an infant whose weight is adequate.",
+          yes: {
+            id: "ref1",
+            q: "Was the refusal SUDDEN, in an infant who had been feeding well?",
+            short: "Sudden onset?",
+            help: "A discrete change from established, effective feeding — as opposed to feeding that was never comfortable or effective.",
+            yes: {
+              id: "ref2",
+              q: "Is there an identifiable acute trigger?",
+              short: "Acute trigger?",
+              help: "Nursing strikes almost always have a proximate cause. Examine ears, mouth and nose; ask about recent changes at home and a recent choking or spraying episode at the breast.",
+              yes: {
+                id: "dx-strike", dx: "Nursing strike", tag: "amber",
+                detail: {
+                  note: "Almost always time-limited and reversible.",
+                  step: [
+                    "Treat the trigger — pain, thrush, congestion.",
+                    "Skin-to-skin; offer when sleepy, drowsy or in motion; dark quiet room; feed lying down.",
+                    "Express to protect supply and feed the milk; do not force the breast.",
+                    "Usually resolves within days."
+                  ]
+                }
+              },
+              no: { goto: "ref3", note: "No acute trigger — continue through the persistent-refusal questions." }
+            },
+            no: {
+              id: "ref3",
+              q: "Signs of ongoing feed-associated pain (reflux, CMPA, thrush, otitis)?",
+              short: "Feed-associated pain?",
+              help: "Persistent (not sudden) refusal driven by discomfort: GORD or oesophagitis, cow's-milk protein allergy (eczema, blood/mucus in stool, family atopy), oral thrush, or otitis media.",
+              yes: {
+                id: "dx-painrefuse", dx: "Pain-driven refusal (GORD / CMPA / thrush / otitis)",
+                detail: {
+                  step: [
+                    "Identify and treat the source of pain; examine ears and mouth.",
+                    "For suspected CMPA, a 2–4 week trial of maternal dairy (± soy) exclusion.",
+                    "Reserve acid suppression for confirmed pathological reflux.",
+                    "Positioning: more upright, paced feeds."
+                  ],
+                  also: ["mim-cmpa"]
+                }
+              },
+              no: {
+                id: "ref4",
+                q: "Does the infant fight the flow EARLY in the feed and settle later?",
+                short: "Fast flow?",
+                help: "Fast-flow refusal: the infant is overwhelmed by the ejection, clamps or pulls off as milk sprays, and feeds better once the flow slows.",
+                yes: {
+                  id: "dx-fastflow", dx: "Fast-flow refusal (overactive let-down / oversupply)",
+                  detail: {
+                    step: [
+                      "Finish the first breast before switching; block feeding if marked.",
+                      "Laid-back or side-lying positioning; brief pre-latch expression.",
+                      "Stop rescue pumping. Most settles by ~12 weeks."
+                    ],
+                    also: ["dx-oald", "mim-flow"]
+                  }
+                },
+                no: {
+                  id: "ref5",
+                  q: "~3–4 months old, feeding well only when sleepy or in a calm room?",
+                  short: "Distractible age?",
+                  help: "Developmental distractibility peaks around 3–4 months: efficient feeds when drowsy, frequent pulling off with the nipple still in the mouth, better feeding at night.",
+                  yes: {
+                    id: "dx-distract", dx: "Distractible feeder (developmental)", tag: "green",
+                    detail: {
+                      step: [
+                        "Feed in a calm, low-stimulation setting; feed at early cues and during naps.",
+                        "A nursing necklace or gentle counter-pressure can help.",
+                        "Reassure — it passes; supply is maintained by the efficient feeds."
+                      ]
+                    }
+                  },
+                  no: {
+                    id: "ref6",
+                    q: "Did refusal emerge after regular bottle use, with the infant preferring a fast teat flow?",
+                    short: "Teat preference?",
+                    help: "Flow preference: the infant roots and will take a bottle eagerly but fusses and pulls at the breast, especially before let-down.",
+                    yes: {
+                      id: "dx-teat", dx: "Teat / flow preference",
+                      detail: {
+                        step: [
+                          "Paced bottle-feeding with the slowest teat; reduce bottle and dummy use.",
+                          "Offer the breast at early hunger cues and when sleepy; skin-to-skin.",
+                          "An at-breast supplementer rewards latching with immediate flow."
+                        ]
+                      }
+                    },
+                    no: {
+                      id: "ref7",
+                      q: "An aversive oral history, with defensive behaviour at the breast?",
+                      short: "Aversive history?",
+                      help: "Oral aversion follows negative oral experiences: the infant is otherwise well and growing on an alternative route but defends against anything approaching the mouth.",
+                      yes: {
+                        id: "dx-aversion", dx: "Oral aversion",
+                        detail: {
+                          step: [
+                            "Gentle, non-pressured re-introduction; responsive feeding; never force.",
+                            "Feeding therapy (SLT / OT); treat any underlying pain.",
+                            "Positive oral experiences away from hunger; skin-to-skin."
+                          ]
+                        }
+                      },
+                      no: {
+                        id: "ref8",
+                        q: "Does the infant fuss and escalate THROUGH the feed, calmer on a bottle?",
+                        short: "Escalates through feed?",
+                        help: "The pattern of frustration at a slow or falling supply — as opposed to fighting a fast flow at the start. If weight gain is also slipping, work the low-supply branch.",
+                        yes: {
+                          id: "dx-slowflow", dx: "Slow-flow / low-supply frustration",
+                          detail: {
+                            note: "If weight gain is faltering, this belongs in the low-intake branch — confirm intake and supply.",
+                            step: [
+                              "Watch a full feed and check the growth chart.",
+                              "Support latch and transfer; an at-breast supplementer while building supply.",
+                              "Work the production questions if supply is the issue."
+                            ],
+                            also: ["a7", "mim-flow"]
+                          }
+                        },
+                        no: {
+                          id: "dx-refuse-unk", dx: "Breast refusal — cause not yet identified",
+                          detail: {
+                            step: [
+                              "IBCLC review with a full feed observation.",
+                              "Protect the parent's supply with regular expression while investigating.",
+                              "Trial skin-to-skin, bath-feeding, and feeding in motion.",
+                              "Reassess in a few days — most declare a cause or resolve."
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          no: {
+            id: "b4",
+            q: "Is the concern that supply seems low, despite adequate weight gain and output?",
+            short: "Supply worry?",
+            help: "The infant is thriving, but the parent is worried about milk supply.",
+            yes: {
+              id: "b5",
+              q: "Are there forceful-flow / oversupply signs as well?",
+              short: "Oversupply signs?",
+              help: "The paradox worth naming: brisk flow makes the infant choke, clamp and pull off, one breast drains poorly, and feeds look chaotic — which the parent reads as ‘not enough’.",
+              yes: {
+                id: "dx-perc-over", dx: "Perceived low supply due to oversupply", tag: "amber",
+                detail: {
+                  step: [
+                    "Show the growth chart; explain the physiology.",
+                    "Manage as oversupply — finish the first breast, block feeding, stop rescue pumping.",
+                    "Do NOT add pumping or galactagogues.",
+                    "Reassure — most settles by ~12 weeks."
+                  ],
+                  also: ["dx-oald"]
+                }
+              },
+              no: {
+                id: "dx-perceived", dx: "Perceived insufficient milk supply (normal)", tag: "green",
+                detail: {
+                  note: "A positive diagnosis made on normal growth and output — not a label of exclusion.",
+                  step: [
+                    "Reassure with the objective data; show the growth chart.",
+                    "Teach normal infant behaviour, hunger cues, cluster feeding, and the weeks 6–12 regulation changes (softer breasts, shorter feeds, less leaking are all normal).",
+                    "A low pump yield is a poor proxy for supply — say so.",
+                    "Offer a review to confirm the trajectory rather than leaving the worry open."
+                  ],
+                  also: ["dx-perc-over"]
+                }
+              }
+            },
+            no: {
+              id: "dx-clarify", dx: "Clarify the concern — re-take the history",
+              detail: {
+                step: [
+                  "Re-take a focused history and observe a full feed.",
+                  "Screen again for pain, a lump, refusal, low mood, and social stressors.",
+                  "Confirm the growth and output data with the parent.",
+                  "Book a review rather than discharging an unexplained concern."
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+};
+/* end T */
+
+/* Extra reference nodes reachable only as cross-links (not on any Yes/No path) */
+const EXTRA = {
+  "dx-oald": { id: "dx-oald", kind: "dx", label: "Oversupply & overactive let-down", tag: "amber",
+    detail: { note: "One physiology — excess production with brisk ejection — that presents as reflux, CMPA, colic, refusal, recurrent blocked ducts, and even perceived low supply.",
+      clue: ["Choking, gulping, clamping, pulling off as milk sprays; short efficient feeds; refusing the second breast.", "Gassy, straining, frequent large explosive green frothy stools; rapid weight gain.", "Recurrent engorgement and blocked ducts; forceful spray on release."],
+      step: ["Finish the first breast before offering the second; block feeding (one breast per 2–4 h) if marked.", "Laid-back or side-lying positioning; brief pre-latch expression.", "Stop rescue pumping — it feeds the loop.", "Most self-corrects by ~12 weeks."],
+      also: ["mim-cmpa", "dx-plug", "dx-fastflow", "dx-perc-over"] } },
+  "cycle-damage": { id: "cycle-damage", kind: "dx", label: "Cycle: nipple damage → infection", tag: "amber",
+    detail: { note: "poor latch → fissure → S. aureus colonisation → pain + poor healing → shallower latch to avoid pain → more damage.",
+      step: ["BREAK IT: latch correction + wound care + treat / decolonise S. aureus together — fixing only one arm lets the loop continue."],
+      also: ["dx-trauma-inf", "dx-position"] } },
+  "mim-cmpa": { id: "mim-cmpa", kind: "dx", label: "Mimic: oversupply stools vs CMPA", tag: "amber",
+    detail: { note: "Both give a gassy, unsettled infant with green frothy or mucousy stools and back-arching.",
+      clue: ["Oversupply: rapid weight gain, forceful spray, recurrent engorgement, well between times.", "CMPA: blood or visible mucus in stool, eczema, faltering or poor weight gain, family atopy, other allergic signs."],
+      step: ["Manage flow first; trial maternal dairy exclusion (2–4 weeks) only if CMPA features are present."],
+      also: ["dx-oald", "dx-painrefuse"] } },
+  "mim-thrush": { id: "mim-thrush", kind: "dx", label: "Mimic: vasospasm vs ‘ductal thrush’", tag: "amber",
+    detail: { note: "Both present as deep, burning, often bilateral pain with a near-normal exam.",
+      clue: ["Vasospasm: visible white → blue → red colour change, a cold trigger, relief with warmth.", "Candidiasis of the lactating breast: a contested entity — require corroborating signs (infant oral thrush, satellite areolar rash, or culture) before antifungals."],
+      step: ["Trial vasospasm management; re-check latch and flange; consider persistent-pain pathways. Avoid reflexive empirical antifungals."],
+      also: ["dx-raynaud", "dx-deeppain"] } },
+  "mim-tie": { id: "mim-tie", kind: "dx", label: "Mimic: posterior tongue restriction vs immaturity", tag: "amber",
+    detail: { note: "Both give a disorganised early latch that ‘might just need practice’.",
+      clue: ["Restriction: persistent maternal pain, clicking, milk spilling, poor weight gain, reflux-like symptoms from aerophagia, restricted tongue elevation on a structured assessment.", "Immaturity: late-preterm / early-term, improving week on week, adequate transfer, less maternal pain."],
+      step: ["Use a validated oral-function assessment plus the weight trajectory; frenotomy only for demonstrated functional restriction."],
+      also: ["dx-oral", "dx-suck"] } },
+  "mim-dmer": { id: "mim-dmer", kind: "dx", label: "Mimic: D-MER vs postnatal depression", tag: "amber",
+    detail: { note: "Both involve low mood in a breastfeeding parent.",
+      clue: ["D-MER: an abrupt wave of dysphoria seconds before let-down, clearing within 30–90 s, every ejection, otherwise well.", "PND / anxiety: pervasive low mood, anhedonia or anxiety not tied to let-down."],
+      step: ["Track the timing against feeds. D-MER: validate and reassure. Pervasive symptoms: screen and refer (the two can coexist)."],
+      also: ["dx-dmer"] } },
+  "mim-ibc": { id: "mim-ibc", kind: "dx", label: "Mimic: non-resolving mastitis vs breast cancer", tag: "red",
+    detail: { note: "Both give a red, swollen, warm breast.",
+      clue: ["Mastitis: onset over hours to a day or two, systemic symptoms, responds to conservative care ± antibiotics within 48 h.", "IBC: does not settle on antibiotics, peau d'orange, skin thickening, nipple retraction, a fixed mass, axillary nodes; may arise outside the postpartum window."],
+      step: ["If a breast has not clearly improved after an appropriate antibiotic course → imaging and core biopsy, NOT another prescription."],
+      also: ["dx-ibc", "dx-bacterial"] } },
+  "mim-flow": { id: "mim-flow", kind: "dx", label: "Mimic: fast-flow vs low-supply refusal", tag: "amber",
+    detail: { note: "Both look like ‘fussing and fighting at the breast’.",
+      clue: ["Fast flow: fights at the START of the feed, coughs / pulls off as milk sprays, settles later or laid-back, gains weight fast.", "Low supply: calm at first then escalates THROUGH the feed, roots frantically, calmer and takes more from a bottle, gains weight slowly."],
+      step: ["Watch a full feed and check the growth chart before deciding which loop you are in."],
+      also: ["dx-fastflow", "dx-slowflow"] } }
+};
+
+/* ============================================================
+   ENGINE
+   ============================================================ */
+const NS = "http://www.w3.org/2000/svg";
+const NODE_W = 250;
+const COL = 300;
+const ROW_GAP = 12;
+const WRAP = 32;
+
+const svg = document.getElementById("map");
+const stage = document.getElementById("stage");
+const gRoot = document.createElementNS(NS, "g");
+const gLinks = document.createElementNS(NS, "g");
+const gNodes = document.createElementNS(NS, "g");
+gRoot.appendChild(gLinks); gRoot.appendChild(gNodes); svg.appendChild(gRoot);
+
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const INDEX = {};
+const CROSS = [];
+
+function build(spec, parentNode, branch, depth) {
+  const n = {
+    id: spec.id, kind: spec.dx ? "dx" : "q",
+    q: spec.q, help: spec.help || "", short: spec.short || null,
+    dx: spec.dx, tag: spec.tag || null, detail: spec.detail || null,
+    label: spec.q || spec.dx || spec.id,
+    depth: depth, parents: [], children: []
+  };
+  INDEX[n.id] = n;
+  if (parentNode) n.parents.push({ node: parentNode, answer: branch, cross: false });
+  for (const answer of ["yes", "no"]) {
+    const sub = spec[answer];
+    if (!sub) continue;
+    if (sub.goto) { CROSS.push({ parentId: n.id, answer: answer, targetId: sub.goto, note: sub.note || "" }); continue; }
+    const child = build(sub, n, answer, depth + 1);
+    n.children.push({ answer: answer, node: child, cross: false });
+  }
+  return n;
+}
+const ROOT = build(T, null, null, 0);
+CROSS.forEach(c => {
+  const p = INDEX[c.parentId], t = INDEX[c.targetId];
+  if (!p || !t) { console.warn("bad goto", c); return; }
+  p.children.push({ answer: c.answer, node: t, cross: true, note: c.note });
+  t.parents.push({ node: p, answer: c.answer, cross: true });
+});
+Object.values(EXTRA).forEach(e => { e.parents = []; e.children = []; e.depth = 99; INDEX[e.id] = e; });
+
+function canonParentEdge(n) { return n.parents.find(p => !p.cross) || null; }
+function canonParent(n) { const e = canonParentEdge(n); return e ? e.node : null; }
+function canonAnswer(n) { const e = canonParentEdge(n); return e ? e.answer : null; }
+function chainOf(id) {
+  const arr = []; let n = INDEX[id];
+  while (n) { arr.push(n); n = canonParent(n); }
+  return arr;
+}
+function countLeaves(node, seen) {
+  seen = seen || new Set();
+  if (seen.has(node.id)) return 0;
+  seen.add(node.id);
+  const kids = node.children.filter(e => !e.cross && canonParent(e.node) === node);
+  if (!kids.length) return 1;
+  return kids.reduce((s, e) => s + countLeaves(e.node, seen), 0);
+}
+
+let view = { x: 0, y: 0, k: 1 };
+let selId = ROOT.id;
+let drawn = new Map();
+let els = new Map();
+let opened = new Set([ROOT.id]);
+
+function isOpen(n) { return n === ROOT || opened.has(n.id); }
+function collapseUnder(node) {
+  node.children.forEach(e => {
+    if (e.cross) return;
+    if (canonParent(e.node) !== node) return;
+    opened.delete(e.node.id);
+    collapseUnder(e.node);
+  });
+}
+function revealTo(node) {
+  let n = node;
+  while (n) { opened.add(n.id); n = canonParent(n); }
+}
+
+function wrapText(text, max) {
+  const words = String(text).split(" ");
+  const lines = []; let cur = "";
+  for (const w of words) {
+    if ((cur + " " + w).trim().length <= max) cur = (cur + " " + w).trim();
+    else { if (cur) lines.push(cur); cur = w; }
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+/* ---------- layout ----------
+   Unexpanded branches render as clickable "Yes" / "No" stub NODES.
+   An expanded branch's answer moves onto the EDGE as a clickable label. */
+const STUB_W = 74, STUB_H = 32;
+
+function nodeH(node) {
+  node._lines = wrapText(node.label, WRAP);
+  return Math.max(38, 16 + node._lines.length * 15.5);
+}
+
+function layout() {
+  let cursorY = 0;
+  const items = [];
+  const slot = (h) => { const y = cursorY + h / 2; cursorY += h + ROW_GAP; return y; };
+
+  function walk(node) {
+    node._h = nodeH(node);
+    node.x = node.depth * COL;
+    const cp = canonParent(node);
+    items.push({ t: "node", key: node.id, node: node, parentKey: cp ? cp.id : null });
+
+    const canonKids = node.children.filter(e => !e.cross && canonParent(e.node) === node);
+    const openKids = canonKids.filter(e => isOpen(e.node));
+    const stubKids = canonKids.filter(e => !isOpen(e.node));
+
+    if (openKids.length === 0) {
+      if (stubKids.length) {
+        const ys = [];
+        stubKids.forEach(e => {
+          const y = slot(STUB_H);
+          items.push({ t: "stub", key: "s:" + e.node.id, parentKey: node.id, answer: e.answer, node: e.node, x: (node.depth + 1) * COL, y: y });
+          ys.push(y);
+        });
+        node.y = (ys[0] + ys[ys.length - 1]) / 2;
+      } else {
+        node.y = slot(node._h);
+      }
+    } else {
+      openKids.forEach(e => walk(e.node));
+      node.y = (openKids[0].node.y + openKids[openKids.length - 1].node.y) / 2;
+      // the branch(es) not expanded float as small pills right beside the parent
+      stubKids.forEach(e => {
+        const off = (e.answer === "yes" ? -1 : 1) * (node._h / 2 + STUB_H / 2 + 18);
+        items.push({ t: "stub", key: "s:" + e.node.id, parentKey: node.id, answer: e.answer, node: e.node, x: (node.depth + 1) * COL, y: node.y + off });
+      });
+    }
+  }
+  walk(ROOT);
+  return items;
+}
+
+function bezier(x1, y1, x2, y2) {
+  const mx = (x1 + x2) / 2;
+  return `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+}
+
+/* ---------- element factories ---------- */
+function mkRect(cls) { const r = document.createElementNS(NS, "rect"); r.setAttribute("class", cls); r.setAttribute("rx", 7); r.setAttribute("ry", 7); return r; }
+function mkText(cls) { const t = document.createElementNS(NS, "text"); t.setAttribute("class", cls); return t; }
+
+function makeEl(item) {
+  const g = document.createElementNS(NS, "g");
+  g.setAttribute("tabindex", "0");
+  g.appendChild(g._box = mkRect("box"));
+  g.appendChild(g._tag = mkText("tagword"));
+  g.appendChild(g._txt = mkText("lbl"));
+  if (item.t === "stub") {
+    const act = () => { const p = INDEX[item.parentKey]; const edge = p.children.find(e => e.answer === item.answer); if (edge && edge.cross) goToNode(edge.node.id); else answerQuestion(p, item.answer); };
+    g.addEventListener("click", (e) => { e.stopPropagation(); act(); });
+    g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); act(); } });
+  } else {
+    g.addEventListener("click", (e) => { e.stopPropagation(); onItemClick(item); });
+    g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onItemClick(item); } });
+  }
+  return g;
+}
+
+function paintEl(g, item) {
+  const t = g._txt;
+  while (t.firstChild) t.removeChild(t.firstChild);
+
+  if (item.t === "stub") {
+    const yes = item.answer === "yes";
+    const parent = INDEX[item.parentKey];
+    const edge = parent.children.find(e => e.answer === item.answer);
+    const isCross = edge && edge.cross;
+    g.setAttribute("class", "node stub" + (yes ? " br-yes" : "") + (isCross ? " br-cross" : ""));
+    g._box.setAttribute("width", STUB_W); g._box.setAttribute("height", STUB_H); g._box.setAttribute("y", -STUB_H / 2);
+    g._tag.textContent = "";
+    const ts = document.createElementNS(NS, "tspan");
+    ts.setAttribute("x", STUB_W / 2); ts.setAttribute("y", 0);
+    ts.setAttribute("text-anchor", "middle"); ts.setAttribute("dominant-baseline", "central");
+    ts.textContent = (yes ? "Yes" : "No") + (isCross ? " ↗" : "");
+    t.appendChild(ts);
+    return;
+  }
+
+  const node = item.node;
+  const h = node._h;
+  g.setAttribute("class", "node kind-" + node.kind + (node.tag ? " t-" + node.tag : "") + (node === ROOT ? " root" : ""));
+  g._box.setAttribute("width", NODE_W);
+  g._box.setAttribute("height", h); g._box.setAttribute("y", -h / 2);
+  g._tag.textContent = node === ROOT ? "START HERE" : (node.kind === "dx" ? "DIAGNOSIS" : "QUESTION");
+  g._tag.setAttribute("class", "tagword");
+  g._tag.setAttribute("x", 14); g._tag.setAttribute("y", -h / 2 + 12);
+  const startY = -h / 2 + 26;
+  node._lines.forEach((ln, i) => {
+    const ts = document.createElementNS(NS, "tspan");
+    ts.setAttribute("x", 14); ts.setAttribute("y", startY + i * 15.5);
+    ts.textContent = ln;
+    t.appendChild(ts);
+  });
+}
+
+/* ---------- render + tween ---------- */
+let raf = null;
+function render(animate) {
+  const items = layout();
+  const keys = new Set(items.map(it => it.key));
+  for (const [k, g] of els) if (!keys.has(k)) { g.remove(); els.delete(k); }
+  items.forEach(it => {
+    let g = els.get(it.key);
+    if (!g) { g = makeEl(it); els.set(it.key, g); gNodes.appendChild(g); }
+    paintEl(g, it);
+    g.classList.toggle("sel", it.t === "node" && it.node.id === selId);
+    it._g = g;
+  });
+
+  const from = new Map(drawn);
+  const to = new Map(items.map(it => [it.key, { x: it.t === "stub" ? it.x : it.node.x, y: it.t === "stub" ? it.y : it.node.y }]));
+  const byKey = new Map(items.map(it => [it.key, it]));
+  const startPos = key => {
+    if (from.has(key)) return from.get(key);
+    const it = byKey.get(key);
+    const pk = it && it.parentKey;
+    if (pk && from.has(pk)) return from.get(pk);
+    if (pk && to.has(pk)) return to.get(pk);
+    return to.get(key);
+  };
+
+  if (!animate || reduceMotion) {
+    drawn = to;
+    paint(items, byKey, 1, k => to.get(k), k => to.get(k));
+    return;
+  }
+  const f0 = new Map(items.map(it => [it.key, startPos(it.key)]));
+  const t0 = performance.now(); const DUR = 300;
+  cancelAnimationFrame(raf);
+  (function frame(now) {
+    const p = Math.min(1, (now - t0) / DUR);
+    const e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+    paint(items, byKey, e, k => f0.get(k), k => to.get(k));
+    if (p < 1) raf = requestAnimationFrame(frame);
+    else drawn = to;
+  })(t0);
+}
+
+function edgeLabel(x, y, ans, onClick) {
+  const g = document.createElementNS(NS, "g");
+  g.setAttribute("class", "elabel " + ans);
+  g.setAttribute("transform", `translate(${x},${y})`);
+  const w = ans === "yes" ? 32 : 26;
+  const r = document.createElementNS(NS, "rect");
+  r.setAttribute("class", "elabel-bg");
+  r.setAttribute("x", -w / 2); r.setAttribute("y", -9); r.setAttribute("width", w); r.setAttribute("height", 18); r.setAttribute("rx", 4);
+  g.appendChild(r);
+  const tx = document.createElementNS(NS, "text");
+  tx.setAttribute("class", "elabel-t");
+  tx.setAttribute("x", 0); tx.setAttribute("y", 0);
+  tx.setAttribute("text-anchor", "middle"); tx.setAttribute("dominant-baseline", "central");
+  tx.textContent = ans === "yes" ? "YES" : "NO";
+  g.appendChild(tx);
+  g.addEventListener("click", (e) => { e.stopPropagation(); onClick(); });
+  return g;
+}
+
+function paint(items, byKey, e, fromPos, toPos) {
+  items.forEach(it => {
+    const a = fromPos(it.key), b = toPos(it.key);
+    it._cx = a.x + (b.x - a.x) * e;
+    it._cy = a.y + (b.y - a.y) * e;
+    it._g.setAttribute("transform", `translate(${it._cx + 6},${it._cy})`);
+    it._g.style.opacity = (e < 1 && !drawn.has(it.key)) ? String(Math.max(0, e * 1.4 - 0.4)) : "1";
+  });
+  while (gLinks.firstChild) gLinks.removeChild(gLinks.firstChild);
+  const onPath = new Set(chainOf(selId).map(n => n.id));
+
+  items.forEach(it => {
+    if (it.parentKey) {
+      const pa = byKey.get(it.parentKey);
+      if (pa) {
+        const x1 = pa._cx + 6 + NODE_W, y1 = pa._cy;
+        const x2 = it._cx + 6, y2 = it._cy;
+        const p = document.createElementNS(NS, "path");
+        let cls = "link" + (it.t === "stub" ? " to-stub" : "");
+        if (it.t === "node" && onPath.has(it.parentKey) && onPath.has(it.node.id)) cls += " on-path";
+        p.setAttribute("class", cls);
+        p.setAttribute("d", bezier(x1, y1, x2, y2));
+        gLinks.appendChild(p);
+        // an expanded child edge carries its answer as a clickable label
+        if (it.t === "node" && pa.node.kind === "q") {
+          const edge = pa.node.children.find(ed => !ed.cross && ed.node === it.node);
+          if (edge) {
+            const lx = x1 + (x2 - x1) * 0.5, ly = y1 + (y2 - y1) * 0.5;
+            const pn = pa.node;
+            gLinks.appendChild(edgeLabel(lx, ly, edge.answer, () => collapseAnswer(pn, edge.answer)));
+          }
+        }
+      }
+    }
+    // DAG merge connectors
+    if (it.t === "node") it.node.children.forEach(edge => {
+      if (!edge.cross) return;
+      const tgt = byKey.get(edge.node.id);
+      if (!tgt) return;
+      const p = document.createElementNS(NS, "path");
+      p.setAttribute("class", "link cross");
+      p.setAttribute("d", bezier(it._cx + 6 + NODE_W, it._cy, tgt._cx + 6, tgt._cy));
+      gLinks.appendChild(p);
+    });
+  });
+}
+
+/* ---------- interactions ---------- */
+function onItemClick(item) {
+  selId = item.node.id;
+  render(false); renderCrumbs();
+  openPanel(item.node); showPanel();
+}
+function collapseAnswer(qnode, ans) {
+  const edge = qnode.children.find(e => e.answer === ans && !e.cross);
+  if (!edge) return;
+  opened.delete(edge.node.id);
+  collapseUnder(edge.node);
+  selId = qnode.id;
+  render(true); renderCrumbs();
+  centerOn(qnode); openPanel(qnode); showPanel();
+}
+
+function answerQuestion(qnode, ans) {
+  const edge = qnode.children.find(e => e.answer === ans);
+  if (!edge) return;
+  if (edge.cross) { goToNode(edge.node.id); return; }
+  qnode.children.forEach(e => {
+    if (e.cross || e.node === edge.node) return;
+    if (canonParent(e.node) !== qnode) return;
+    opened.delete(e.node.id); collapseUnder(e.node);
+  });
+  opened.add(edge.node.id);
+  selId = edge.node.id;
+  render(true); renderCrumbs();
+  centerOn(edge.node);
+  openPanel(edge.node); showPanel();
+}
+
+function goToNode(id) {
+  const target = INDEX[id];
+  if (!target) return;
+  if (target.depth === 99) { selId = id; openPanel(target); showPanel(); return; }
+  revealTo(target);   // reveal target + its canonical ancestors; leave other open branches alone
+  selId = id;
+  render(true); renderCrumbs();
+  centerOn(target);
+  openPanel(target); showPanel();
+  const g = els.get(target.id);
+  if (g && !reduceMotion) { g.classList.remove("flash"); void g.getBBox(); g.classList.add("flash"); }
+}
+
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+const panel = document.getElementById("panel");
+const scrim = document.getElementById("scrim");
+
+function openPanel(node) {
+  document.getElementById("p-kicker").textContent =
+    node === ROOT ? "Start here" : node.kind === "q" ? "Question" : "Working diagnosis";
+  document.getElementById("p-title").textContent = node.label;
+  const badge = document.getElementById("p-badge");
+  const bn = { red: "Do not miss", green: "Likely normal", amber: "Commonly mislabelled" }[node.tag] || "";
+  badge.textContent = bn;
+  badge.className = "badge" + (node.tag ? " " + node.tag : "");
+  badge.style.display = bn ? "" : "none";
+
+  const b = document.getElementById("p-body");
+  b.innerHTML = "";
+
+  if (node.kind === "q") {
+    const c = document.createElement("div"); c.className = "choices";
+    const mk = (ans) => {
+      const btn = document.createElement("button");
+      btn.className = ans;
+      btn.textContent = ans === "yes" ? "Yes" : "No";
+      const edge = node.children.find(e => e.answer === ans);
+      if (edge && !edge.cross && opened.has(edge.node.id)) btn.classList.add("picked");
+      btn.addEventListener("click", () => answerQuestion(node, ans));
+      return btn;
+    };
+    c.appendChild(mk("yes")); c.appendChild(mk("no"));
+    b.appendChild(c);
+    const hint = document.createElement("p");
+    hint.className = "note";
+    hint.innerHTML = "&hellip; or tap the <b>Yes</b> / <b>No</b> node on the map — it opens into the next question.";
+    b.appendChild(hint);
+    if (node.help) {
+      const h = document.createElement("div"); h.className = "assess";
+      h.innerHTML = "<strong>How to assess.</strong> " + esc(node.help);
+      b.appendChild(h);
+    }
+    const others = node.parents.filter(p => p.cross);
+    if (others.length) {
+      const h = document.createElement("h3"); h.textContent = "Also reached from"; b.appendChild(h);
+      const ul = document.createElement("ul");
+      others.forEach(p => { const li = document.createElement("li"); li.textContent = (p.node.short || p.node.label) + " — " + p.answer; ul.appendChild(li); });
+      b.appendChild(ul);
+    }
+    return;
+  }
+
+  // diagnosis
+  const d = node.detail || {};
+  const steps = chainOf(node.id).reverse();
+  if (steps.length > 1) {
+    const h = document.createElement("h3"); h.textContent = "Path taken"; b.appendChild(h);
+    const p = document.createElement("p"); p.style.fontSize = "0.83rem"; p.style.color = "var(--ink-soft)";
+    const parts = [];
+    for (let i = 0; i < steps.length - 1; i++) {
+      const q = steps[i], nx = steps[i + 1];
+      parts.push((q.short || (q.label || "").slice(0, 20)) + " — " + (canonAnswer(nx) || ""));
+    }
+    p.textContent = parts.join("   ›   ");
+    b.appendChild(p);
+  }
+  if (d.note) { const p = document.createElement("p"); p.className = "note"; p.textContent = d.note; b.appendChild(p); }
+  const addList = (title, arr) => {
+    if (!arr || !arr.length) return;
+    const h = document.createElement("h3"); h.textContent = title; b.appendChild(h);
+    const ul = document.createElement("ul");
+    arr.forEach(it => { const li = document.createElement("li"); li.innerHTML = esc(it); ul.appendChild(li); });
+    b.appendChild(ul);
+  };
+  addList("What points to it", d.clue);
+  addList("First steps for the feeding problem", d.step);
+  if (node.parents.filter(p => p.cross).length) {
+    const h = document.createElement("h3"); h.textContent = "Also reached from"; b.appendChild(h);
+    const ul = document.createElement("ul");
+    node.parents.filter(p => p.cross).forEach(p => { const li = document.createElement("li"); li.textContent = (p.node.short || p.node.label) + " — " + p.answer; ul.appendChild(li); });
+    b.appendChild(ul);
+  }
+  if (d.also && d.also.length) {
+    const h = document.createElement("h3"); h.textContent = "Related nodes"; b.appendChild(h);
+    const w = document.createElement("div"); w.className = "chips";
+    d.also.forEach(id => {
+      const tgt = INDEX[id]; if (!tgt) return;
+      const c = document.createElement("button"); c.className = "chip";
+      c.textContent = tgt.label;
+      c.addEventListener("click", () => goToNode(id));
+      w.appendChild(c);
+    });
+    b.appendChild(w);
+  }
+}
+function closePanel() { panel.classList.remove("open"); scrim.classList.remove("on"); }
+function showPanel() { panel.classList.add("open"); scrim.classList.add("on"); }
+
+function renderCrumbs() {
+  const bar = document.getElementById("crumbs");
+  bar.innerHTML = "";
+  const steps = chainOf(selId).reverse();   // [ROOT, ..., selected]
+  if (steps.length <= 1 && INDEX[selId] === ROOT) { bar.classList.add("empty"); return; }
+  bar.classList.remove("empty");
+  const lead = document.createElement("span"); lead.className = "lead"; lead.textContent = "Path";
+  bar.appendChild(lead);
+  for (let i = 0; i < steps.length - 1; i++) {
+    const q = steps[i], nx = steps[i + 1];
+    if (q.kind !== "q") continue;
+    const c = document.createElement("button"); c.className = "crumb";
+    const lab = q.short || (q.label || "").slice(0, 20);
+    c.innerHTML = esc(lab) + "  <b>" + esc((canonAnswer(nx) || "").toUpperCase()) + "</b>";
+    c.addEventListener("click", () => rewindTo(q.id));
+    bar.appendChild(c);
+  }
+  const cur = INDEX[selId];
+  if (cur && cur.kind === "dx") {
+    const c = document.createElement("span"); c.className = "crumb dx";
+    c.textContent = cur.short || cur.label;
+    bar.appendChild(c);
+  }
+}
+function rewindTo(qid) {
+  const q = INDEX[qid];
+  collapseUnder(q);
+  opened.add(q.id);
+  selId = q.id;
+  render(true); renderCrumbs(); centerOn(q); openPanel(q); showPanel();
+}
+
+function centerOn(node) {
+  const r = stage.getBoundingClientRect();
+  if (view.k < 0.75) view.k = 0.85;
+  view.x = r.width * 0.38 - (node.x + NODE_W / 2) * view.k;
+  view.y = r.height / 2 - node.y * view.k;
+  applyView();
+}
+function fit() {
+  const items = layout();
+  let a = Infinity, c = Infinity, bx = -Infinity, by = -Infinity;
+  items.forEach(it => {
+    const x = it.t === "stub" ? it.x : it.node.x;
+    const y = it.t === "stub" ? it.y : it.node.y;
+    const w = it.t === "stub" ? STUB_W : NODE_W;
+    const hh = it.t === "stub" ? STUB_H : it.node._h;
+    a = Math.min(a, x); bx = Math.max(bx, x + w);
+    c = Math.min(c, y - hh / 2); by = Math.max(by, y + hh / 2);
+  });
+  const r = stage.getBoundingClientRect(); const pad = 44;
+  const k = Math.min((r.width - pad * 2) / (bx - a), (r.height - pad * 2) / (by - c), 1.1);
+  view.k = Math.max(0.22, k);
+  view.x = pad + (r.width - pad * 2 - (bx - a) * view.k) / 2 - a * view.k;
+  view.y = pad + (r.height - pad * 2 - (by - c) * view.k) / 2 - c * view.k;
+  applyView();
+}
+function applyView() { gRoot.setAttribute("transform", `translate(${view.x},${view.y}) scale(${view.k})`); }
+
+let dragging = false, last = null, moved = 0;
+svg.addEventListener("pointerdown", (e) => { dragging = true; moved = 0; last = { x: e.clientX, y: e.clientY }; svg.classList.add("panning"); svg.setPointerCapture(e.pointerId); });
+svg.addEventListener("pointermove", (e) => {
+  if (!dragging) return;
+  const dx = e.clientX - last.x, dy = e.clientY - last.y;
+  moved += Math.abs(dx) + Math.abs(dy);
+  view.x += dx; view.y += dy; last = { x: e.clientX, y: e.clientY }; applyView();
+});
+svg.addEventListener("pointerup", (e) => { dragging = false; svg.classList.remove("panning"); try { svg.releasePointerCapture(e.pointerId); } catch (x) {} });
+svg.addEventListener("click", () => { if (moved > 6) return; closePanel(); });
+svg.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  const r = svg.getBoundingClientRect();
+  const mx = e.clientX - r.left, my = e.clientY - r.top;
+  const wx = (mx - view.x) / view.k, wy = (my - view.y) / view.k;
+  view.k = Math.min(2.2, Math.max(0.2, view.k * Math.exp(-e.deltaY * 0.0015)));
+  view.x = mx - wx * view.k; view.y = my - wy * view.k; applyView();
+}, { passive: false });
+
+function resetTree() {
+  opened = new Set([ROOT.id]);
+  selId = ROOT.id;
+}
+function expandAll() {
+  opened = new Set(Object.values(INDEX).filter(n => n.depth !== 99).map(n => n.id));
+}
+document.getElementById("btn-fit").addEventListener("click", fit);
+document.getElementById("btn-expand").addEventListener("click", () => {
+  expandAll(); closePanel();
+  render(true); renderCrumbs(); setTimeout(fit, 320);
+});
+document.getElementById("btn-collapse").addEventListener("click", () => {
+  resetTree(); closePanel();
+  render(true); renderCrumbs(); setTimeout(fit, 320);
+});
+document.getElementById("btn-restart").addEventListener("click", () => {
+  resetTree();
+  render(true); renderCrumbs();
+  setTimeout(() => { centerOn(ROOT); openPanel(ROOT); showPanel(); }, 60);
+});
+document.getElementById("btn-legend").addEventListener("click", () => document.getElementById("legend").classList.toggle("hidden"));
+document.getElementById("p-close").addEventListener("click", closePanel);
+scrim.addEventListener("click", closePanel);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePanel(); });
+window.addEventListener("resize", applyView);
+
+/* boot */
+render(false);
+fit();
+setTimeout(() => { centerOn(ROOT); openPanel(ROOT); showPanel(); }, 260);
+setTimeout(() => { const h = document.getElementById("hint"); h.style.transition = "opacity .6s"; h.style.opacity = "0"; }, 6000);
+
+})();
+</script>

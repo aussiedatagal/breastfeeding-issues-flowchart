@@ -1,0 +1,24 @@
+.app {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+.stage {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+.hint {
+  position: absolute;
+  left: 16px;
+  bottom: 14px;
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  color: var(--ink-faint);
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  padding: 5px 9px;
+  border-radius: var(--radius);
+  pointer-events: none;
+  transition: opacity 500ms;
+}
