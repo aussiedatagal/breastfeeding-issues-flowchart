@@ -11,14 +11,22 @@
 }
 .hint {
   position: absolute;
-  left: 16px;
+  left: 62px;
   bottom: 14px;
-  font-family: var(--font-mono);
-  font-size: var(--step--2);
-  color: var(--ink-faint);
-  background: color-mix(in srgb, var(--bg) 82%, transparent);
-  padding: 5px 9px;
+  max-width: min(28rem, calc(100% - 140px));
+  text-align: left;
+  font-size: var(--step--1);
+  color: var(--ink-muted);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  padding: 8px 12px;
   border-radius: var(--radius);
-  pointer-events: none;
-  transition: opacity 500ms;
+  box-shadow: var(--shadow-sm);
+  line-height: 1.45;
+}
+.hint b {
+  color: var(--ink);
+}
+.hint:hover {
+  border-color: var(--accent);
 }

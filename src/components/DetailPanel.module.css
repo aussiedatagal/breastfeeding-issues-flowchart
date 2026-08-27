@@ -1,9 +1,12 @@
+/* Positioned within the .stage element, so it never covers the toolbar or
+   breadcrumb. On desktop it is a non-modal side drawer. */
 .panel {
-  position: fixed;
+  position: absolute;
   top: 0;
   right: 0;
-  height: 100%;
-  width: min(420px, 92vw);
+  bottom: 0;
+  width: 420px;
+  max-width: 92vw;
   background: var(--surface);
   border-left: 1px solid var(--hairline);
   box-shadow: var(--shadow);
@@ -15,6 +18,27 @@
 }
 .panel[data-open="true"] {
   transform: none;
+}
+
+/* Bottom sheet on small screens so the map stays visible above it. */
+.panel[data-compact="true"] {
+  top: auto;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: none;
+  height: min(64%, 26rem);
+  border-left: none;
+  border-top: 1px solid var(--hairline);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  transform: translateY(101%);
+}
+.panel[data-compact="true"][data-open="true"] {
+  transform: none;
+}
+.panel[data-compact="true"] .head {
+  padding-top: 14px;
 }
 
 .head {
@@ -175,7 +199,7 @@
 }
 
 .scrim {
-  position: fixed;
+  position: absolute;
   inset: 0;
   background: rgba(20, 17, 13, 0.28);
   opacity: 0;
@@ -186,10 +210,4 @@
 .scrim[data-open="true"] {
   opacity: 1;
   pointer-events: auto;
-}
-
-@media (max-width: 640px) {
-  .panel {
-    width: 100vw;
-  }
 }

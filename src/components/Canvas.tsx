@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import type { Graph } from "../graph/types.ts";
 import type { Layout, Placement } from "../graph/layout.ts";
 import type { Answer } from "../graph/types.ts";
@@ -14,7 +13,7 @@ interface Props {
   selectedId: string;
   activeIds: ReadonlySet<string>;
   panZoom: ReturnType<typeof usePanZoom>;
-  onSelectNode: (id: string) => void;
+  onInspectNode: (id: string) => void;
   onStubActivate: (placement: Placement) => void;
   onUndo: (questionId: string, answer: Answer) => void;
   onBackground: () => void;
@@ -26,35 +25,37 @@ export function Canvas({
   selectedId,
   activeIds,
   panZoom,
-  onSelectNode,
+  onInspectNode,
   onStubActivate,
   onUndo,
   onBackground,
 }: Props) {
-  const panning = useRef(false);
-
   return (
     <svg
       ref={panZoom.svgRef}
-      className={`dm-canvas${panning.current ? " is-panning" : ""}`}
+      className="dm-canvas"
+      role="application"
+      aria-roledescription="decision map"
+      aria-label="Breastfeeding difficulty decision map. Pan by dragging, zoom with the scroll wheel."
       {...panZoom.handlers}
-      onPointerDown={(e) => {
-        panning.current = true;
-        panZoom.handlers.onPointerDown(e);
-      }}
-      onPointerUp={(e) => {
-        panning.current = false;
-        panZoom.handlers.onPointerUp(e);
-      }}
       onClick={() => {
         if (!panZoom.consumedDrag()) onBackground();
       }}
     >
+      <title>Breastfeeding difficulty decision map</title>
       <g transform={panZoom.transform}>
         <Connectors layout={layout} activeIds={activeIds} onUndo={onUndo} />
         {layout.placements.map((p) => {
           if (p.kind === "stub") {
-            return <StubShape key={p.id} placement={p} onActivate={onStubActivate} />;
+            const parent = p.parentId ? graph.nodes.get(p.parentId) : undefined;
+            return (
+              <StubShape
+                key={p.id}
+                placement={p}
+                parentLabel={parent?.short ?? "this question"}
+                onActivate={onStubActivate}
+              />
+            );
           }
           const node = graph.nodes.get(p.nodeId);
           if (!node) return null;
@@ -64,7 +65,7 @@ export function Canvas({
               placement={p}
               node={node}
               selected={p.nodeId === selectedId}
-              onSelect={onSelectNode}
+              onSelect={onInspectNode}
             />
           );
         })}

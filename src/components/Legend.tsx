@@ -6,7 +6,7 @@ const rows: { swatch: React.CSSProperties; label: React.ReactNode }[] = [
     label: "A question — its branches are Yes / No nodes",
   },
   {
-    swatch: { background: "var(--surface-sunken)", borderColor: "var(--calm)" },
+    swatch: { background: "var(--surface-raised)", borderColor: "var(--calm)" },
     label: "Tap a Yes / No node to open that branch",
   },
   {
@@ -14,11 +14,7 @@ const rows: { swatch: React.CSSProperties; label: React.ReactNode }[] = [
     label: "Working diagnosis — the end of a path",
   },
   {
-    swatch: {
-      background: "transparent",
-      borderColor: "var(--accent)",
-      borderStyle: "dashed",
-    },
+    swatch: { background: "transparent", borderColor: "var(--accent)", borderStyle: "dashed" },
     label: "↗ jumps to a shared step (several paths, one outcome)",
   },
   {
@@ -35,11 +31,16 @@ const rows: { swatch: React.CSSProperties; label: React.ReactNode }[] = [
   },
 ];
 
-export function Legend({ open }: { open: boolean }) {
+export function Legend({ open, onClose }: { open: boolean; onClose: () => void }) {
   if (!open) return null;
   return (
     <div className={styles.legend} role="note">
-      <p className={styles.title}>How to read it</p>
+      <div className={styles.head}>
+        <p className={styles.title}>How to read it</p>
+        <button type="button" className={styles.close} onClick={onClose} aria-label="Close legend">
+          ×
+        </button>
+      </div>
       {rows.map((row, i) => (
         <div className={styles.row} key={i}>
           <span className={styles.swatch} style={row.swatch} />

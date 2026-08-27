@@ -2,13 +2,13 @@ import type { Answer, Graph, GraphNode } from "./types.ts";
 import { isQuestion } from "./types.ts";
 import { wrap } from "./text.ts";
 
-export const NODE_W = 260;
-export const STUB_W = 78;
-export const STUB_H = 34;
-const COL = 312;
-const ROW_GAP = 14;
-const WRAP_CHARS = 32;
-const LINE_H = 16;
+export const NODE_W = 264;
+export const STUB_W = 92;
+export const STUB_H = 40;
+const COL = 320;
+const ROW_GAP = 16;
+const WRAP_CHARS = 31;
+const LINE_H = 16.5;
 
 export interface Placement {
   id: string;
