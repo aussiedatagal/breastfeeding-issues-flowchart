@@ -7,8 +7,10 @@
   background: var(--surface);
   border-bottom: 1px solid var(--hairline);
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   white-space: nowrap;
   scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
 }
 .lead {
   flex: none;
@@ -81,4 +83,18 @@
 }
 .clear:hover {
   color: var(--accent);
+}
+
+@media (max-width: 720px), (max-height: 560px) {
+  .tray {
+    gap: 6px;
+    padding: 5px 12px;
+  }
+  .lead {
+    letter-spacing: 0.04em;
+  }
+  .chip {
+    padding: 4px 5px 4px 9px;
+    font-size: var(--step--2);
+  }
 }

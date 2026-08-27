@@ -30,7 +30,9 @@ export function DomainPicker({ graph, openIds, findings, onToggle, onGoToDomain 
                 className={styles.label}
                 onClick={() => (isOpen ? onGoToDomain(d.entry) : onToggle(d.entry, true))}
               >
-                <span className={styles.state}>{isOpen ? "open" : "＋"}</span>
+                <span className={styles.state} aria-hidden="true">
+                  {isOpen ? "✓" : "+"}
+                </span>
                 <span>{d.label}</span>
                 {count > 0 && (
                   <span className={styles.count}>
@@ -52,8 +54,7 @@ export function DomainPicker({ graph, openIds, findings, onToggle, onGoToDomain 
         })}
       </ul>
       <p className={styles.hint}>
-        Open every area that applies. Each is worked separately; findings from all of them build one
-        problem list.
+        Each area is worked on its own; findings from all of them build one problem list.
       </p>
     </div>
   );

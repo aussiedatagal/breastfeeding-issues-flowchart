@@ -51,9 +51,18 @@ export function DetailPanel({ isOpen, onClose, compact, ...rest }: Props) {
         className={styles.panel}
         data-open={isOpen}
         data-compact={compact}
+        data-root={rootSelected}
         aria-label="Details"
         inert={!isOpen}
       >
+        {compact && (
+          <button
+            type="button"
+            className={styles.grip}
+            aria-label="Close details"
+            onClick={onClose}
+          />
+        )}
         {rootSelected ? (
           <>
             <div className={styles.head}>
@@ -138,9 +147,9 @@ function PanelContent({
         <div style={{ flex: 1, minWidth: 0 }}>
           <p className={styles.kicker}>
             {isDomainEntry
-              ? domain!.label
+              ? (domain!.short ?? domain!.label)
               : domain
-                ? `${domain.label} · ${question ? "Question" : "Working diagnosis"}`
+                ? `${domain.short ?? domain.label} · ${question ? "Question" : "Working diagnosis"}`
                 : question
                   ? "Question"
                   : "Working diagnosis"}

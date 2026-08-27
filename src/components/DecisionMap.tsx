@@ -23,7 +23,11 @@ export function DecisionMap({ graph }: { graph: Graph }) {
   const { open, selectedId, selected, path, findings, actions } = useDecisionState(graph);
   const panZoom = usePanZoom();
   const theme = useTheme();
-  const compact = useMediaQuery("(max-width: 720px)");
+  // Phone-sized either way up: narrow, or short (landscape phone) — drives the
+  // compact chrome. The panel is a bottom sheet only when the screen is also
+  // narrow; a short-but-wide landscape phone gets the side drawer instead.
+  const compact = useMediaQuery("(max-width: 720px), (max-height: 560px)");
+  const bottomSheet = useMediaQuery("(max-width: 720px)");
 
   const targetLayout = useMemo(() => computeLayout(graph, open), [graph, open]);
   const layout = useAnimatedLayout(targetLayout);
@@ -39,8 +43,8 @@ export function DecisionMap({ graph }: { graph: Graph }) {
 
   const { fitTo, centerOn, ensureVisible } = panZoom;
   const inset = useMemo(
-    () => (panelOpen && !compact ? { right: PANEL_WIDTH } : undefined),
-    [panelOpen, compact],
+    () => (panelOpen && !bottomSheet ? { right: PANEL_WIDTH } : undefined),
+    [panelOpen, bottomSheet],
   );
 
   // The node together with the row directly below it (its Yes/No stubs and any
@@ -53,11 +57,14 @@ export function DecisionMap({ graph }: { graph: Graph }) {
       let maxX = p.x + p.w;
       let minY = p.y - p.h / 2;
       let maxY = p.y + p.h / 2;
+      // the row below (this node's stubs / opened child) and, for an endpoint,
+      // the parent question above it — so the framed unit always has context
+      const isEndpoint = p.kind === "diagnosis";
       for (const q of targetLayout.placements) {
-        const touches =
-          q.parentId === id ||
-          targetLayout.connectors.some((c) => c.fromId === id && c.toId === q.id);
-        if (!touches) continue;
+        const below = targetLayout.connectors.some((c) => c.fromId === id && c.toId === q.id);
+        const above =
+          isEndpoint && targetLayout.connectors.some((c) => c.toId === id && c.fromId === q.id);
+        if (!below && !above) continue;
         minX = Math.min(minX, q.x);
         maxX = Math.max(maxX, q.x + q.w);
         minY = Math.min(minY, q.y - q.h / 2);
@@ -78,15 +85,24 @@ export function DecisionMap({ graph }: { graph: Graph }) {
     (id: string, animate = true) => {
       const g = groupOf(id);
       if (!g) return;
-      if (compact) {
-        // keep the group in the strip above the bottom-sheet when it is open
-        const bottom = panelOpen ? Math.min(window.innerHeight * 0.6, 420) : 0;
-        centerOn(g.center, { fit: g.size, minK: 0.55, maxK: 1, animate, inset: { bottom } });
+      if (bottomSheet) {
+        // keep the group in the strip above the bottom sheet when it is open
+        // (the inset matches the sheet height in DetailPanel.module.css); sit it
+        // low in that strip so the path context above stays visible.
+        const bottom = panelOpen ? Math.min(window.innerHeight * 0.5, 380) + 8 : 0;
+        centerOn(g.center, {
+          fit: g.size,
+          minK: 0.7,
+          maxK: 1.15,
+          animate,
+          inset: { bottom },
+          anchorY: panelOpen ? 0.6 : 0.56,
+        });
       } else {
         ensureVisible(g.rect, { inset, align: 0.5 });
       }
     },
-    [groupOf, compact, panelOpen, centerOn, ensureVisible, inset],
+    [groupOf, bottomSheet, panelOpen, centerOn, ensureVisible, inset],
   );
 
   // Open the panel on a deliberate node click, or when a path lands on a diagnosis.
@@ -121,31 +137,35 @@ export function DecisionMap({ graph }: { graph: Graph }) {
     requestAnimationFrame(place); // once the SVG has real dimensions
   }, [selectedId, groupOf, centerOn]);
 
-  // Follow the selection as the user moves through the graph.
-  const prevSelected = useRef(selectedId);
+  // Follow the selection, and the panel opening/closing, so the current node
+  // always sits clear of the sheet (mobile) or drawer (desktop) — and fills the
+  // space again once they're gone.
   useEffect(() => {
-    if (prevSelected.current === selectedId) return;
-    prevSelected.current = selectedId;
-    focusGroup(selectedId);
-  }, [selectedId, focusGroup]);
-
-  // When the panel opens, re-frame so the current group clears it.
-  useEffect(() => {
-    if (!panelOpen) return;
-    if (compact) {
-      const g = groupOf(selectedId);
-      if (g)
-        centerOn(g.center, {
-          fit: g.size,
-          minK: 0.55,
-          maxK: 1,
-          inset: { bottom: Math.min(window.innerHeight * 0.6, 420) },
-        });
-    } else {
-      const g = groupOf(selectedId);
-      if (g) ensureVisible(g.rect, { inset: { right: PANEL_WIDTH }, align: 0.5 });
+    if (bottomSheet && panelOpen) {
+      // sheet is open: just keep the selected node itself visible in the strip
+      // above it — the sheet carries the detail, the map is only orientation.
+      const p = targetLayout.byId.get(selectedId);
+      if (!p) return;
+      centerOn(
+        { x: p.x + p.w / 2, y: p.y },
+        {
+          fit: { w: p.w, h: p.h },
+          minK: 0.8,
+          maxK: 1.15,
+          inset: { bottom: Math.min(window.innerHeight * 0.5, 380) + 8 },
+          anchorY: 0.6,
+        },
+      );
+      return;
     }
-  }, [panelOpen, compact, selectedId, groupOf, ensureVisible, centerOn]);
+    const g = groupOf(selectedId);
+    if (!g) return;
+    if (bottomSheet) {
+      centerOn(g.center, { fit: g.size, minK: 0.7, maxK: 1.15, anchorY: 0.56 });
+    } else {
+      ensureVisible(g.rect, { inset: panelOpen ? { right: PANEL_WIDTH } : {}, align: 0.5 });
+    }
+  }, [panelOpen, bottomSheet, selectedId, groupOf, targetLayout, ensureVisible, centerOn]);
 
   const onStubActivate = useCallback(
     (p: Placement) => {
@@ -224,15 +244,23 @@ export function DecisionMap({ graph }: { graph: Graph }) {
           onZoomIn={() => panZoom.zoomBy(1.3)}
           onZoomOut={() => panZoom.zoomBy(1 / 1.3)}
         />
-        {!hintDismissed && (
+        {!hintDismissed && !panelOpen && (
           <button
             type="button"
             className={styles.hint}
             onClick={() => setHintDismissed(true)}
             title="Dismiss"
           >
-            Tap a <b>Yes</b> / <b>No</b> node to open that branch. Tap an edge label to undo. Drag
-            to pan.
+            {compact ? (
+              <>
+                Tap <b>Yes</b> / <b>No</b> to follow a branch · pinch to zoom
+              </>
+            ) : (
+              <>
+                Tap a <b>Yes</b> / <b>No</b> node to open that branch. Tap an edge label to undo.
+                Drag to pan.
+              </>
+            )}
           </button>
         )}
         <DetailPanel
@@ -243,7 +271,7 @@ export function DecisionMap({ graph }: { graph: Graph }) {
           openIds={open}
           findings={findings}
           isOpen={panelOpen && (selected !== null || selectedId === ROOT_ID)}
-          compact={compact}
+          compact={bottomSheet}
           onClose={() => setPanelOpen(false)}
           onAnswer={actions.answer}
           onGoTo={actions.goTo}

@@ -188,6 +188,8 @@ export function usePanZoom(initial: Viewport = { x: 0, y: 0, k: 1 }) {
         animate?: boolean;
         /** if given, zoom so this world-size region fits the available viewport */
         fit?: { w: number; h: number };
+        /** vertical placement of `point` in the available area (0 top … 1 bottom, default 0.5) */
+        anchorY?: number;
       },
     ) => {
       const rect = rectOf();
@@ -195,7 +197,7 @@ export function usePanZoom(initial: Viewport = { x: 0, y: 0, k: 1 }) {
       const availW = rect.width - (opts?.inset?.right ?? 0);
       const availH = rect.height - (opts?.inset?.bottom ?? 0);
       const cx = availW / 2;
-      const cy = availH / 2;
+      const cy = availH * (opts?.anchorY ?? 0.5);
       let k = Math.max(view.current.k, opts?.minK ?? 0.7);
       if (opts?.fit) {
         const pad = 32;
