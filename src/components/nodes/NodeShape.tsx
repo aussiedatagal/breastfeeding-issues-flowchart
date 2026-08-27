@@ -26,12 +26,12 @@ export function NodeShape({ placement, node, selected, onSelect }: Props) {
 
   const targetId = isRoot || !node ? "__root__" : node.id;
   const kicker = isRoot
-    ? "START"
-    : placement.domainLabel
-      ? placement.domainLabel.toUpperCase()
+    ? "Start here"
+    : placement.domainShort
+      ? placement.domainShort
       : isDiagnosis
-        ? "DIAGNOSIS"
-        : "QUESTION";
+        ? "Working diagnosis"
+        : "Question";
   const ariaLabel =
     isRoot || !node
       ? "Start: what is the dyad dealing with?"
@@ -60,13 +60,13 @@ export function NodeShape({ placement, node, selected, onSelect }: Props) {
         }
       }}
     >
-      <rect className="dm-node__box" x={0} y={-h / 2} width={w} height={h} rx={4} />
-      <text className="dm-node__kicker" x={14} y={-h / 2 + 14}>
+      <rect className="dm-node__box" x={0} y={-h / 2} width={w} height={h} rx={14} />
+      <text className="dm-node__kicker" x={16} y={-h / 2 + 17}>
         {kicker}
       </text>
-      <text className="dm-node__label" x={14} y={-h / 2 + 30}>
+      <text className="dm-node__label" x={16} y={-h / 2 + 35}>
         {lines.map((line, i) => (
-          <tspan key={i} x={14} dy={i === 0 ? 0 : 16}>
+          <tspan key={i} x={16} dy={i === 0 ? 0 : 16}>
             {line}
           </tspan>
         ))}

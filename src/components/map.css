@@ -22,23 +22,25 @@
 .dm-node__box {
   fill: var(--surface);
   stroke: var(--hairline-strong);
-  stroke-width: 1.5;
+  stroke-width: 1.25;
 }
 .dm-node:hover .dm-node__box {
   stroke: var(--accent);
 }
 .dm-node.is-selected .dm-node__box {
   stroke: var(--accent);
-  stroke-width: 2.5;
+  stroke-width: 2.25;
 }
 .dm-node__kicker {
   fill: var(--ink-faint);
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  letter-spacing: 0.09em;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 .dm-node__label {
   fill: var(--ink);
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
 }
@@ -77,24 +79,29 @@
   fill: var(--caution);
 }
 
-/* Synthetic root — the "what is the dyad dealing with?" picker node. */
+/* Synthetic root — the "what is the dyad dealing with?" opening node. */
 .dm-node--root .dm-node__box {
-  fill: var(--surface-raised);
-  stroke: var(--ink-muted);
-  stroke-width: 2;
-  stroke-dasharray: 2 2;
+  fill: var(--root-wash);
+  stroke: var(--danger);
+  stroke-width: 1.5;
 }
 .dm-node--root .dm-node__kicker {
-  fill: var(--accent);
+  fill: var(--danger);
+}
+.dm-node--root .dm-node__label {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .dm-stub__box {
   fill: var(--surface-raised);
   stroke: var(--hairline-strong);
-  stroke-width: 1.6;
+  stroke-width: 1.25;
 }
 .dm-stub__label {
   fill: var(--ink-muted);
+  font-family: var(--font-sans);
   font-size: 13.5px;
   font-weight: 600;
 }
@@ -142,11 +149,12 @@
 
 .dm-link {
   fill: none;
-  stroke: var(--ink-faint);
-  stroke-width: 1.8;
+  stroke: var(--hairline-strong);
+  stroke-width: 1.6;
+  stroke-linecap: round;
 }
 .dm-link--stub {
-  stroke-dasharray: 5 4;
+  stroke-dasharray: 3 4;
   stroke-width: 1.6;
 }
 .dm-link--merge {
@@ -173,10 +181,10 @@
   stroke-width: 1;
 }
 .dm-elabel__text {
-  font-family: var(--font-mono);
-  font-size: 10px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.01em;
 }
 .dm-elabel--yes .dm-elabel__text {
   fill: var(--calm);

@@ -35,11 +35,13 @@ play). Each area is listed in `map.yaml`:
 ```yaml
 domains:
   - id: supply # short label, unique
-    label: Not enough milk, poor weight gain, or supply feels low
+    label: Not enough milk, poor weight gain, or supply feels low # the picker prompt
+    short: Milk supply & weight # 2–4 words — the column header on the map
     entry: q1 # the id of the first question in this area's tree
 ```
 
-`entry` must be the `id` of a question. Everything reachable from that question
+`entry` must be the `id` of a question. `short` is optional (it falls back to
+`label`), but a long `label` makes an unwieldy column header, so set it. Everything reachable from that question
 by `ifYes` / `ifNo` belongs to that area. To add a whole new problem area, add a
 `domains:` entry and author its question tree; to reword an area's opening,
 change `label` (the picker) and the `ask:` of its `entry` question (the node).

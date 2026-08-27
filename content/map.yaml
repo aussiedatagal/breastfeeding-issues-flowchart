@@ -11,15 +11,19 @@ rootPrompt: >
 domains:
   - id: supply
     label: Not enough milk, poor weight gain, or supply feels low
+    short: Milk supply & weight
     entry: q1
   - id: pain
     label: Nipple or breast pain
+    short: Nipple & breast pain
     entry: pain1
   - id: inflammation
     label: A breast lump, or a red, hot, or inflamed area
+    short: Lump or inflammation
     entry: inf1
   - id: refusal
     label: The baby fights, fusses at, or refuses the breast
+    short: Fussing or refusing
     entry: ref1
 
 multifactorialNote: >
