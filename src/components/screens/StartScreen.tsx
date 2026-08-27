@@ -18,7 +18,13 @@ export function StartScreen({ graph, findingsCount, onPickArea, onOpenSummary }:
       <ul className={styles.areas}>
         {graph.domains.map((d) => (
           <li key={d.id}>
-            <button type="button" className={styles.area} onClick={() => onPickArea(d.id)}>
+            <button
+              type="button"
+              className={styles.area}
+              data-area={d.id}
+              aria-label={d.short ?? d.label}
+              onClick={() => onPickArea(d.id)}
+            >
               <span className={styles.areaText}>
                 <span className={styles.areaName}>{d.short ?? d.label}</span>
                 <span className={styles.areaHint}>{d.label}</span>
