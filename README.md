@@ -1,9 +1,8 @@
 # Breastfeeding Decision Map
 
-An interactive binary decision graph for working up breastfeeding difficulty in
-the parent–infant dyad. You answer a question Yes or No and the map opens the
-next question, until it reaches a working diagnosis with its discriminating
-features and first steps.
+An interactive binary decision graph for working up breastfeeding difficulty.
+You answer a question Yes or No and the map opens the next question, until it
+reaches a working diagnosis with its discriminating features and first steps.
 
 **Educational — for clinicians.** It diagnoses the _breastfeeding_ problem; the
 infant's clinical care (hydration, jaundice, weight, top-ups) is assessed and
@@ -53,9 +52,9 @@ legacy/             the original single-file prototypes, kept for reference
 ```
 
 The map is **several independent decision trees**, one per problem area
-(`domains` in `map.yaml`). The clinician opens every area that applies to the
-dyad — pain, low supply and refusal are not mutually exclusive — and findings
-accumulate across all of them into one problem list.
+(`domains` in `map.yaml`). The clinician opens every area that applies — pain,
+low supply and refusal are not mutually exclusive — and findings accumulate
+across all of them into one problem list.
 
 Within a problem area the model is a **DAG, not a tree**: several routes can
 reach one diagnosis. Each node is drawn once (under its shortest route from that

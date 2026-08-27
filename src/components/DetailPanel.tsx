@@ -68,7 +68,7 @@ export function DetailPanel({ isOpen, onClose, compact, ...rest }: Props) {
             <div className={styles.head}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p className={styles.kicker}>Start here</p>
-                <h2 className={styles.title}>What is the dyad dealing with?</h2>
+                <h2 className={styles.title}>What is the difficulty?</h2>
               </div>
               <button
                 ref={closeRef}

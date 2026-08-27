@@ -79,7 +79,7 @@
   fill: var(--caution);
 }
 
-/* Synthetic root — the "what is the dyad dealing with?" opening node. */
+/* Synthetic root — the opening "what is the difficulty?" node. */
 .dm-node--root .dm-node__box {
   fill: var(--root-wash);
   stroke: var(--danger);

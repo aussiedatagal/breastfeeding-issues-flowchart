@@ -28,7 +28,7 @@ spaces (e.g. `pain-at-latch`), unique across every file.
 ### Problem areas (domains)
 
 The map is **not one big tree**. It is several independent decision trees, one
-per problem area, and the clinician opens every area that applies to the dyad
+per problem area, and the clinician opens every area that applies
 (they are not mutually exclusive — pain, low supply and refusal can all be in
 play). Each area is listed in `map.yaml`:
 
@@ -40,11 +40,12 @@ domains:
     entry: q1 # the id of the first question in this area's tree
 ```
 
-`entry` must be the `id` of a question. `short` is optional (it falls back to
-`label`), but a long `label` makes an unwieldy column header, so set it. Everything reachable from that question
-by `ifYes` / `ifNo` belongs to that area. To add a whole new problem area, add a
-`domains:` entry and author its question tree; to reword an area's opening,
-change `label` (the picker) and the `ask:` of its `entry` question (the node).
+`entry` must be the `id` of a question. Everything reachable from that question
+by `ifYes` / `ifNo` belongs to that area. `short` is optional (it falls back to
+`label`), but a long `label` makes an unwieldy column header, so set it. To add
+a whole new problem area, add a `domains:` entry and author its question tree;
+to reword an area's opening, change `label` (the picker) and the `ask:` of its
+`entry` question (the node).
 
 ---
 
@@ -102,7 +103,7 @@ Add a block to a `diagnoses/*.yaml` file and point a question's branch at it.
 ### Multifactorial cases
 
 A binary tree walks one path, so answering a question "yes" skips whatever the
-"no" branch would have found. A dyad often has more than one problem at once
+"no" branch would have found. A parent often has more than one problem at once
 (e.g. a tongue restriction _and_ oversupply). Two things handle this:
 
 - **`coexists:`** on a diagnosis lists the factors that commonly occur

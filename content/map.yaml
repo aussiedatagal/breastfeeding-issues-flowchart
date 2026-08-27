@@ -1,7 +1,7 @@
 title: Breastfeeding Difficulty
 subtitle: Diagnoses the breastfeeding problem, not the infant's clinical care.
 
-# The dyad may be dealing with several of these at once — they are separate
+# The parent and baby may have several of these at once — they are separate
 # problems, not one. The clinician opens every area that applies and works each.
 rootPrompt: >
   Open every area that applies — they are not mutually exclusive. A tongue

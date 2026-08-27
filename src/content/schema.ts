@@ -40,7 +40,7 @@ export const rawDiagnosis = z
     seeAlso: z.array(z.string().min(1)).optional(),
     /**
      * Factors that commonly occur *alongside* this one. Surfaced as "also check"
-     * so a multifactorial dyad isn't closed out at the first diagnosis.
+     * so a multifactorial case isn't closed out at the first diagnosis.
      */
     coexists: z.array(z.string().min(1)).optional(),
     /** true = a look-alike / concept node, not on any yes/no path */
