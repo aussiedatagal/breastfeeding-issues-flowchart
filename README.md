@@ -1,10 +1,12 @@
-# Breastfeeding Decision Map
+# Breastfeeding Difficulty — guided assessment
 
-An interactive binary decision graph for working up breastfeeding difficulty.
-You answer a question Yes or No and the map opens the next question, until it
-reaches a working diagnosis with its discriminating features and first steps.
+A guided quiz for working up breastfeeding difficulty. Pick where the problem
+shows up, answer one Yes/No question at a time, and land on a working diagnosis
+with what points to it, first steps, look-alikes to rule out, and **what the
+path didn't check** — so a single walk down the tree doesn't quietly close out
+other explanations.
 
-**Educational — for clinicians.** It diagnoses the _breastfeeding_ problem; the
+**Educational — for clinicians.** It works up the _breastfeeding_ problem; the
 infant's clinical care (hydration, jaundice, weight, top-ups) is assessed and
 managed separately, in parallel.
 
@@ -12,12 +14,12 @@ managed separately, in parallel.
 
 | You want to…                                            | Go to                                           |
 | ------------------------------------------------------- | ----------------------------------------------- |
-| Change a question, a diagnosis, or how branches connect | [`content/`](content/README.md) — YAML, no code |
-| Change how the map looks or behaves                     | `src/`                                          |
+| Change a question, a diagnosis, or where a branch leads | [`content/`](content/README.md) — YAML, no code |
+| Change how the quiz looks or behaves                    | `src/`                                          |
 
-The clinical content is deliberately kept out of the code so an educator can
-edit it without a development environment. Every content change is checked by
-`npm run validate` before it can be deployed.
+The clinical content is kept out of the code so an educator can edit it without
+a development environment. Every content change is checked by `npm run validate`
+before it can be deployed.
 
 ## Develop
 
@@ -30,7 +32,7 @@ npm run dev        # http://localhost:5173
 | ------------------ | -------------------------------------------------------- |
 | `npm run dev`      | Vite dev server with hot reload                          |
 | `npm run validate` | Structural check of `content/` (part of `build` and CI)  |
-| `npm test`         | Vitest — graph logic + a render smoke test               |
+| `npm test`         | Vitest — quiz logic, content checks, a render test       |
 | `npm run lint`     | ESLint                                                   |
 | `npm run build`    | `validate` → type-check → production bundle into `dist/` |
 | `npm run preview`  | Serve the production build locally                       |
@@ -40,28 +42,36 @@ npm run dev        # http://localhost:5173
 ```
 content/            YAML — the clinical decision graph (educator-owned)
 src/
-  content/          schema (zod) + loader; turns YAML into a validated graph
-  graph/            framework-free core:
-    build.ts          flat nodes → graph with canonical parents + merge edges
-    layout.ts         progressive-disclosure top-down column layout (pure)
-    traversal.ts      open / collapse / answer / path (pure)
-  hooks/            useDecisionState (+ URL sync), usePanZoom, useAnimatedLayout, useTheme
-  components/       React + SVG rendering; no logic beyond wiring
-scripts/            validate-content.mjs (shared with CI), extract-legacy.mjs (one-off)
-legacy/             the original single-file prototypes, kept for reference
+  content/          zod schema + loader; turns YAML into a validated graph
+  graph/            framework-free graph model (build.ts, types.ts) — unit-tested
+  quiz/             framework-free quiz logic — unit-tested
+    session.ts        walk() + screenOf() + the reducer (pure state machine)
+    analysis.ts       "what the path didn't check" — the confounding-variable safeguard
+    url.ts            session <-> URL hash
+  hooks/            useQuizSession, useTheme
+  components/       React + CSS Modules; screens/, quiz/, ui/. No UI framework.
+scripts/            validate-content.mjs (shared with CI)
+legacy/             earlier single-file prototypes, kept for reference
 ```
 
-The map is **several independent decision trees**, one per problem area
-(`domains` in `map.yaml`). The clinician opens every area that applies — pain,
-low supply and refusal are not mutually exclusive — and findings accumulate
-across all of them into one problem list.
+`src/graph/*` and `src/quiz/*` have no React imports and are covered by unit
+tests, so the decision logic is reasoned about and changed independently of the
+UI. Components are wiring and presentation only.
 
-Within a problem area the model is a **DAG, not a tree**: several routes can
-reach one diagnosis. Each node is drawn once (under its shortest route from that
-area's entry question); the other routes render as dashed "↗" connectors.
+### Problem areas
 
-`src/graph/*` has no React imports and is covered by unit tests, so the
-decision logic can be reasoned about and changed independently of the UI.
+`map.yaml` lists **problem areas** (`domains`). They are independent: the
+clinician works one at a time, pins the result to **Findings**, and comes back
+for another. The output is a problem list, not a single answer — because pain,
+low supply and refusal are not mutually exclusive, and one often causes another.
+
+### Not cutting off other explanations
+
+A single Yes/No walk only characterises one problem. On the result screen,
+**"What this path didn't check"** enumerates — for every fork you passed — the
+diagnoses the branch you _didn't_ take would have investigated, with a one-tap
+"revisit that question". The answer trail is always visible and every answer is
+tappable to go back.
 
 ## Deploy (GitHub Pages)
 
@@ -78,12 +88,14 @@ workflow.
 
 ## State in the URL
 
-The current path is written to the URL hash (`#intake-adequate=no,transfer-effective=yes`),
-so a particular route to a diagnosis can be linked or bookmarked.
+The session is written to the URL hash
+(`#area=pain&a=yes,no,no&f=dx-vasospasm,dx-oversupply`), so a particular
+assessment — or its findings list — can be linked or bookmarked.
 
 ## Caveats
 
-The clinical content was migrated from an earlier prototype and reflects
-guidance known up to early 2026 (e.g. ABM Protocol #36, 2022, for the mastitis
-spectrum). Check it against current guidelines before clinical use. Longer-form
-source notes are in `legacy/differential-diagnosis-flowchart.html`.
+The clinical content reflects guidance known up to early 2026 — ABM Clinical
+Protocols #26 (persistent pain) and #36 (mastitis spectrum, 2022), IBLCE
+Detailed Content Outline 2023. Check it against current guidelines before
+clinical use. Longer-form source notes are in
+`legacy/differential-diagnosis-flowchart.html`.
