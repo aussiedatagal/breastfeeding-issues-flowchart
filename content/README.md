@@ -1,6 +1,6 @@
-# Editing the decision map — for educators
+# Editing the assessment — for educators
 
-Everything the map says lives in this folder as plain text (`.yaml`) files. You
+Everything the quiz says lives in this folder as plain text (`.yaml`) files. You
 do **not** need to touch any code to change a question, add a diagnosis, or
 re-route a branch. Edit a file, save, open a pull request, and the site
 rebuilds itself.
@@ -21,31 +21,30 @@ file and which line.
 - **`map.yaml`** holds the page title, the `rootPrompt` shown on the start
   screen, and the list of **problem areas** (`domains`).
 
-The files are split by clinical area only to keep them short — the map does not
+The files are split by clinical area only to keep them short — the quiz does not
 care which file a node is in, just its `id`. An `id` is a short label with no
 spaces (e.g. `pain-at-latch`), unique across every file.
 
 ### Problem areas (domains)
 
-The map is **not one big tree**. It is several independent decision trees, one
-per problem area, and the clinician opens every area that applies
-(they are not mutually exclusive — pain, low supply and refusal can all be in
-play). Each area is listed in `map.yaml`:
+The assessment is **not one big tree**. It is several independent question
+trees, one per problem area. The clinician works one area at a time, pins the
+result, and comes back for another — pain, low supply and refusal are not
+mutually exclusive. Each area is listed in `map.yaml`:
 
 ```yaml
 domains:
   - id: supply # short label, unique
-    label: Not enough milk, poor weight gain, or supply feels low # the picker prompt
-    short: Milk supply & weight # 2–4 words — the column header on the map
+    label: Not enough milk, poor weight gain, or supply feels low # the descriptive line on the picker
+    short: Milk supply & weight # 2–4 words — the area's name in the header and result screen
     entry: q1 # the id of the first question in this area's tree
 ```
 
 `entry` must be the `id` of a question. Everything reachable from that question
-by `ifYes` / `ifNo` belongs to that area. `short` is optional (it falls back to
-`label`), but a long `label` makes an unwieldy column header, so set it. To add
-a whole new problem area, add a `domains:` entry and author its question tree;
-to reword an area's opening, change `label` (the picker) and the `ask:` of its
-`entry` question (the node).
+by `ifYes` / `ifNo` belongs to that area. Set both `label` (the descriptive
+line) and `short` (the name). To add a whole new problem area, add a `domains:`
+entry and author its question tree; to reword an area's opening, change `label`
+and the `ask:` of its `entry` question.
 
 ---
 
@@ -58,8 +57,8 @@ Find it by its `id` and edit `ask:` (or `name:`, `points:`, `steps:`).
 ```yaml
 - id: intake-adequate
   ask: Is the infant's weight gain and milk output adequate for age?
-  short: Intake adequate? # what shows in the breadcrumb trail
-  assess: > # the "How to assess" note in the side panel
+  short: Intake adequate? # the short label used in the answer trail
+  assess: > # shown behind "How do I check this?" on the question
     A diagnostic split, not a safety check …
   ifYes: pain-present
   ifNo: transfer-effective
@@ -102,24 +101,24 @@ Add a block to a `diagnoses/*.yaml` file and point a question's branch at it.
 
 ### Multifactorial cases
 
-A binary tree walks one path, so answering a question "yes" skips whatever the
-"no" branch would have found. A parent often has more than one problem at once
-(e.g. a tongue restriction _and_ oversupply). Two things handle this:
+A single walk down the tree characterises one problem and skips whatever the
+other branch would have found. A parent often has more than one problem at once
+(e.g. a tongue restriction _and_ oversupply). This is handled by:
 
-- **`coexists:`** on a diagnosis lists the factors that commonly occur
-  alongside it. They appear in the panel under "Often occurs alongside — also
-  check", so the reader is pointed at what the tree may have skipped.
-- The clinician pins each diagnosis to **Findings** and uses the breadcrumb to
-  go back and work the other branch. Findings persist across passes.
-
-`multifactorialNote` in `map.yaml` is the standing reminder shown on every
-diagnosis — edit it there.
+- **`coexists:`** on a diagnosis lists factors that commonly occur alongside it.
+  They show on the result screen under "Often occurs alongside".
+- **`seeAlso:`** lists look-alikes, shown under "Distinguish from".
+- The result screen's **"What this path didn't check"** is generated
+  automatically — for each fork on the path it names what the other answer would
+  have investigated. You don't author this; keeping branches well-populated with
+  real diagnoses is what makes it useful.
+- The clinician pins each diagnosis to **Findings**, then "checks another area".
+  `multifactorialNote` in `map.yaml` frames the findings summary — edit it there.
 
 ### Send more than one branch to the same outcome (a shared step)
 
-Two questions can point at the same `id` — the map draws it once and shows the
-convergence. If the shared node is defined far away and you just want a "jump
-to it" link, wrap the target:
+Two questions can point at the same `id`. If the shared node is defined far away
+and you just want a "jump to it" link, wrap the target:
 
 ```yaml
 ifYes:
@@ -139,8 +138,8 @@ Leave `flag` off for an ordinary diagnosis.
 ### Reference notes (look-alikes, not on a path)
 
 A diagnosis with `reference: true` is not part of any yes/no route — it only
-appears when someone taps a `seeAlso` link. Use it for "X vs Y" comparison
-notes. These live in `diagnoses/reference.yaml`.
+appears when it is named in a `seeAlso` (or `coexists`) list. Use it for "X vs
+Y" comparison notes. These live in `diagnoses/reference.yaml`.
 
 ---
 
@@ -148,8 +147,8 @@ notes. These live in `diagnoses/reference.yaml`.
 
 ```
 npm run validate     # structural check — must pass to publish
-npm run dev           # opens the map locally so you can click through it
+npm run dev           # opens the quiz locally so you can click through it
 ```
 
-If `npm run dev` shows an error screen instead of the map, it lists exactly
+If `npm run dev` shows an error screen instead of the quiz, it lists exactly
 what to fix.

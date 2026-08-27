@@ -1,0 +1,38 @@
+.app {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.main {
+  flex: 1;
+  width: 100%;
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4) calc(var(--space-7) + env(safe-area-inset-bottom));
+}
+
+.screen {
+  animation: rise 240ms ease both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* on a larger screen the column becomes a contained, content-height card */
+@media (min-width: 40rem) {
+  .main {
+    flex: 0 1 auto;
+    max-width: 36rem;
+    margin: var(--space-6) auto var(--space-7);
+    padding: var(--space-6);
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+  }
+}

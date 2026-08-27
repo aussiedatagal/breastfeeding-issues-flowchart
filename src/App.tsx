@@ -1,5 +1,5 @@
 import { buildFromFiles, loadContentFiles } from "./content/load.ts";
-import { DecisionMap } from "./components/DecisionMap.tsx";
+import { QuizApp } from "./components/QuizApp.tsx";
 import { ContentError } from "./components/ContentError.tsx";
 
 const result = buildFromFiles(loadContentFiles());
@@ -12,5 +12,5 @@ export function App() {
   if (!result.graph) {
     return <ContentError errors={result.errors} />;
   }
-  return <DecisionMap graph={result.graph} />;
+  return <QuizApp graph={result.graph} />;
 }
