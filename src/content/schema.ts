@@ -49,11 +49,23 @@ export const rawDiagnosis = z
   .strict();
 export type RawDiagnosis = z.infer<typeof rawDiagnosis>;
 
+/** An independent problem area with its own decision sub-tree. */
+export const domain = z
+  .object({
+    id: z.string().min(1),
+    label: z.string().min(1),
+    entry: z.string().min(1),
+  })
+  .strict();
+export type Domain = z.infer<typeof domain>;
+
 export const mapMeta = z
   .object({
     title: z.string().min(1),
     subtitle: z.string().min(1).optional(),
-    entry: z.string().min(1),
+    /** the prompt shown on the "what is going on?" picker */
+    rootPrompt: z.string().min(1),
+    domains: z.array(domain).min(1),
     /** shown on every diagnosis: the reminder that cases are often multifactorial */
     multifactorialNote: z.string().min(1).optional(),
   })

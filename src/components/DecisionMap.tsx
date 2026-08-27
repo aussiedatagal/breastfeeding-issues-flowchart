@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Graph } from "../graph/types.ts";
-import { computeLayout, STUB_W } from "../graph/layout.ts";
+import { ROOT_ID, type Graph } from "../graph/types.ts";
+import { computeLayout, DOMAIN_W, STUB_W } from "../graph/layout.ts";
 import type { Placement } from "../graph/layout.ts";
 import { canonicalChain, expandAll } from "../graph/traversal.ts";
 import { useDecisionState } from "../hooks/useDecisionState.ts";
@@ -43,17 +43,19 @@ export function DecisionMap({ graph }: { graph: Graph }) {
     [panelOpen, compact],
   );
 
-  // The question and its two Yes/No stubs, as one group to keep in view.
+  // The question and its two Yes/No stubs (or the root and its domain column),
+  // as one group to keep in view.
   const STUB_ROOM = STUB_W + 64;
   const groupOf = useCallback(
     (id: string) => {
       const p = targetLayout.byId.get(id);
       if (!p) return null;
-      const w = p.w + STUB_ROOM;
+      const w = id === ROOT_ID ? p.w + 320 + DOMAIN_W : p.w + STUB_ROOM;
+      const h = Math.max(p.h, 96);
       return {
-        rect: { x: p.x, y: p.y - p.h / 2, w, h: Math.max(p.h, 96) },
+        rect: { x: p.x, y: p.y - h / 2, w, h },
         center: { x: p.x + w / 2, y: p.y },
-        size: { w, h: Math.max(p.h, 96) },
+        size: { w, h },
       };
     },
     [targetLayout, STUB_ROOM],
@@ -86,17 +88,25 @@ export function DecisionMap({ graph }: { graph: Graph }) {
     if (selected?.kind === "diagnosis" && selected.depth >= 0) setPanelOpen(true);
   }, [selected]);
 
-  // First paint: a readable view of the entry question + its branches.
+  // Show the picker on first load if nothing has been opened yet.
+  const introShown = useRef(false);
+  useEffect(() => {
+    if (introShown.current) return;
+    introShown.current = true;
+    if (selectedId === ROOT_ID && open.size === 0) setPanelOpen(true);
+  }, [selectedId, open.size]);
+
+  // First paint: a readable view of the root / current group.
   const positioned = useRef(false);
   useEffect(() => {
     if (positioned.current) return;
-    const g = groupOf(graph.entry);
+    const g = groupOf(selectedId === ROOT_ID ? ROOT_ID : selectedId);
     if (!g) return;
     positioned.current = true;
-    const place = () => centerOn(g.center, { fit: g.size, minK: 0.55, maxK: 1, animate: false });
+    const place = () => centerOn(g.center, { fit: g.size, minK: 0.5, maxK: 1, animate: false });
     place();
     requestAnimationFrame(place); // once the SVG has real dimensions
-  }, [graph.entry, groupOf, centerOn]);
+  }, [selectedId, groupOf, centerOn]);
 
   // Follow the selection as the user moves through the graph.
   const prevSelected = useRef(selectedId);
@@ -127,7 +137,8 @@ export function DecisionMap({ graph }: { graph: Graph }) {
   const onStubActivate = useCallback(
     (p: Placement) => {
       setHintDismissed(true);
-      if (p.merge) actions.goTo(p.nodeId);
+      if (p.kind === "domain") actions.openDomain(p.nodeId);
+      else if (p.merge) actions.goTo(p.nodeId);
       else if (p.parentId && p.answer) actions.answer(p.parentId, p.answer);
     },
     [actions],
@@ -145,9 +156,9 @@ export function DecisionMap({ graph }: { graph: Graph }) {
 
   const onRestart = useCallback(() => {
     actions.restart();
-    setPanelOpen(false);
-    requestAnimationFrame(() => focusGroup(graph.entry));
-  }, [actions, graph.entry, focusGroup]);
+    setPanelOpen(true);
+    requestAnimationFrame(() => focusGroup(ROOT_ID, false));
+  }, [actions, focusGroup]);
 
   return (
     <div className={styles.app}>
@@ -214,16 +225,20 @@ export function DecisionMap({ graph }: { graph: Graph }) {
         <DetailPanel
           graph={graph}
           node={selected}
+          rootSelected={selectedId === ROOT_ID}
           path={path}
           openIds={open}
           findings={findings}
-          isOpen={panelOpen && selected !== null}
+          isOpen={panelOpen && (selected !== null || selectedId === ROOT_ID)}
           compact={compact}
           onClose={() => setPanelOpen(false)}
           onAnswer={actions.answer}
           onGoTo={actions.goTo}
           onPin={actions.pinFinding}
           onUnpin={actions.unpinFinding}
+          onToggleDomain={(entryId, willOpen) =>
+            willOpen ? actions.openDomain(entryId) : actions.closeDomain(entryId)
+          }
         />
       </div>
     </div>

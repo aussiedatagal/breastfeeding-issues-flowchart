@@ -1,9 +1,3 @@
-- id: b2
-  ask: Is there a breast LUMP, focal swelling, or area of redness / inflammation?
-  short: Lump or redness?
-  assess: Any discrete lump, focal firm area, or region of erythema and swelling in the breast.
-  ifYes: inf1
-  ifNo: b3
 - id: inf1
   ask: Is the swelling BILATERAL and diffuse — both breasts full, firm and tender — in the first
     2–5 days?

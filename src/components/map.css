@@ -77,6 +77,17 @@
   fill: var(--caution);
 }
 
+/* Synthetic root — the "what is the dyad dealing with?" picker node. */
+.dm-node--root .dm-node__box {
+  fill: var(--surface-raised);
+  stroke: var(--ink-muted);
+  stroke-width: 2;
+  stroke-dasharray: 2 2;
+}
+.dm-node--root .dm-node__kicker {
+  fill: var(--accent);
+}
+
 .dm-stub__box {
   fill: var(--surface-raised);
   stroke: var(--hairline-strong);
@@ -109,6 +120,26 @@
   fill: var(--accent);
 }
 
+/* Problem-area chip hanging off the root (a whole unopened decision tree). */
+.dm-stub--domain .dm-stub__box {
+  fill: var(--surface);
+  stroke: var(--hairline-strong);
+  stroke-width: 1.5;
+}
+.dm-stub--domain .dm-stub__label {
+  fill: var(--ink);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.dm-stub--domain .dm-stub__plus {
+  fill: var(--accent);
+  font-weight: 700;
+}
+.dm-stub--domain:hover .dm-stub__box {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
 .dm-link {
   fill: none;
   stroke: var(--ink-faint);
@@ -127,6 +158,10 @@
 .dm-link--active {
   stroke: var(--accent);
   stroke-width: 2.6;
+}
+.dm-link--domain {
+  stroke: var(--ink-faint);
+  stroke-width: 1.8;
 }
 
 .dm-elabel {

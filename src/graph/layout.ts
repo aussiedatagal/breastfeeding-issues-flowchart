@@ -1,10 +1,13 @@
-import type { Answer, Graph, GraphNode } from "./types.ts";
-import { isQuestion } from "./types.ts";
+import { ROOT_ID, isQuestion, type Answer, type Graph, type GraphNode } from "./types.ts";
 import { wrap } from "./text.ts";
 
 export const NODE_W = 264;
 export const STUB_W = 92;
 export const STUB_H = 40;
+export const DOMAIN_W = 300;
+const DOMAIN_WRAP = 34;
+const DOMAIN_GAP = 44;
+const ROOT_LABEL = "What is the dyad dealing with?";
 const COL = 320;
 const ROW_GAP = 16;
 const WRAP_CHARS = 31;
@@ -12,24 +15,28 @@ const LINE_H = 16.5;
 
 export interface Placement {
   id: string;
-  kind: "question" | "diagnosis" | "stub";
+  kind: "root" | "domain" | "question" | "diagnosis" | "stub";
   x: number;
   y: number;
   w: number;
   h: number;
   lines: string[];
+  /** id of the underlying node ("" for the synthetic root) */
   nodeId: string;
   parentId?: string;
   answer?: Answer;
   merge?: boolean;
+  /** domain chips + domain-entry questions carry their area label */
+  domainId?: string;
+  domainLabel?: string;
 }
 
 export interface Connector {
   id: string;
   fromId: string;
   toId: string;
-  kind: "canonical" | "stub" | "merge";
-  answer: Answer;
+  kind: "canonical" | "stub" | "merge" | "domain";
+  answer?: Answer;
 }
 
 export interface Layout {
@@ -57,12 +64,14 @@ export function computeLayout(graph: Graph, open: ReadonlySet<string>): Layout {
     return y;
   };
 
-  const isOpen = (id: string) => id === graph.entry || open.has(id);
+  const isOpen = (id: string) => open.has(id);
+  const domainByEntry = new Map(graph.domains.map((d) => [d.entry, d]));
 
   const walk = (node: GraphNode): number => {
     const lines = wrap(isQuestion(node) ? node.ask : node.name, WRAP_CHARS);
     const h = nodeHeight(lines);
     const x = node.depth * COL;
+    const dom = domainByEntry.get(node.id);
 
     const placement: Placement = {
       id: node.id,
@@ -73,6 +82,7 @@ export function computeLayout(graph: Graph, open: ReadonlySet<string>): Layout {
       h,
       lines,
       nodeId: node.id,
+      ...(dom ? { domainId: dom.id, domainLabel: dom.label } : {}),
     };
     placements.push(placement);
 
@@ -153,8 +163,55 @@ export function computeLayout(graph: Graph, open: ReadonlySet<string>): Layout {
     return placement.y;
   };
 
-  const entry = graph.nodes.get(graph.entry);
-  if (entry) walk(entry);
+  // The synthetic root sits at x = 0; each domain's sub-tree grows to its right.
+  const root: Placement = {
+    id: ROOT_ID,
+    kind: "root",
+    x: 0,
+    y: 0,
+    w: NODE_W,
+    h: 0,
+    lines: wrap(ROOT_LABEL, WRAP_CHARS),
+    nodeId: "",
+  };
+  root.h = Math.max(52, 22 + root.lines.length * LINE_H);
+  placements.push(root);
+
+  const domainYs: number[] = [];
+  graph.domains.forEach((dom, i) => {
+    const node = graph.nodes.get(dom.entry);
+    if (!node) return;
+    if (i > 0) cursorY += DOMAIN_GAP;
+    const opened = isOpen(dom.entry);
+    if (opened) {
+      domainYs.push(walk(node));
+    } else {
+      const lines = wrap(dom.label, DOMAIN_WRAP);
+      const h = Math.max(STUB_H, 16 + lines.length * LINE_H);
+      const y = slot(h);
+      placements.push({
+        id: `domain:${dom.id}`,
+        kind: "domain",
+        x: COL,
+        y,
+        w: DOMAIN_W,
+        h,
+        lines,
+        nodeId: dom.entry,
+        parentId: ROOT_ID,
+        domainId: dom.id,
+        domainLabel: dom.label,
+      });
+      domainYs.push(y);
+    }
+    connectors.push({
+      id: `dom:${dom.id}`,
+      fromId: ROOT_ID,
+      toId: opened ? dom.entry : `domain:${dom.id}`,
+      kind: "domain",
+    });
+  });
+  root.y = domainYs.length ? (domainYs[0]! + domainYs[domainYs.length - 1]!) / 2 : slot(root.h);
 
   const byId = new Map(placements.map((p) => [p.id, p]));
 

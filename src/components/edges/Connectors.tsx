@@ -39,6 +39,7 @@ export function Connectors({ layout, activeIds, onUndo }: Props) {
           "dm-link",
           c.kind === "stub" ? "dm-link--stub" : "",
           c.kind === "merge" ? "dm-link--merge" : "",
+          c.kind === "domain" ? "dm-link--domain" : "",
           active ? "dm-link--active" : "",
         ]
           .filter(Boolean)
@@ -48,27 +49,28 @@ export function Connectors({ layout, activeIds, onUndo }: Props) {
     );
 
     // an opened branch carries its answer on the edge; click to fold it back
-    if (c.kind === "canonical") {
+    if (c.kind === "canonical" && c.answer) {
+      const answer = c.answer;
       const lx = a.x + (b.x - a.x) * 0.5;
       const ly = a.y + (b.y - a.y) * 0.5;
-      const text = c.answer === "yes" ? "YES" : "NO";
-      const width = c.answer === "yes" ? 30 : 24;
+      const text = answer === "yes" ? "YES" : "NO";
+      const width = answer === "yes" ? 30 : 24;
       labels.push(
         <g
           key={`${c.id}-label`}
-          className={`dm-elabel dm-elabel--${c.answer}`}
+          className={`dm-elabel dm-elabel--${answer}`}
           transform={`translate(${lx} ${ly})`}
           role="button"
           tabIndex={0}
-          aria-label={`Undo the "${c.answer}" answer at this question`}
+          aria-label={`Undo the "${answer}" answer at this question`}
           onClick={(e) => {
             e.stopPropagation();
-            onUndo(c.fromId, c.answer);
+            onUndo(c.fromId, answer);
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
-              onUndo(c.fromId, c.answer);
+              onUndo(c.fromId, answer);
             }
           }}
         >

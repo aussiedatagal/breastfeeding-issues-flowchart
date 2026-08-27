@@ -3,7 +3,7 @@ import type { Placement } from "../../graph/layout.ts";
 
 interface Props {
   placement: Placement;
-  node: GraphNode;
+  node: GraphNode | null;
   selected: boolean;
   onSelect: (id: string) => void;
 }
@@ -11,19 +11,35 @@ interface Props {
 /** A full question or diagnosis card in the diagram. */
 export function NodeShape({ placement, node, selected, onSelect }: Props) {
   const { x, y, w, h, lines } = placement;
-  const isDiagnosis = node.kind === "diagnosis";
+  const isRoot = placement.kind === "root";
+  const isDiagnosis = node?.kind === "diagnosis";
   const flag = isDiagnosis ? node.flag : undefined;
 
   const className = [
     "dm-node",
-    isDiagnosis ? "dm-node--diagnosis" : "dm-node--question",
+    isRoot ? "dm-node--root" : isDiagnosis ? "dm-node--diagnosis" : "dm-node--question",
     flag ? `dm-node--flag-${flag}` : "",
     selected ? "is-selected" : "",
   ]
     .filter(Boolean)
     .join(" ");
 
-  const activate = () => onSelect(node.id);
+  const targetId = isRoot || !node ? "__root__" : node.id;
+  const kicker = isRoot
+    ? "START"
+    : placement.domainLabel
+      ? placement.domainLabel.toUpperCase()
+      : isDiagnosis
+        ? "DIAGNOSIS"
+        : "QUESTION";
+  const ariaLabel =
+    isRoot || !node
+      ? "Start: what is the dyad dealing with?"
+      : `${node.kind === "diagnosis" ? "Diagnosis" : "Question"}: ${
+          node.kind === "question" ? node.ask : node.name
+        }`;
+
+  const activate = () => onSelect(targetId);
 
   return (
     <g
@@ -32,9 +48,7 @@ export function NodeShape({ placement, node, selected, onSelect }: Props) {
       role="button"
       tabIndex={0}
       aria-pressed={selected}
-      aria-label={`${isDiagnosis ? "Diagnosis" : "Question"}: ${
-        node.kind === "question" ? node.ask : node.name
-      }`}
+      aria-label={ariaLabel}
       onClick={(e) => {
         e.stopPropagation();
         activate();
@@ -48,7 +62,7 @@ export function NodeShape({ placement, node, selected, onSelect }: Props) {
     >
       <rect className="dm-node__box" x={0} y={-h / 2} width={w} height={h} rx={4} />
       <text className="dm-node__kicker" x={14} y={-h / 2 + 14}>
-        {isDiagnosis ? "DIAGNOSIS" : "QUESTION"}
+        {kicker}
       </text>
       <text className="dm-node__label" x={14} y={-h / 2 + 30}>
         {lines.map((line, i) => (

@@ -18,11 +18,31 @@ file and which line.
   where `ifYes` / `ifNo` lead.
 - **Diagnoses** live in `diagnoses/`. Each has an `id`, a `name`, and optional
   `points` (what points to it) and `steps` (first steps).
-- **`map.yaml`** names the very first question (`entry`) and the page title.
+- **`map.yaml`** holds the page title, the `rootPrompt` shown on the start
+  screen, and the list of **problem areas** (`domains`).
 
 The files are split by clinical area only to keep them short — the map does not
 care which file a node is in, just its `id`. An `id` is a short label with no
 spaces (e.g. `pain-at-latch`), unique across every file.
+
+### Problem areas (domains)
+
+The map is **not one big tree**. It is several independent decision trees, one
+per problem area, and the clinician opens every area that applies to the dyad
+(they are not mutually exclusive — pain, low supply and refusal can all be in
+play). Each area is listed in `map.yaml`:
+
+```yaml
+domains:
+  - id: supply # short label, unique
+    label: Not enough milk, poor weight gain, or supply feels low
+    entry: q1 # the id of the first question in this area's tree
+```
+
+`entry` must be the `id` of a question. Everything reachable from that question
+by `ifYes` / `ifNo` belongs to that area. To add a whole new problem area, add a
+`domains:` entry and author its question tree; to reword an area's opening,
+change `label` (the picker) and the `ask:` of its `entry` question (the node).
 
 ---
 

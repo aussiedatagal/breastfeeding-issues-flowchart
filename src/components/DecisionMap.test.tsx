@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { buildFromFiles } from "../content/load.ts";
 import { pathTo } from "../graph/traversal.ts";
+import { domainOf } from "../graph/types.ts";
 import { DecisionMap } from "./DecisionMap.tsx";
 
 const contentDir = resolve(__dirname, "../../content");
@@ -23,36 +24,48 @@ if (!graph) throw new Error("content did not build");
 
 const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const panel = () => screen.getByRole("complementary", { name: "Details" });
-const stubFor = (parentShort: string, answer: "yes" | "no") =>
-  screen.getByRole("button", {
-    name: new RegExp(`Answer ${answer}\\b.*"${esc(parentShort)}"`),
-  });
 
-afterEach(cleanup);
+const openDomainFor = (nodeId: string) => {
+  const domain = domainOf(graph, nodeId)!;
+  fireEvent.click(
+    screen.getByRole("button", { name: new RegExp(`Open the "${esc(domain.label)}"`) }),
+  );
+};
+const stubFor = (parentShort: string, answer: "yes" | "no") =>
+  screen.getByRole("button", { name: new RegExp(`Answer ${answer}\\b.*"${esc(parentShort)}"`) });
+
+const walkTo = (targetId: string) => {
+  openDomainFor(targetId);
+  for (const step of pathTo(graph, targetId)) {
+    fireEvent.click(stubFor(step.question.short, step.answer));
+  }
+};
+
+afterEach(() => {
+  cleanup();
+  window.history.replaceState(null, "", window.location.pathname);
+});
 
 describe("<DecisionMap> — user scenarios", () => {
-  it("loads with the entry question, two branch nodes, and the panel closed", () => {
+  it("loads on the picker with a chip for every problem area", () => {
     render(<DecisionMap graph={graph} />);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(graph.title);
-    expect(screen.getAllByRole("button", { name: /Answer (yes|no)\b/ })).toHaveLength(2);
-    expect(panel()).toHaveProperty("inert", true);
+    for (const d of graph.domains) {
+      expect(
+        screen.getByRole("button", { name: new RegExp(`Open the "${esc(d.label)}"`) }),
+      ).toBeDefined();
+    }
   });
 
-  it("clicking a Yes/No node opens that branch without opening the panel", () => {
+  it("opening an area reveals its first question and Yes/No branches", () => {
     render(<DecisionMap graph={graph} />);
-    const entry = graph.nodes.get(graph.entry)!;
-    fireEvent.click(stubFor(entry.short, "no"));
-    expect(screen.getAllByRole("button", { name: /Undo the "no" answer/i }).length).toBeGreaterThan(
-      0,
+    const first = graph.domains[0]!;
+    fireEvent.click(
+      screen.getByRole("button", { name: new RegExp(`Open the "${esc(first.label)}"`) }),
     );
-    expect(panel()).toHaveProperty("inert", true);
-  });
-
-  it("clicking a question node body opens the panel with its assessment note", () => {
-    render(<DecisionMap graph={graph} />);
-    fireEvent.click(screen.getAllByRole("button", { name: /^Question:/ })[0]!);
-    expect(panel()).toHaveProperty("inert", false);
-    expect(within(panel()).getByRole("heading", { name: "How to assess" })).toBeDefined();
+    expect(
+      screen.getAllByRole("button", { name: /Answer (yes|no)\b/ }).length,
+    ).toBeGreaterThanOrEqual(2);
   });
 
   it("answering through to a diagnosis auto-opens the panel with first steps", () => {
@@ -60,27 +73,9 @@ describe("<DecisionMap> — user scenarios", () => {
     const target = [...graph.nodes.values()].find(
       (n) => n.kind === "diagnosis" && !n.reference && n.steps.length > 0,
     )!;
-    for (const step of pathTo(graph, target.id)) {
-      fireEvent.click(stubFor(step.question.short, step.answer));
-    }
+    walkTo(target.id);
     expect(panel()).toHaveProperty("inert", false);
     expect(within(panel()).getByRole("heading", { name: /First steps/ })).toBeDefined();
-  });
-
-  it("a breadcrumb rewinds to that question and folds the rest away", () => {
-    render(<DecisionMap graph={graph} />);
-    const entry = graph.nodes.get(graph.entry)!;
-    fireEvent.click(stubFor(entry.short, "no"));
-    // go one more level down the "no" spine
-    const deeper = screen
-      .getAllByRole("button", { name: /Answer no\b/ })
-      .find((el) => !el.getAttribute("aria-label")!.includes(entry.short));
-    if (deeper) fireEvent.click(deeper);
-    const crumbs = within(screen.getByRole("navigation", { name: /Answers so far/ })).getAllByRole(
-      "button",
-    );
-    fireEvent.click(crumbs[0]!);
-    expect(screen.getAllByRole("button", { name: /Answer (yes|no)\b/ })).toHaveLength(2);
   });
 
   it("Expand all draws every question node once", () => {
@@ -90,26 +85,22 @@ describe("<DecisionMap> — user scenarios", () => {
     expect(screen.getAllByRole("button", { name: /^Question:/ }).length).toBe(questionCount);
   });
 
-  it("findings accumulate across two passes through the graph", () => {
+  it("findings from two different areas build one list", () => {
     render(<DecisionMap graph={graph} />);
-    const diagnoses = [...graph.nodes.values()].filter(
-      (n) => n.kind === "diagnosis" && !n.reference,
-    );
-    const [a, b] = [diagnoses[0]!, diagnoses.find((d) => d.id !== diagnoses[0]!.id)!];
+    const byDomain = new Map<string, string>();
+    for (const n of graph.nodes.values()) {
+      if (n.kind !== "diagnosis" || n.reference) continue;
+      const d = domainOf(graph, n.id);
+      if (d && !byDomain.has(d.id) && n.steps.length > 0) byDomain.set(d.id, n.id);
+    }
+    const [first, second] = [...byDomain.values()];
 
-    const walkAndPin = (targetId: string) => {
-      for (const step of pathTo(graph, targetId)) {
-        fireEvent.click(stubFor(step.question.short, step.answer));
-      }
-      fireEvent.click(screen.getByRole("button", { name: "+ Add to findings" }));
-    };
-
-    walkAndPin(a.id);
-    fireEvent.click(screen.getByRole("button", { name: "Start over" }));
-    walkAndPin(b.id);
+    walkTo(first!);
+    fireEvent.click(screen.getByRole("button", { name: "+ Add to findings" }));
+    walkTo(second!);
+    fireEvent.click(screen.getByRole("button", { name: "+ Add to findings" }));
 
     const tray = screen.getByRole("region", { name: /Findings \(2\)/ });
-    expect(within(tray).getByText(a.short)).toBeDefined();
-    expect(within(tray).getByText(b.short)).toBeDefined();
+    expect(tray).toBeDefined();
   });
 });

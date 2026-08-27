@@ -1,7 +1,10 @@
-import type { Flag } from "../content/schema";
+import type { Domain, Flag } from "../content/schema";
 
-export type { Flag };
+export type { Domain, Flag };
 export type Answer = "yes" | "no";
+
+/** Synthetic id for the "what is the dyad dealing with?" picker at the far left. */
+export const ROOT_ID = "__root__";
 
 /**
  * An outgoing branch of a question.
@@ -58,8 +61,24 @@ export interface Graph {
   title: string;
   subtitle?: string;
   multifactorialNote?: string;
-  entry: string;
+  rootPrompt: string;
+  /** the problem areas, each the root of its own sub-tree */
+  domains: readonly Domain[];
   nodes: ReadonlyMap<string, GraphNode>;
+}
+
+/** The domain a node sits in, or null if it is not reachable from any. */
+export function domainOf(graph: Graph, id: string): Domain | null {
+  let cur = graph.nodes.get(id) ?? null;
+  const seen = new Set<string>();
+  while (cur && !seen.has(cur.id)) {
+    seen.add(cur.id);
+    const d = graph.domains.find((dom) => dom.entry === cur!.id);
+    if (d) return d;
+    const parent = cur.parents.find((p) => !p.merge);
+    cur = parent ? (graph.nodes.get(parent.from) ?? null) : null;
+  }
+  return null;
 }
 
 export const isQuestion = (n: GraphNode): n is QuestionNode => n.kind === "question";

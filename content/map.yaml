@@ -1,9 +1,29 @@
 title: Breastfeeding Difficulty
-subtitle: A binary decision graph — diagnoses the breastfeeding problem, not the infant's clinical care.
-entry: q1
+subtitle: Diagnoses the breastfeeding problem, not the infant's clinical care.
+
+# The dyad may be dealing with several of these at once — they are separate
+# problems, not one. The clinician opens every area that applies and works each.
+rootPrompt: >
+  What is the parent–infant dyad dealing with? Open every area that applies. These
+  are not mutually exclusive — a tongue restriction, oversupply, and cracked
+  nipples can all be in play at once, and one often causes another.
+
+domains:
+  - id: supply
+    label: Not enough milk, poor weight gain, or supply feels low
+    entry: q1
+  - id: pain
+    label: Nipple or breast pain
+    entry: pain1
+  - id: inflammation
+    label: A breast lump, or a red, hot, or inflamed area
+    entry: inf1
+  - id: refusal
+    label: The baby fights, fusses at, or refuses the breast
+    entry: ref1
+
 multifactorialNote: >
-  Breastfeeding difficulty is frequently multifactorial. This is one contributing
-  factor — check that it explains the whole picture. If it does not, add it to
-  Findings, then use the breadcrumb to go back to an earlier question and work the
-  other branch as well. A dyad can have, say, a tongue restriction and oversupply
-  and a falling supply all at once.
+  This is one contributing factor — check that it explains the whole picture. If
+  it does not, add it to Findings and open another area (or go back and work the
+  other branch of this one). The result should be a problem list, not a single
+  answer.

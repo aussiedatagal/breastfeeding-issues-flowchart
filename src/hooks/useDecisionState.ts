@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Answer, Graph } from "../graph/types.ts";
-import { isDiagnosis } from "../graph/types.ts";
+import { ROOT_ID, isDiagnosis } from "../graph/types.ts";
 import {
   answer as answerFn,
   collapse as collapseFn,
+  closeDomain as closeDomainFn,
   expandAll,
   initialOpen,
+  openDomain as openDomainFn,
   pathTo,
   reveal as revealFn,
   rewindTo as rewindToFn,
@@ -18,32 +20,30 @@ interface State {
   findings: string[];
 }
 
-/** `#q1=no,a1=no;f=dx-x,dx-y` — the answers to the selected node + pinned findings. */
-function encode(graph: Graph, state: State): string {
-  const steps = pathTo(graph, state.selectedId);
-  const path = steps.map((s) => `${s.question.id}=${s.answer}`).join(",");
-  const found = state.findings.join(",");
-  if (!path && !found) return "";
-  return "#" + path + (found ? `;f=${found}` : "");
+/** `#o=q1,a1;s=a1;f=dx-x` — open nodes, selection, and the pinned findings. */
+function encode(state: State): string {
+  const parts: string[] = [];
+  if (state.open.size) parts.push(`o=${[...state.open].join(",")}`);
+  if (state.selectedId !== ROOT_ID) parts.push(`s=${state.selectedId}`);
+  if (state.findings.length) parts.push(`f=${state.findings.join(",")}`);
+  return parts.length ? "#" + parts.join(";") : "";
 }
 
 function decode(graph: Graph, hash: string): State {
-  const [pathBody = "", foundBody = ""] = hash.replace(/^#/, "").trim().split(";f=");
-  let state: State = { open: initialOpen(graph), selectedId: graph.entry, findings: [] };
-
-  for (const part of pathBody.split(",")) {
-    const [qid, choice] = part.split("=");
-    if (!qid || (choice !== "yes" && choice !== "no")) continue;
-    if (!graph.nodes.has(qid)) continue;
-    const next = answerFn(graph, state.open, qid, choice as Answer);
-    state = { ...state, open: next.open, selectedId: next.selectedId };
+  const params = new Map<string, string>();
+  for (const seg of hash.replace(/^#/, "").split(";")) {
+    const eq = seg.indexOf("=");
+    if (eq > 0) params.set(seg.slice(0, eq), seg.slice(eq + 1));
   }
-
-  state.findings = foundBody
+  const known = (id: string) => graph.nodes.has(id);
+  const open = new Set((params.get("o") ?? "").split(",").filter(known));
+  const findings = (params.get("f") ?? "")
     .split(",")
     .filter((id) => id && isDiagnosisId(graph, id))
     .filter((id, i, all) => all.indexOf(id) === i);
-  return state;
+  const s = params.get("s");
+  const selectedId = s && known(s) ? s : ROOT_ID;
+  return { open, selectedId, findings };
 }
 
 const isDiagnosisId = (graph: Graph, id: string) => {
@@ -66,7 +66,7 @@ export function useDecisionState(graph: Graph) {
   }, [graph]);
 
   useEffect(() => {
-    const next = encode(graph, state);
+    const next = encode(state);
     if (next === lastHash.current) return;
     lastHash.current = next;
     window.history.replaceState(
@@ -74,7 +74,7 @@ export function useDecisionState(graph: Graph) {
       "",
       next || window.location.pathname + window.location.search,
     );
-  }, [graph, state]);
+  }, [state]);
 
   const answer = useCallback(
     (questionId: string, choice: Answer) =>
@@ -117,14 +117,29 @@ export function useDecisionState(graph: Graph) {
     [graph],
   );
 
+  const openDomain = useCallback(
+    (entryId: string) =>
+      setState((s) => ({ ...s, open: openDomainFn(s.open, entryId), selectedId: entryId })),
+    [],
+  );
+  const closeDomain = useCallback(
+    (entryId: string) =>
+      setState((s) => ({
+        ...s,
+        open: closeDomainFn(graph, s.open, entryId),
+        selectedId: ROOT_ID,
+      })),
+    [graph],
+  );
+
   const expandEverything = useCallback(
-    () => setState((s) => ({ ...s, open: expandAll(graph), selectedId: graph.entry })),
+    () => setState((s) => ({ ...s, open: expandAll(graph), selectedId: ROOT_ID })),
     [graph],
   );
 
   /** Reset the current path but keep the findings list (you're doing another pass). */
   const restart = useCallback(
-    () => setState((s) => ({ ...s, open: initialOpen(graph), selectedId: graph.entry })),
+    () => setState((s) => ({ ...s, open: initialOpen(graph), selectedId: ROOT_ID })),
     [graph],
   );
 
@@ -139,8 +154,12 @@ export function useDecisionState(graph: Graph) {
   );
   const clearFindings = useCallback(() => setState((s) => ({ ...s, findings: [] })), []);
 
-  const path = useMemo(() => pathTo(graph, state.selectedId), [graph, state.selectedId]);
-  const selected = graph.nodes.get(state.selectedId) ?? null;
+  const path = useMemo(
+    () => (state.selectedId === ROOT_ID ? [] : pathTo(graph, state.selectedId)),
+    [graph, state.selectedId],
+  );
+  const selected =
+    state.selectedId === ROOT_ID ? null : (graph.nodes.get(state.selectedId) ?? null);
 
   return {
     open: state.open,
@@ -154,6 +173,8 @@ export function useDecisionState(graph: Graph) {
       select,
       goTo,
       rewindTo,
+      openDomain,
+      closeDomain,
       expandEverything,
       restart,
       pinFinding,

@@ -52,7 +52,24 @@ export function canonicalSubtree(graph: Graph, id: string): Set<string> {
   return out;
 }
 
-export const initialOpen = (graph: Graph): Set<string> => new Set([graph.entry]);
+/** Nothing open — the "what is going on?" picker is the starting point. */
+export const initialOpen = (_graph: Graph): Set<string> => new Set<string>();
+
+export function openDomain(open: ReadonlySet<string>, domainEntry: string): Set<string> {
+  const next = new Set(open);
+  next.add(domainEntry);
+  return next;
+}
+
+export function closeDomain(
+  graph: Graph,
+  open: ReadonlySet<string>,
+  domainEntry: string,
+): Set<string> {
+  const next = new Set(open);
+  for (const id of canonicalSubtree(graph, domainEntry)) next.delete(id);
+  return next;
+}
 
 /** Choose an answer at a question: open that branch, fold the other away. */
 export function answer(

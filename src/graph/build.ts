@@ -104,8 +104,19 @@ export function buildGraph(input: BuildInput): BuildResult {
     });
   }
 
-  if (!nodes.has(meta.entry)) {
-    errors.push(`map.yaml: entry "${meta.entry}" is not a known node`);
+  const domainEntries = new Set<string>();
+  const seenDomainIds = new Set<string>();
+  for (const dom of meta.domains) {
+    if (seenDomainIds.has(dom.id)) errors.push(`map.yaml: duplicate domain id "${dom.id}"`);
+    seenDomainIds.add(dom.id);
+    const target = nodes.get(dom.entry);
+    if (!target) {
+      errors.push(`map.yaml: domain "${dom.id}" entry "${dom.entry}" is not a known node`);
+    } else if (!isQuestion(target)) {
+      errors.push(`map.yaml: domain "${dom.id}" entry "${dom.entry}" must be a question`);
+    } else {
+      domainEntries.add(dom.entry);
+    }
   }
 
   // every edge / seeAlso target must resolve
@@ -139,16 +150,19 @@ export function buildGraph(input: BuildInput): BuildResult {
     child.parents.push({ from, answer, merge });
   };
 
-  const walk = (followMerge: boolean) => {
-    const queue: string[] = [meta.entry];
+  // Each domain is its own sub-tree; its entry sits at depth 1 (depth 0 is the
+  // synthetic "what is going on?" root the app draws at the far left).
+  const walk = () => {
+    const queue = [...domainEntries];
+    for (const id of domainEntries) nodes.get(id)!.depth = 1;
     while (queue.length) {
       const id = queue.shift()!;
       const node = nodes.get(id)!;
       if (!isQuestion(node)) continue;
       for (const edge of [node.edges.yes, node.edges.no]) {
-        if (edge.merge && !followMerge) continue;
+        if (edge.merge) continue;
         const child = nodes.get(edge.to)!;
-        const canonical = child.depth === -1 && !edge.merge;
+        const canonical = child.depth === -1 && !domainEntries.has(child.id);
         if (canonical) {
           child.depth = node.depth + 1;
           link(child, id, edge.answer, false);
@@ -161,8 +175,7 @@ export function buildGraph(input: BuildInput): BuildResult {
     }
   };
 
-  nodes.get(meta.entry)!.depth = 0;
-  walk(false);
+  walk();
   // any node reachable only through goto edges still needs a home
   for (const node of nodes.values()) {
     if (node.depth === -1 && !isReference(node) && node.parents.some((p) => p.merge)) {
@@ -175,10 +188,9 @@ export function buildGraph(input: BuildInput): BuildResult {
   }
 
   for (const node of nodes.values()) {
-    if (isReference(node)) continue;
-    if (node.id === meta.entry) continue;
+    if (isReference(node) || domainEntries.has(node.id)) continue;
     if (node.depth === -1 || node.parents.length === 0) {
-      warnings.push(`node "${node.id}" is never reached from "${meta.entry}"`);
+      warnings.push(`node "${node.id}" is never reached from any domain entry`);
     }
   }
 
@@ -200,7 +212,8 @@ export function buildGraph(input: BuildInput): BuildResult {
     ...(meta.multifactorialNote !== undefined
       ? { multifactorialNote: meta.multifactorialNote }
       : {}),
-    entry: meta.entry,
+    rootPrompt: meta.rootPrompt,
+    domains: meta.domains,
     nodes,
   };
   return { graph, errors, warnings };
