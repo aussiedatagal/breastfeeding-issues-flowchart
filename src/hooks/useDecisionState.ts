@@ -7,6 +7,7 @@ import {
   initialOpen,
   pathTo,
   reveal as revealFn,
+  rewindTo as rewindToFn,
 } from "../graph/traversal.ts";
 
 interface State {
@@ -92,6 +93,15 @@ export function useDecisionState(graph: Graph) {
     [graph],
   );
 
+  const rewindTo = useCallback(
+    (questionId: string) =>
+      setState((s) => {
+        const r = rewindToFn(graph, s.open, questionId);
+        return { open: r.open, selectedId: r.selectedId };
+      }),
+    [graph],
+  );
+
   const expandEverything = useCallback(
     () => setState({ open: expandAll(graph), selectedId: graph.entry }),
     [graph],
@@ -110,6 +120,6 @@ export function useDecisionState(graph: Graph) {
     selectedId: state.selectedId,
     selected,
     path,
-    actions: { answer, undoAnswer, select, goTo, expandEverything, restart },
+    actions: { answer, undoAnswer, select, goTo, rewindTo, expandEverything, restart },
   };
 }

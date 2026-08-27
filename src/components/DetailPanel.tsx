@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { Answer, Graph, GraphNode } from "../graph/types.ts";
 import { isQuestion } from "../graph/types.ts";
 import type { PathStep } from "../graph/traversal.ts";
@@ -16,26 +16,40 @@ interface Props {
   path: PathStep[];
   openIds: ReadonlySet<string>;
   isOpen: boolean;
+  compact: boolean;
   onClose: () => void;
   onAnswer: (questionId: string, choice: Answer) => void;
   onGoTo: (nodeId: string) => void;
 }
 
-export function DetailPanel({ isOpen, onClose, ...rest }: Props) {
+export function DetailPanel({ isOpen, onClose, compact, ...rest }: Props) {
+  const closeRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     if (!isOpen) return;
+    closeRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, rest.node?.id]);
 
   return (
     <>
-      <div className={styles.scrim} data-open={isOpen} onClick={onClose} />
-      <aside className={styles.panel} data-open={isOpen} aria-hidden={!isOpen} aria-live="polite">
-        {rest.node && <PanelContent {...rest} onClose={onClose} node={rest.node} />}
+      {/* Modal backdrop only for the mobile bottom sheet; on desktop the drawer
+          is non-modal so the map and breadcrumb stay usable. */}
+      {compact && <div className={styles.scrim} data-open={isOpen} onClick={onClose} />}
+      <aside
+        className={styles.panel}
+        data-open={isOpen}
+        data-compact={compact}
+        aria-label="Details"
+        inert={!isOpen}
+      >
+        {rest.node && (
+          <PanelContent {...rest} onClose={onClose} node={rest.node} closeRef={closeRef} />
+        )}
       </aside>
     </>
   );
@@ -49,14 +63,18 @@ function PanelContent({
   onClose,
   onAnswer,
   onGoTo,
-}: Omit<Props, "isOpen"> & { node: GraphNode }) {
+  closeRef,
+}: Omit<Props, "isOpen" | "compact"> & {
+  node: GraphNode;
+  closeRef: React.RefObject<HTMLButtonElement | null>;
+}) {
   const question = isQuestion(node);
   const mergeParents = node.parents.filter((p) => p.merge);
 
   return (
     <>
       <div className={styles.head}>
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <p className={styles.kicker}>
             {node.id === graph.entry ? "Start here" : question ? "Question" : "Working diagnosis"}
           </p>
@@ -67,7 +85,12 @@ function PanelContent({
             </span>
           )}
         </div>
-        <button className={styles.close} onClick={onClose} aria-label="Close details">
+        <button
+          ref={closeRef}
+          className={styles.close}
+          onClick={onClose}
+          aria-label="Close details"
+        >
           ×
         </button>
       </div>

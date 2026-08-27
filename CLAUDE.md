@@ -40,8 +40,8 @@ Import style: relative imports carry the `.ts` / `.tsx` extension
 ## The decision model
 
 - It is a **DAG, not a tree**. Multiple routes may reach one diagnosis. A node
-  is drawn once, under its shortest route from the entry (its *canonical*
-  parent); other routes are *merge* edges, shown dashed with a "↗" stub.
+  is drawn once, under its shortest route from the entry (its _canonical_
+  parent); other routes are _merge_ edges, shown dashed with a "↗" stub.
 - `content/` is flat: questions reference other nodes by `id` via `ifYes` /
   `ifNo` (or `{ goto: id }` for an explicit jump). `build.ts` does a BFS from
   the entry to assign canonical parents and depths, and flags every other
@@ -52,13 +52,31 @@ Import style: relative imports carry the `.ts` / `.tsx` extension
 ## Interaction (do not regress without asking)
 
 - An un-opened branch is a small clickable **"Yes" / "No" stub node** beside its
-  parent. Opening it reveals the next node in place; the answer then moves onto
+  parent. Tapping it opens the next node in place; the answer then moves onto
   the **edge** as a clickable "YES/NO" label (tap to undo). The unchosen branch
   stays as its stub, so tapping that also switches the answer.
-- Clicking a node body selects it and opens the side panel (informational:
-  "How to assess" for a question, detail for a diagnosis; backup Yes/No too).
-- **Expand all** opens every node for browsing. Breadcrumb rewinds. URL hash
-  carries the path for sharing.
+- Tapping a **node body** opens the detail panel (question: "how to assess" +
+  backup Yes/No; diagnosis: points + first steps). Answering via a stub does
+  **not** open the panel; reaching a diagnosis opens it automatically.
+- The panel is a **non-modal side drawer on desktop** (map, breadcrumb and
+  toolbar stay live; no scrim) and a **bottom sheet on mobile** (scrim, and the
+  current node is re-framed into the strip above it). It lives inside `.stage`,
+  never over the chrome.
+- **Expand all** opens every node and fits it to the viewport. Breadcrumb chips
+  rewind (`rewindTo`). A merge/`↗` jump is additive — it reveals the shared
+  node's route without folding the branch you came from, and a dashed connector
+  shows the join. URL hash carries the path for sharing.
+- Camera: readable zoom by default (centres the current question + its stubs);
+  pans to follow the selection only when it drifts out of view; wheel/pinch to
+  zoom, drag to pan, ± buttons and Fit. Honours `prefers-reduced-motion`.
+
+## QA harness
+
+`npm test` runs the vitest suites: `src/graph/*.test.ts` (pure logic) and
+`src/components/DecisionMap.test.tsx` (happy-dom render + interaction). There is
+no browser E2E dep; visual QA was done ad hoc with Playwright against the system
+Chrome. Keep the DecisionMap test's scenario list in step with the interaction
+rules above.
 
 ## Scope boundary (user-set)
 

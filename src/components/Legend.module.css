@@ -1,8 +1,8 @@
 .legend {
   position: absolute;
-  right: 16px;
-  top: 16px;
-  width: 260px;
+  right: 14px;
+  top: 14px;
+  width: min(264px, calc(100vw - 28px));
   background: var(--surface);
   border: 1px solid var(--hairline);
   border-radius: var(--radius-lg);
@@ -10,24 +10,38 @@
   padding: 14px 16px;
   font-size: var(--step--1);
   line-height: 1.5;
-  z-index: 15;
+  z-index: 20;
+}
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
 }
 .title {
-  margin: 0 0 8px;
+  margin: 0;
   font-family: var(--font-mono);
   font-size: var(--step--2);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-faint);
 }
+.close {
+  border: none;
+  background: none;
+  color: var(--ink-muted);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+}
+.close:hover {
+  color: var(--accent);
+}
 .row {
   display: flex;
   align-items: center;
   gap: 8px;
   margin: 5px 0;
-}
-.row span:first-child {
-  flex: none;
 }
 .swatch {
   width: 22px;

@@ -67,8 +67,10 @@ export function answer(
   const edge = question.edges[choice];
   const next = new Set(open);
 
+  // A merge branch jumps to a shared node: reveal it (and its route) but keep
+  // the branch we came from, so the convergence stays visible.
   if (edge.merge) {
-    for (const id of canonicalChain(graph, edge.to)) next.add(id.id);
+    for (const node of canonicalChain(graph, edge.to)) next.add(node.id);
     return { open: next, selectedId: edge.to, jumpedTo: edge.to };
   }
 
@@ -96,15 +98,41 @@ export function collapse(
   return { open: next, selectedId: questionId };
 }
 
-/** Bring a node (and its canonical ancestors) into view without folding anything. */
+/**
+ * Jump to a node from a link. A placeable node is revealed along its canonical
+ * route (without folding anything away); a reference (look-alike) node only
+ * updates the panel.
+ */
 export function reveal(
   graph: Graph,
   open: ReadonlySet<string>,
   id: string,
 ): { open: Set<string>; selectedId: string } {
+  const node = graph.nodes.get(id);
+  if (!node || isReference(node) || node.depth < 0) {
+    return { open: new Set(open), selectedId: id };
+  }
   const next = new Set(open);
-  for (const node of canonicalChain(graph, id)) next.add(node.id);
+  for (const step of canonicalChain(graph, id)) next.add(step.id);
   return { open: next, selectedId: id };
+}
+
+/** Go back to a question already on the path: fold everything after it away. */
+export function rewindTo(
+  graph: Graph,
+  open: ReadonlySet<string>,
+  questionId: string,
+): { open: Set<string>; selectedId: string } {
+  const question = graph.nodes.get(questionId);
+  const next = new Set(open);
+  if (question && isQuestion(question)) {
+    for (const edge of [question.edges.yes, question.edges.no]) {
+      if (edge.merge) continue;
+      for (const id of canonicalSubtree(graph, edge.to)) next.delete(id);
+    }
+    next.add(question.id);
+  }
+  return { open: next, selectedId: questionId };
 }
 
 export function expandAll(graph: Graph): Set<string> {
