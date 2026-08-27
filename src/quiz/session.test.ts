@@ -1,123 +1,151 @@
 import { describe, expect, it } from "vitest";
 import { buildFromFiles } from "../content/load.ts";
-import type { Graph } from "../graph/types.ts";
-import { buildProfiles } from "./profiles.ts";
-import { rankMatches } from "./score.ts";
-import { nextQuestion } from "./flow.ts";
-import { emptySession, reduce, screenOf, type SessionState } from "./session.ts";
+import type { Content } from "../content/model.ts";
+import { rankArea } from "./score.ts";
+import { emptySession, reduce, screenOf, type SessionAction, type SessionState } from "./session.ts";
 
 /**
- *   q1 ─yes→ q2 ─yes→ dA
- *    │        └─no──→ dB
- *    └─no──→ q3 ─yes→ dC
- *             └─no──→ dD
+ * A tiny area:
+ *   q1  boolean  "Fever?"
+ *   q2  boolean  "Red wedge?"
+ *   q3  multi    "Skin change?" → rash / crack
+ *
+ *   dMastitis   supported by q1 + q2
+ *   dAbscess    supported by q2, but IMPOSSIBLE without fever (excludes)
+ *   dDermatitis supported by rash, argued against by q1
  */
-function miniGraph(): Graph {
-  const { graph, errors } = buildFromFiles({
-    "map.yaml": "title: T\nrootPrompt: p\ndomains:\n  - { id: a, label: A, entry: q1 }\n",
+function miniContent(): Content {
+  const { content, errors } = buildFromFiles({
+    "map.yaml": "title: T\nintro: i\nareas:\n  - { id: a, label: Area A }\n",
     "questions/q.yaml":
-      "- { id: q1, ask: Q1?, ifYes: q2, ifNo: q3 }\n" +
-      "- { id: q2, ask: Q2?, ifYes: dA, ifNo: dB }\n" +
-      "- { id: q3, ask: Q3?, ifYes: dC, ifNo: dD }\n",
+      "- { id: q1, area: a, type: boolean, ask: 'Fever?', short: 'Fever' }\n" +
+      "- { id: q2, area: a, type: boolean, ask: 'Red wedge?', short: 'Red wedge' }\n" +
+      "- id: q3\n" +
+      "  area: a\n" +
+      "  type: multi\n" +
+      "  ask: 'Skin change?'\n" +
+      "  options:\n" +
+      "    - { finding: rash, label: 'Scaly rash' }\n" +
+      "    - { finding: crack, label: 'Crack' }\n",
     "diagnoses/d.yaml":
-      "- { id: dA, name: A }\n- { id: dB, name: B }\n- { id: dC, name: C }\n- { id: dD, name: D }\n",
+      "- { id: dMastitis, area: a, name: Mastitis, supports: [ { finding: q1, weight: 2 }, { finding: q2, weight: 2 } ] }\n" +
+      "- { id: dAbscess, area: a, name: Abscess, supports: [ { finding: q2, weight: 2 } ], excludes: [ { finding: q1, when: absent } ] }\n" +
+      "- { id: dDermatitis, area: a, name: Dermatitis, supports: [ { finding: rash, weight: 2 } ], against: [ { finding: q1, weight: 2 } ] }\n",
   });
-  if (!graph) throw new Error(errors.join("; "));
-  return graph;
+  if (!content) throw new Error(errors.join("; "));
+  return content;
 }
 
-const graph = miniGraph();
-const profiles = buildProfiles(graph);
+const content = miniContent();
 
-const after = (...actions: Parameters<typeof reduce>[1][]) =>
-  actions.reduce<SessionState>((s, a) => reduce(s, a), emptySession());
+const after = (...actions: SessionAction[]): SessionState =>
+  actions.reduce<SessionState>((s, a) => reduce(content, s, a), emptySession());
 
-describe("buildProfiles", () => {
-  it("reads every root→leaf path as a symptom profile", () => {
-    const dA = profiles.find((p) => p.diagnosisId === "dA")!;
-    expect(dA.findings).toEqual([
-      { questionId: "q1", answer: "yes" },
-      { questionId: "q2", answer: "yes" },
-    ]);
-    expect(profiles.map((p) => p.diagnosisId).sort()).toEqual(["dA", "dB", "dC", "dD"]);
-  });
-});
-
-describe("rankMatches — nothing is gated out", () => {
-  it("a contradicted diagnosis stays in the list, just scored down", () => {
-    const m = rankMatches(graph, profiles, "a", { q1: "yes" });
-    const ids = m.map((x) => x.diagnosis.id);
-    expect(ids).toContain("dC"); // q1=yes contradicts dC's profile, but it's still here
-    const dC = m.find((x) => x.diagnosis.id === "dC")!;
-    expect(dC.conflicting).toHaveLength(1);
-    expect(dC.tier).toBe("unlikely");
+describe("rankArea — nothing is gated out unless impossible", () => {
+  it("scores a contradicted diagnosis down but keeps it", () => {
+    const m = rankArea(content, "a", { q1: "absent", q2: "present" });
+    const derm = m.find((x) => x.diagnosis.id === "dDermatitis")!;
+    expect(derm).toBeDefined();
+    expect(derm.tier).not.toBe("ruled-out");
   });
 
-  it("ranks the profile that matches the answers first", () => {
-    const m = rankMatches(graph, profiles, "a", { q1: "yes", q2: "yes" });
-    expect(m[0]!.diagnosis.id).toBe("dA");
-    expect(m[0]!.tier).toBe("best");
-    expect(m.find((x) => x.diagnosis.id === "dB")!.conflicting).toHaveLength(1);
-  });
-});
+  it("removes a diagnosis only when a hard exclude fires", () => {
+    const withFever = rankArea(content, "a", { q1: "present", q2: "present" });
+    expect(withFever.find((x) => x.diagnosis.id === "dAbscess")!.tier).not.toBe("ruled-out");
 
-describe("nextQuestion — adaptive", () => {
-  it("asks a question a front-runner still needs", () => {
-    expect(nextQuestion(graph, profiles, "a", {}).question?.id).toBe("q1");
-    expect(nextQuestion(graph, profiles, "a", { q1: "yes" }).question?.id).toBe("q2");
+    const noFever = rankArea(content, "a", { q1: "absent", q2: "present" });
+    const abscess = noFever.find((x) => x.diagnosis.id === "dAbscess")!;
+    expect(abscess.tier).toBe("ruled-out");
+    expect(abscess.ruledOutBy).toEqual({ finding: "q1", when: "absent" });
+    // still listed, just last
+    expect(noFever.at(-1)!.diagnosis.id).toBe("dAbscess");
   });
 
-  it("stops once no front-runner needs another answer", () => {
-    const step = nextQuestion(graph, profiles, "a", { q1: "yes", q2: "yes" });
-    expect(step.question).toBeNull();
+  it("ranks the best-supported diagnosis first", () => {
+    const m = rankArea(content, "a", { q1: "present", q2: "present" });
+    expect(m[0]!.diagnosis.id).toBe("dMastitis");
+    expect(m[0]!.tier).toBe("strong");
+  });
+
+  it("a multi question surfaces one finding per picked option", () => {
+    const m = rankArea(content, "a", { rash: "present", crack: "absent" });
+    const derm = m.find((x) => x.diagnosis.id === "dDermatitis")!;
+    expect(derm.present.map((f) => f.finding)).toEqual(["rash"]);
   });
 });
 
 describe("screenOf + reduce", () => {
   it("start → question → results", () => {
-    expect(screenOf(graph, profiles, emptySession()).name).toBe("start");
+    expect(screenOf(content, emptySession()).name).toBe("start");
 
     const picked = after({ type: "pickArea", areaId: "a" });
-    expect(screenOf(graph, profiles, picked).name).toBe("question");
+    const q = screenOf(content, picked);
+    expect(q.name).toBe("question");
+    if (q.name === "question") expect(q.question.id).toBe("q1");
 
     const done = after(
       { type: "pickArea", areaId: "a" },
-      { type: "answer", questionId: "q1", answer: "yes" },
-      { type: "answer", questionId: "q2", answer: "yes" },
+      { type: "answerQuestion", questionId: "q1", findings: { q1: "present" } },
+      { type: "answerQuestion", questionId: "q2", findings: { q2: "present" } },
+      { type: "answerQuestion", questionId: "q3", findings: { rash: "absent", crack: "absent" } },
     );
-    const screen = screenOf(graph, profiles, done);
+    const screen = screenOf(content, done);
     expect(screen.name).toBe("results");
-    if (screen.name === "results") expect(screen.matches[0]!.diagnosis.id).toBe("dA");
+    if (screen.name === "results") {
+      expect(screen.complete).toBe(true);
+      expect(screen.matches[0]!.diagnosis.id).toBe("dMastitis");
+    }
   });
 
-  it("answering the same question again replaces it, order preserved", () => {
+  it("skipping a question advances past it and counts as skipped", () => {
     const s = after(
       { type: "pickArea", areaId: "a" },
-      { type: "answer", questionId: "q1", answer: "yes" },
-      { type: "answer", questionId: "q1", answer: "no" },
+      { type: "skipQuestion", questionId: "q1" },
     );
-    expect(s.given).toEqual([{ questionId: "q1", answer: "no" }]);
+    const screen = screenOf(content, s);
+    expect(screen.name).toBe("question");
+    if (screen.name === "question") expect(screen.question.id).toBe("q2");
   });
 
-  it("reveal shows results before the questions run out", () => {
+  it("revising an answer replaces it", () => {
     const s = after(
       { type: "pickArea", areaId: "a" },
-      { type: "answer", questionId: "q1", answer: "yes" },
+      { type: "answerQuestion", questionId: "q1", findings: { q1: "present" } },
+      { type: "setFinding", finding: "q1", value: "absent" },
+    );
+    expect(s.answers.q1).toBe("absent");
+  });
+
+  it("reveal shows results early; back returns to the question", () => {
+    const s = after(
+      { type: "pickArea", areaId: "a" },
+      { type: "answerQuestion", questionId: "q1", findings: { q1: "present" } },
       { type: "reveal" },
     );
-    expect(screenOf(graph, profiles, s).name).toBe("results");
-    expect(screenOf(graph, profiles, reduce(s, { type: "back" })).name).toBe("question");
+    expect(screenOf(content, s).name).toBe("results");
+    expect(screenOf(content, reduce(content, s, { type: "back" })).name).toBe("question");
   });
 
-  it("restart clears the walk but keeps findings", () => {
+  it("back undoes the last handled question", () => {
     const s = after(
       { type: "pickArea", areaId: "a" },
-      { type: "pinFinding", id: "dA" },
-      { type: "answer", questionId: "q1", answer: "yes" },
+      { type: "answerQuestion", questionId: "q1", findings: { q1: "present" } },
+      { type: "answerQuestion", questionId: "q2", findings: { q2: "present" } },
+      { type: "back" },
+    );
+    expect(s.answers.q2).toBeUndefined();
+    expect(s.answers.q1).toBe("present");
+  });
+
+  it("restart clears the walk but keeps pinned findings", () => {
+    const s = after(
+      { type: "pickArea", areaId: "a" },
+      { type: "pinFinding", id: "dMastitis" },
+      { type: "answerQuestion", questionId: "q1", findings: { q1: "present" } },
       { type: "restart" },
     );
     expect(s.areaId).toBeNull();
-    expect(s.given).toEqual([]);
-    expect(s.findings).toEqual(["dA"]);
+    expect(s.answers).toEqual({});
+    expect(s.findings).toEqual(["dMastitis"]);
   });
 });

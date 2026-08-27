@@ -1,28 +1,83 @@
+- id: mim-cmpa
+  area: refusal
+  name: "Mimic: oversupply stools vs CMPA"
+  flag: often-mislabelled
+  note: Both give a gassy, unsettled infant with green frothy or mucousy stools
+    and back-arching.
+  points:
+    - "Oversupply: rapid weight gain, forceful spray, recurrent engorgement,
+      well between times."
+    - "CMPA: blood or visible mucus in stool, eczema, faltering or poor weight
+      gain, family atopy, other allergic signs."
+  steps:
+    - Manage flow first; trial maternal dairy exclusion (2–4 weeks) only if CMPA
+      features are present.
+  seeAlso:
+    - dx-oald
+    - dx-painrefuse
+  reference: true
+- id: mim-flow
+  area: refusal
+  name: "Mimic: fast-flow vs low-supply refusal"
+  flag: often-mislabelled
+  note: Both look like ‘fussing and fighting at the breast’.
+  points:
+    - "Fast flow: fights at the START of the feed, coughs / pulls off as milk
+      sprays, settles later or laid-back, gains weight fast."
+    - "Low supply: calm at first then escalates THROUGH the feed, roots
+      frantically, calmer and takes more from a bottle, gains weight slowly."
+  steps:
+    - Watch a full feed and check the growth chart before deciding which loop
+      you are in.
+  seeAlso:
+    - dx-fastflow
+    - dx-slowflow
+  reference: true
 - id: dx-strike
+  area: refusal
   name: Nursing strike
   flag: often-mislabelled
   note: Almost always time-limited and reversible.
   steps:
     - Treat the trigger — pain, thrush, congestion.
-    - Skin-to-skin; offer when sleepy, drowsy or in motion; dark quiet room; feed lying down.
+    - Skin-to-skin; offer when sleepy, drowsy or in motion; dark quiet room;
+      feed lying down.
     - Express to protect supply and feed the milk; do not force the breast.
     - Usually resolves within days.
   coexists:
     - dx-oald
     - dx-painrefuse
+  supports:
+    - finding: ref1
+      weight: 2
+    - finding: ref2
+      weight: 2
+  against: []
 - id: dx-painrefuse
+  area: refusal
   name: Pain-driven refusal (reflux / thrush / otitis)
   steps:
     - Identify and treat the source of pain; examine ears and mouth.
-    - Reserve acid suppression for confirmed pathological reflux — most posseting is normal.
-    - "Positioning: more upright, paced feeds; treat oral thrush or otitis if found."
+    - Reserve acid suppression for confirmed pathological reflux — most
+      posseting is normal.
+    - "Positioning: more upright, paced feeds; treat oral thrush or otitis if
+      found."
   seeAlso:
     - dx-cmpa
     - mim-cmpa
   coexists:
     - dx-cmpa
     - dx-oald
+  supports:
+    - finding: ref3
+      weight: 2
+  against:
+    - finding: ref1
+      weight: 1
+    - finding: ref3b
+      weight: 1
 - id: dx-cmpa
+  area: refusal
   name: Cow's-milk protein allergy
   flag: often-mislabelled
   note: >
@@ -30,15 +85,27 @@
     in the stool is missed. Base it on the cluster, and confirm it: symptoms
     settle on exclusion, then return on reintroduction.
   steps:
-    - 2–4 week trial of strict maternal dairy (± soy) exclusion, then reintroduce to confirm.
-    - Keep breastfeeding — it is protective; refer to dietetics for a nutritionally complete exclusion.
-    - Paediatric or allergy referral if blood loss is significant or growth falters.
+    - 2–4 week trial of strict maternal dairy (± soy) exclusion, then
+      reintroduce to confirm.
+    - Keep breastfeeding — it is protective; refer to dietetics for a
+      nutritionally complete exclusion.
+    - Paediatric or allergy referral if blood loss is significant or growth
+      falters.
   seeAlso:
     - mim-cmpa
     - dx-painrefuse
   coexists:
     - dx-painrefuse
+  supports:
+    - finding: ref3
+      weight: 2
+    - finding: ref3b
+      weight: 2
+  against:
+    - finding: ref1
+      weight: 1
 - id: dx-fastflow
+  area: refusal
   name: Fast-flow refusal (overactive let-down / oversupply)
   steps:
     - Finish the first breast before switching; block feeding if marked.
@@ -50,40 +117,122 @@
   coexists:
     - dx-plug
     - dx-perc-over
+  supports:
+    - finding: ref4
+      weight: 2
+  against:
+    - finding: ref1
+      weight: 1
+    - finding: ref3
+      weight: 1
 - id: dx-distract
+  area: refusal
   name: Distractible feeder (developmental)
   flag: likely-normal
   steps:
-    - Feed in a calm, low-stimulation setting; feed at early cues and during naps.
+    - Feed in a calm, low-stimulation setting; feed at early cues and during
+      naps.
     - A nursing necklace or gentle counter-pressure can help.
     - Reassure — it passes; supply is maintained by the efficient feeds.
+  supports:
+    - finding: ref5
+      weight: 2
+  against:
+    - finding: ref1
+      weight: 1
+    - finding: ref3
+      weight: 1
+    - finding: ref4
+      weight: 1
 - id: dx-teat
+  area: refusal
   name: Teat / flow preference
   steps:
     - Paced bottle-feeding with the slowest teat; reduce bottle and dummy use.
     - Offer the breast at early hunger cues and when sleepy; skin-to-skin.
     - An at-breast supplementer rewards latching with immediate flow.
+  supports:
+    - finding: ref6
+      weight: 2
+  against:
+    - finding: ref1
+      weight: 1
+    - finding: ref3
+      weight: 1
+    - finding: ref4
+      weight: 1
+    - finding: ref5
+      weight: 1
 - id: dx-aversion
+  area: refusal
   name: Oral aversion
   steps:
     - Gentle, non-pressured re-introduction; responsive feeding; never force.
     - Feeding therapy (SLT / OT); treat any underlying pain.
     - Positive oral experiences away from hunger; skin-to-skin.
+  supports:
+    - finding: ref7
+      weight: 2
+  against:
+    - finding: ref1
+      weight: 1
+    - finding: ref3
+      weight: 1
+    - finding: ref4
+      weight: 1
+    - finding: ref5
+      weight: 1
+    - finding: ref6
+      weight: 1
 - id: dx-slowflow
+  area: refusal
   name: Slow-flow / low-supply frustration
-  note: If weight gain is faltering, this belongs in the low-intake branch — confirm intake and
-    supply.
+  note: If weight gain is faltering, this belongs in the low-intake branch —
+    confirm intake and supply.
   steps:
     - Watch a full feed and check the growth chart.
-    - Support latch and transfer; an at-breast supplementer while building supply.
+    - Support latch and transfer; an at-breast supplementer while building
+      supply.
     - Work the production questions if supply is the issue.
   seeAlso:
-    - a7
     - mim-flow
+  supports:
+    - finding: ref8
+      weight: 2
+  against:
+    - finding: ref1
+      weight: 1
+    - finding: ref3
+      weight: 1
+    - finding: ref4
+      weight: 1
+    - finding: ref5
+      weight: 1
+    - finding: ref6
+      weight: 1
+    - finding: ref7
+      weight: 1
 - id: dx-refuse-unk
+  area: refusal
   name: Breast refusal — cause not yet identified
   steps:
     - IBCLC review with a full feed observation.
     - Protect the parent's supply with regular expression while investigating.
     - Trial skin-to-skin, bath-feeding, and feeding in motion.
     - Reassess in a few days — most declare a cause or resolve.
+  supports: []
+  against:
+    - finding: ref1
+      weight: 1
+    - finding: ref3
+      weight: 1
+    - finding: ref4
+      weight: 1
+    - finding: ref5
+      weight: 1
+    - finding: ref6
+      weight: 1
+    - finding: ref7
+      weight: 1
+    - finding: ref8
+      weight: 1

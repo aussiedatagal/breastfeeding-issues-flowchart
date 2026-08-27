@@ -1,7 +1,6 @@
-import type { Graph } from "../../graph/types.ts";
-import { isQuestion } from "../../graph/types.ts";
+import type { Content } from "../../content/model.ts";
+import { findingShort } from "../../content/model.ts";
 import type { Match, Tier } from "../../quiz/score.ts";
-import type { Finding } from "../../quiz/profiles.ts";
 import { Badge } from "../ui/Badge.tsx";
 import { Button } from "../ui/Button.tsx";
 import { Disclosure } from "../ui/Disclosure.tsx";
@@ -10,116 +9,107 @@ import { RelatedList } from "./RelatedList.tsx";
 import styles from "./MatchCard.module.css";
 
 const TIER_LABEL: Record<Tier, string> = {
-  best: "Best fit",
-  likely: "Likely",
+  strong: "Strong fit",
   possible: "Possible",
-  unlikely: "Argues against it",
+  unlikely: "Weak fit",
+  "ruled-out": "Ruled out",
 };
 
 interface Props {
-  graph: Graph;
+  content: Content;
   match: Match;
-  /** "prominent" = the best-fit hero card, "minimal" = a set-aside one-liner */
-  variant?: "prominent" | "card" | "minimal";
+  /** the hero treatment for a top strong match */
+  prominent?: boolean;
   pinned: boolean;
   onPin: () => void;
   onUnpin: () => void;
 }
 
-const shortOf = (graph: Graph, questionId: string) => {
-  const q = graph.nodes.get(questionId);
-  return q && isQuestion(q) ? q.short : questionId;
-};
+const labels = (content: Content, list: { finding: string }[]) =>
+  list.map((f) => findingShort(content, f.finding));
 
-const answered = (graph: Graph, f: Finding) => `${shortOf(graph, f.questionId)} — ${f.answer}`;
-
-/** phrase a contradicted profile finding from the reader's point of view */
-const contradicted = (graph: Graph, f: Finding) =>
-  `${shortOf(graph, f.questionId)} — ${f.answer === "yes" ? "no" : "yes"}`;
-
-export function MatchCard({ graph, match, variant = "card", pinned, onPin, onUnpin }: Props) {
-  const { diagnosis, matched, missing, conflicting, tier } = match;
-  const prominent = variant === "prominent";
-
-  if (variant === "minimal") {
-    return (
-      <article className={styles.minimal} data-flag={diagnosis.flag ?? "none"}>
-        <p className={styles.minimalName}>
-          {diagnosis.name}
-          {conflicting[0] && (
-            <span className={styles.minimalWhy}>
-              {" · "}
-              {shortOf(graph, conflicting[0].questionId)}
-            </span>
-          )}
-        </p>
-        {pinned ? (
-          <span className={styles.minimalPinned}>in findings</span>
-        ) : (
-          <button type="button" className={styles.minimalPin} onClick={onPin}>
-            Add anyway
-          </button>
-        )}
-      </article>
-    );
-  }
+export function MatchCard({ content, match, prominent = false, pinned, onPin, onUnpin }: Props) {
+  const { diagnosis, tier, fitPct, present, absent, unknown, againstHit, ruledOutBy, fallback } =
+    match;
+  const ruledOut = tier === "ruled-out";
+  const showFit = !ruledOut && !fallback;
 
   const detail = (
     <>
       <DetailList title="What points to it" items={diagnosis.points} />
       <DetailList title="First steps for the feeding problem" items={diagnosis.steps} />
-      {prominent && (
-        <>
-          <RelatedList
-            title="Often occurs alongside"
-            blurb="Common companions — worth checking even if this explains most of the picture."
-            graph={graph}
-            ids={diagnosis.coexists}
-          />
-          <RelatedList
-            title="Distinguish from"
-            blurb="Look-alikes to rule out before settling on this."
-            graph={graph}
-            ids={diagnosis.seeAlso}
-          />
-        </>
-      )}
+      <RelatedList
+        title="Often occurs alongside"
+        blurb="Common companions — worth checking even if this explains most of the picture."
+        content={content}
+        ids={diagnosis.coexists}
+      />
+      <RelatedList
+        title="Distinguish from"
+        blurb="Look-alikes to rule out before settling on this."
+        content={content}
+        ids={diagnosis.seeAlso}
+      />
     </>
   );
 
   return (
     <article className={styles.card} data-tier={tier} data-prominent={prominent}>
-      <p className={styles.kicker}>{TIER_LABEL[tier]}</p>
-      <h2 className={styles.name}>{diagnosis.name}</h2>
+      <div className={styles.head}>
+        <div className={styles.headText}>
+          <p className={styles.kicker}>{TIER_LABEL[tier]}</p>
+          <h2 className={styles.name}>{diagnosis.name}</h2>
+        </div>
+        {showFit && (
+          <div className={styles.fit} aria-label={`Fits ${fitPct}% of assessed findings`}>
+            <span className={styles.fitPct}>{fitPct}%</span>
+            <span className={styles.fitWord}>fit</span>
+          </div>
+        )}
+      </div>
+
+      {showFit && (
+        <div className={styles.bar} aria-hidden="true">
+          <span className={styles.barFill} style={{ width: `${fitPct}%` }} />
+        </div>
+      )}
+
+      {fallback && !ruledOut && (
+        <p className={styles.unknown}>
+          A diagnosis of exclusion — nothing confirms it directly. Consider it once the options
+          above are worked through and don't fit.
+        </p>
+      )}
+
       {diagnosis.flag && (
         <div className={styles.badge}>
           <Badge flag={diagnosis.flag} />
         </div>
       )}
 
-      {conflicting.length > 0 && (
-        <p className={styles.against}>
-          Doesn't fit: you answered <strong>{contradicted(graph, conflicting[0]!)}</strong>
-          {conflicting.length > 1 && ` (+${conflicting.length - 1} more)`}.
+      {ruledOutBy && (
+        <p className={styles.ruledOut}>
+          Not possible with your answers: <strong>{findingShort(content, ruledOutBy.finding)}</strong>{" "}
+          answered {ruledOutBy.when === "present" ? "yes" : "no"}.
         </p>
       )}
 
-      {matched.length > 0 && conflicting.length === 0 && (
-        <p className={styles.because}>
-          {matched.length > 4
-            ? `Consistent with all ${matched.length} of your answers.`
-            : `Fits: ${matched.map((f) => answered(graph, f)).join("; ")}.`}
+      {!ruledOut && present.length > 0 && (
+        <p className={styles.fits}>
+          <span className={styles.lead}>Fits</span> {labels(content, present).join(", ")}.
         </p>
       )}
 
-      {prominent && missing.length > 0 && (
-        <p className={styles.missing}>
-          Not confirmed yet:{" "}
-          {missing
-            .slice(0, 4)
-            .map((f) => shortOf(graph, f.questionId))
-            .join("; ")}
-          {missing.length > 4 && ` (+${missing.length - 4} more)`}.
+      {!ruledOut && (absent.length > 0 || againstHit.length > 0) && (
+        <p className={styles.mismatch}>
+          <span className={styles.lead}>Doesn't fit</span>{" "}
+          {[...labels(content, absent), ...labels(content, againstHit)].join(", ")}.
+        </p>
+      )}
+
+      {!ruledOut && prominent && unknown.length > 0 && (
+        <p className={styles.unknown}>
+          <span className={styles.lead}>Not asked</span> {labels(content, unknown).join(", ")}.
         </p>
       )}
 
@@ -133,11 +123,7 @@ export function MatchCard({ graph, match, variant = "card", pinned, onPin, onUnp
         </Button>
       </div>
 
-      {prominent ? (
-        <div className={styles.detail}>{detail}</div>
-      ) : (
-        <Disclosure summary="Detail">{detail}</Disclosure>
-      )}
+      {prominent ? <div className={styles.detail}>{detail}</div> : <Disclosure summary="Detail">{detail}</Disclosure>}
     </article>
   );
 }

@@ -27,20 +27,19 @@ function readAllYaml(dir) {
   return files;
 }
 
-const { graph, errors, warnings } = buildFromFiles(readAllYaml(contentDir));
+const { content, errors, warnings } = buildFromFiles(readAllYaml(contentDir));
 
 for (const w of warnings) console.warn(`  warning  ${w}`);
 for (const e of errors) console.error(`  error    ${e}`);
 
-if (errors.length) {
+if (errors.length || !content) {
   console.error(`\n${errors.length} error(s) — content is not valid.`);
   process.exit(1);
 }
 
-const nodes = [...(graph?.nodes.values() ?? [])];
-const questions = nodes.filter((n) => n.kind === "question").length;
-const diagnoses = nodes.filter((n) => n.kind === "diagnosis" && !n.reference).length;
-const reference = nodes.filter((n) => n.kind === "diagnosis" && n.reference).length;
+const questions = content.questions.length;
+const diagnoses = content.diagnoses.filter((d) => !d.reference).length;
+const reference = content.diagnoses.filter((d) => d.reference).length;
 console.log(
   `content ok — ${questions} questions, ${diagnoses} diagnoses, ${reference} reference nodes` +
     (warnings.length ? `, ${warnings.length} warning(s)` : ""),

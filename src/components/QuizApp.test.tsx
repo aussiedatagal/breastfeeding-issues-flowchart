@@ -18,28 +18,23 @@ function readContent(dir = contentDir): Record<string, string> {
   return out;
 }
 const built = buildFromFiles(readContent());
-if (!built.graph) throw new Error("content did not build");
-const graph = built.graph;
+if (!built.content) throw new Error("content did not build");
+const content = built.content;
 
 const clickArea = (name: RegExp) => fireEvent.click(screen.getByRole("button", { name }));
-const answer = (a: "Yes" | "No") =>
-  fireEvent.click(screen.getAllByRole("button", { name: new RegExp(`^${a}$`) })[0]!);
 const onResults = () => screen.queryByRole("heading", { name: /· what fits/i }) !== null;
-/** the name of the top match on the results screen */
 const topMatchName = () => screen.getAllByRole("heading", { level: 2 })[0]!.textContent!.trim();
 
-/** answer questions until the results screen shows (adaptive flow, or the
- *  "see what fits so far" shortcut once it appears). */
-function answerToResults(pick = "no") {
-  for (let i = 0; i < 40 && !onResults(); i += 1) {
+/** answer every question "No" (or use the reveal shortcut) until results show */
+function answerToResults() {
+  for (let i = 0; i < 60 && !onResults(); i += 1) {
+    const no = screen.queryAllByRole("button", { name: /^No$/ })[0];
+    const next = screen.queryByRole("button", { name: /None of these — next/i });
     const reveal = screen.queryByRole("button", { name: /see what fits so far/i });
-    if (reveal && i > 6) {
-      fireEvent.click(reveal);
-      continue;
-    }
-    const btn = screen.queryAllByRole("button", { name: pick === "no" ? /^No$/ : /^Yes$/ })[0];
-    if (!btn) break;
-    fireEvent.click(btn);
+    if (no) fireEvent.click(no);
+    else if (next) fireEvent.click(next);
+    else if (reveal) fireEvent.click(reveal);
+    else break;
   }
 }
 
@@ -50,40 +45,44 @@ afterEach(() => {
 
 describe("<QuizApp>", () => {
   it("starts on the area picker", () => {
-    render(<QuizApp graph={graph} />);
+    render(<QuizApp content={content} />);
     expect(screen.getByRole("heading", { level: 1 })).toBeDefined();
-    for (const d of graph.domains) {
-      expect(screen.getByRole("button", { name: new RegExp(d.short ?? d.label) })).toBeDefined();
+    for (const a of content.areas) {
+      expect(screen.getByRole("button", { name: new RegExp(a.short ?? a.label) })).toBeDefined();
     }
   });
 
   it("asks one question at a time, then shows a ranked result", () => {
-    render(<QuizApp graph={graph} />);
+    render(<QuizApp content={content} />);
     clickArea(/Nipple & breast pain/);
-    expect(screen.getByText(/question 1/i)).toBeDefined();
+    expect(screen.getByText(/question 1 of/i)).toBeDefined();
     expect(screen.getByRole("button", { name: /^Yes$/ })).toBeDefined();
 
-    answerToResults("no");
+    answerToResults();
     expect(onResults()).toBe(true);
-    // a best-fit card with the pin action
     expect(screen.getAllByRole("button", { name: /Add to my findings/ }).length).toBeGreaterThan(0);
   });
 
-  it('the "See what fits so far" shortcut appears after a few answers', () => {
-    render(<QuizApp graph={graph} />);
+  it('the "See what fits so far" shortcut appears after an answer', () => {
+    render(<QuizApp content={content} />);
     clickArea(/Nipple & breast pain/);
-    answer("No");
-    answer("No");
-    answer("No");
+    fireEvent.click(screen.getAllByRole("button", { name: /^No$/ })[0]!);
     const reveal = screen.getByRole("button", { name: /see what fits so far/i });
     fireEvent.click(reveal);
     expect(onResults()).toBe(true);
   });
 
-  it("pins a match and shows it on the findings summary", () => {
-    render(<QuizApp graph={graph} />);
+  it("a skipped question does not block reaching results", () => {
+    render(<QuizApp content={content} />);
     clickArea(/Nipple & breast pain/);
-    answerToResults("no");
+    fireEvent.click(screen.getByRole("button", { name: /Not sure — skip this one/i }));
+    expect(screen.getByText(/question 2 of/i)).toBeDefined();
+  });
+
+  it("pins a match and shows it on the findings summary", () => {
+    render(<QuizApp content={content} />);
+    clickArea(/Nipple & breast pain/);
+    answerToResults();
 
     fireEvent.click(screen.getAllByRole("button", { name: /Add to my findings/ })[0]!);
     fireEvent.click(screen.getByRole("button", { name: /^Findings/ }));
@@ -92,16 +91,16 @@ describe("<QuizApp>", () => {
   });
 
   it("findings from two different areas build one list", () => {
-    render(<QuizApp graph={graph} />);
+    render(<QuizApp content={content} />);
 
     clickArea(/Nipple & breast pain/);
-    answerToResults("no");
+    answerToResults();
     const firstName = topMatchName();
     fireEvent.click(screen.getAllByRole("button", { name: /Add to my findings/ })[0]!);
     fireEvent.click(screen.getByRole("button", { name: /Check another area/ }));
 
     clickArea(/Lump or inflammation/);
-    answerToResults("no");
+    answerToResults();
     const secondName = topMatchName();
     fireEvent.click(screen.getAllByRole("button", { name: /Add to my findings/ })[0]!);
 

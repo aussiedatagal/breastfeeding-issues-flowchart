@@ -1,49 +1,57 @@
 import { useId, useState } from "react";
-import type { Graph } from "../../graph/types.ts";
-import { isQuestion } from "../../graph/types.ts";
-import type { Answer, Given } from "../../quiz/session.ts";
+import type { Content, Presence } from "../../content/model.ts";
+import { findingShort } from "../../content/model.ts";
 import styles from "./AnswerGrid.module.css";
 
 interface Props {
-  graph: Graph;
-  given: Given[];
-  onChange: (questionId: string, answer: Answer) => void;
+  content: Content;
+  answers: Record<string, Presence>;
+  onChange: (finding: string, value: Presence) => void;
+  onClear?: (finding: string) => void;
   /** shown open on the results screen, collapsed on the question screen */
   variant?: "collapsed" | "open";
 }
 
 /** Every answer given so far, in a set you can revise in place — order doesn't
  *  matter to the scoring, so nothing "rewinds". */
-export function AnswerGrid({ graph, given, onChange, variant = "collapsed" }: Props) {
+export function AnswerGrid({ content, answers, onChange, onClear, variant = "collapsed" }: Props) {
   const [open, setOpen] = useState(variant === "open");
   const id = useId();
-  if (given.length === 0) return null;
+
+  const entries = Object.entries(answers) as [string, Presence][];
+  if (entries.length === 0) return null;
 
   const rows = (
     <ul id={id} className={styles.list}>
-      {given.map((g) => {
-        const q = graph.nodes.get(g.questionId);
-        if (!q || !isQuestion(q)) return null;
-        return (
-          <li key={g.questionId} className={styles.row}>
-            <span className={styles.q}>{q.short}</span>
-            <span className={styles.toggle} role="group" aria-label={q.short}>
-              {(["yes", "no"] as const).map((a) => (
-                <button
-                  key={a}
-                  type="button"
-                  className={styles.opt}
-                  data-on={g.answer === a}
-                  aria-pressed={g.answer === a}
-                  onClick={() => onChange(g.questionId, a)}
-                >
-                  {a === "yes" ? "Yes" : "No"}
-                </button>
-              ))}
-            </span>
-          </li>
-        );
-      })}
+      {entries.map(([finding, value]) => (
+        <li key={finding} className={styles.row}>
+          <span className={styles.q}>{findingShort(content, finding)}</span>
+          <span className={styles.toggle} role="group" aria-label={findingShort(content, finding)}>
+            {(["present", "absent"] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                className={styles.opt}
+                data-on={value === v}
+                aria-pressed={value === v}
+                onClick={() => onChange(finding, v)}
+              >
+                {v === "present" ? "Yes" : "No"}
+              </button>
+            ))}
+          </span>
+          {onClear && (
+            <button
+              type="button"
+              className={styles.clear}
+              aria-label={`Clear ${findingShort(content, finding)}`}
+              onClick={() => onClear(finding)}
+            >
+              ×
+            </button>
+          )}
+        </li>
+      ))}
     </ul>
   );
 
@@ -66,7 +74,7 @@ export function AnswerGrid({ graph, given, onChange, variant = "collapsed" }: Pr
         onClick={() => setOpen((v) => !v)}
       >
         <span className={styles.chevron} aria-hidden="true" />
-        {open ? "Hide" : "Show"} your answers ({given.length})
+        {open ? "Hide" : "Show"} your answers ({entries.length})
       </button>
       {open && rows}
     </div>

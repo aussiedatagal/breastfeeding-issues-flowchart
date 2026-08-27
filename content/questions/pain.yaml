@@ -1,82 +1,92 @@
 - id: pain1
-  ask: Does the pain occur ONLY in the first ~30 seconds of latch, then ease as milk flows?
+  area: pain
+  type: boolean
+  ask: Does the pain occur ONLY in the first ~30 seconds of latch, then ease as
+    milk flows?
   short: Pain at latch only?
-  assess: "Classic mechanical pattern: a sharp pinch as the infant draws the nipple in, gone once
-    milk is flowing, with the nipple rounded (not creased or blanched) on release."
-  ifYes: dx-latchpain
-  ifNo: pain2
+  assess: "Classic mechanical pattern: a sharp pinch as the infant draws the
+    nipple in, gone once milk is flowing, with the nipple rounded (not creased
+    or blanched) on release."
 - id: pain2
+  area: pain
+  type: boolean
   ask: Is there a focal wedge or area of redness with firmness and warmth (± fever)?
   short: Red firm wedge?
-  assess: A segment of the breast that is red, indurated, hot and tender — as opposed to pain
-    confined to the nipple or felt deep and diffuse. This is the mastitis spectrum.
-  ifYes:
-    goto: inf3
-  ifNo: pain3
+  assess: A segment of the breast that is red, indurated, hot and tender — as
+    opposed to pain confined to the nipple or felt deep and diffuse. This is the
+    mastitis spectrum.
 - id: pain3
+  area: pain
+  type: boolean
   ask: Is there a VISIBLE skin change on the nipple or areola?
   short: Skin change?
-  assess: "Inspect in good light: erythema, scale, a rash, a discrete wound, vesicles or crusting,
-    a white spot at the tip, or a colour change. ‘No’ means the nipple and areola look
-    essentially normal."
-  ifYes: pain4
-  ifNo: pain8
+  assess: "Inspect in good light: erythema, scale, a rash, a discrete wound,
+    vesicles or crusting, a white spot at the tip, or a colour change. ‘No’
+    means the nipple and areola look essentially normal."
 - id: pain4
+  area: pain
+  type: boolean
   ask: Grouped vesicles, punched-out ulcers, or honey-coloured crusting?
   short: Vesicles / crusting?
-  assess: Grouped vesicles or shallow ‘punched-out’ ulcers with prodromal tingling suggest HSV.
-    Golden-crusted erosions suggest bullous impetigo.
-  ifYes: dx-hsv
-  ifNo: pain5
+  assess: Grouped vesicles or shallow ‘punched-out’ ulcers with prodromal tingling
+    suggest HSV. Golden-crusted erosions suggest bullous impetigo.
 - id: pain5
+  area: pain
+  type: boolean
   ask: Is there a discrete wound — a crack, fissure, abrasion, bruise, or scab?
   short: Nipple wound?
-  assess: A localised break in the skin, with pain that maps to the wound. Distinguish from a
-    diffuse rash or dermatitis.
-  ifYes: pain6
-  ifNo: pain7
+  assess: A localised break in the skin, with pain that maps to the wound.
+    Distinguish from a diffuse rash or dermatitis.
 - id: pain6
-  ask: Is the wound failing to heal after 48–72 h, spreading redness, or purulent / honey-crusted?
+  area: pain
+  type: boolean
+  ask: Is the wound failing to heal after 48–72 h, spreading redness, or purulent
+    / honey-crusted?
   short: Wound infected?
-  assess: Signs of bacterial superinfection of a nipple fissure — usually Staphylococcus aureus,
-    sometimes MRSA.
-  ifYes: dx-trauma-inf
-  ifNo: dx-trauma
+  assess: Signs of bacterial superinfection of a nipple fissure — usually
+    Staphylococcus aureus, sometimes MRSA.
 - id: pain7
+  area: pain
+  type: boolean
   ask: A well-demarcated, scaly, itchy rash (dermatitis pattern)?
   short: Rash / dermatitis?
-  assess: Look for a sharply marginated, scaly, itchy or burning area of the areola or nipple.
-    Contact dermatitis flares with lanolin, fragrances, topical antibiotics, breast pads or
-    detergents; atopic and psoriatic forms have clues elsewhere on the skin.
-  ifYes: dx-derm
-  ifNo: dx-paget
+  assess: Look for a sharply marginated, scaly, itchy or burning area of the
+    areola or nipple. Contact dermatitis flares with lanolin, fragrances,
+    topical antibiotics, breast pads or detergents; atopic and psoriatic forms
+    have clues elsewhere on the skin.
 - id: pain8
-  ask: A white or yellow spot at one point on the nipple, with a tender cord behind it?
+  area: pain
+  type: boolean
+  ask: A white or yellow spot at one point on the nipple, with a tender cord
+    behind it?
   short: Bleb?
-  assess: "A milk bleb (blister): a pinpoint blocked nipple pore, often recurrent at the same
-    spot, with a tender duct proximally, usually on a background of oversupply."
-  ifYes: dx-bleb
-  ifNo: pain9
+  assess: "A milk bleb (blister): a pinpoint blocked nipple pore, often recurrent
+    at the same spot, with a tender duct proximally, usually on a background of
+    oversupply."
 - id: pain9
+  area: pain
+  type: boolean
   ask: Does the nipple blanch and change colour, triggered by cold?
   short: Colour change?
-  assess: "Nipple vasospasm / Raynaud's: a biphasic or triphasic colour change, a clear cold
-    trigger, pain between feeds (not just during), and relief with heat. Ask about Raynaud's
-    elsewhere and precipitating drugs (beta-blockers, fluconazole, the combined pill)."
-  ifYes: dx-raynaud
-  ifNo: pain10
+  assess: "Nipple vasospasm / Raynaud's: a biphasic or triphasic colour change, a
+    clear cold trigger, pain between feeds (not just during), and relief with
+    heat. Ask about Raynaud's elsewhere and precipitating drugs (beta-blockers,
+    fluconazole, the combined pill)."
 - id: pain10
+  area: pain
+  type: boolean
   ask: A brief wave of dysphoria at let-down, clearing within ~90 seconds?
   short: Dysphoria at let-down?
-  assess: "D-MER (dysphoric milk ejection reflex): an abrupt, time-locked wave of dread,
-    hollowness or sadness immediately before each ejection (including on the pump), resolving
-    within 30–90 seconds. The parent is well between feeds. It is a dopamine-drop phenomenon,
-    not a mood disorder — though the two can coexist."
-  ifYes: dx-dmer
-  ifNo: pain11
+  assess: "D-MER (dysphoric milk ejection reflex): an abrupt, time-locked wave of
+    dread, hollowness or sadness immediately before each ejection (including on
+    the pump), resolving within 30–90 seconds. The parent is well between feeds.
+    It is a dopamine-drop phenomenon, not a mood disorder — though the two can
+    coexist."
 - id: pain11
-  ask: A deep, dull, bilateral ache or burning that continues DURING and AFTER feeds, worst in the
-    lower breast?
+  area: pain
+  type: boolean
+  ask: A deep, dull, bilateral ache or burning that continues DURING and AFTER
+    feeds, worst in the lower breast?
   short: Deep ache during + after?
   assess: >
     The pattern of mammary dysbiosis / subacute mastitis: a fairly constant deep
@@ -85,16 +95,14 @@
     quadrants. Ask about a history of recurrent blocked ducts, blebs, cracked
     nipples or previous mastitis, exclusive pumping or nipple-shield use, and
     unresolved oversupply.
-  ifYes: dx-dysbiosis
-  ifNo: pain12
 - id: pain12
-  ask: Does light touch hurt — clothing brushing the nipple, the shower spray, or patting dry with
-    a towel?
+  area: pain
+  type: boolean
+  ask: Does light touch hurt — clothing brushing the nipple, the shower spray, or
+    patting dry with a towel?
   short: Pain to light touch?
   assess: >
     Allodynia — pain from a stimulus that would not normally hurt — points to
     central sensitisation rather than a local breast problem, especially
     alongside other chronic pain conditions (fibromyalgia, IBS, migraine, TMJ
     pain, painful intercourse) and where the breast and nipple exam is normal.
-  ifYes: dx-allodynia
-  ifNo: dx-deeppain

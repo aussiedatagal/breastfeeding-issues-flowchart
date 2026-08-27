@@ -1,82 +1,204 @@
 - id: dx-engorge
+  area: inflammation
   name: Physiological engorgement
   flag: likely-normal
   steps:
-    - Feed frequently and responsively; cold packs between feeds; reverse-pressure softening;
-      NSAIDs.
+    - Feed frequently and responsively; cold packs between feeds;
+      reverse-pressure softening; NSAIDs.
     - Avoid aggressive pumping — it prolongs it.
     - Settles over 24–48 h.
+  supports:
+    - finding: inf1
+      weight: 2
+  against: []
 - id: dx-galac
+  area: inflammation
   name: Galactocele
   steps:
     - Confirm on ultrasound; aspirate if symptomatic or for diagnosis.
     - Recurrence is common while lactating.
     - Send fluid for analysis if atypical.
+  supports:
+    - finding: inf2
+      weight: 2
+    - finding: inf8
+      weight: 2
+  against:
+    - finding: inf1
+      weight: 1
+    - finding: inf7
+      weight: 1
 - id: dx-ibc
+  area: inflammation
   name: Exclude inflammatory breast cancer
   flag: do-not-miss
   note: The exit that must stay in mind at every rung of the mastitis ladder.
   steps:
-    - Urgent breast imaging (ultrasound and mammography) and core biopsy of skin and any mass.
+    - Urgent breast imaging (ultrasound and mammography) and core biopsy of skin
+      and any mass.
     - Do NOT repeat antibiotic courses without imaging.
     - Refer on a 2-week cancer pathway.
   seeAlso:
     - mim-ibc
+  supports:
+    - finding: inf2
+      weight: 2
+    - finding: inf9
+      weight: 2
+  against:
+    - finding: inf1
+      weight: 1
+    - finding: inf7
+      weight: 1
+    - finding: inf8
+      weight: 1
 - id: dx-recur
+  area: inflammation
   name: Recurrent focal mastitis — image the site
   flag: often-mislabelled
   steps:
-    - Ultrasound the affected area for an obstructing lesion, mass, or persistent bleb.
+    - Ultrasound the affected area for an obstructing lesion, mass, or
+      persistent bleb.
     - Treat the underlying oversupply; review bra and pump-flange fit.
     - If persistent or atypical, exclude malignancy.
   seeAlso:
     - dx-ibc
     - dx-oald
+  supports:
+    - finding: inf2
+      weight: 2
+    - finding: inf10
+      weight: 2
+  against:
+    - finding: inf1
+      weight: 1
+    - finding: inf7
+      weight: 1
+    - finding: inf8
+      weight: 1
+    - finding: inf9
+      weight: 1
 - id: dx-lump
+  area: inflammation
   name: Persistent breast lump — triple assessment
   flag: often-mislabelled
-  note: A discrete lump that is not an abscess, galactocele, or resolving inflammation.
+  note: A discrete lump that is not an abscess, galactocele, or resolving
+    inflammation.
   steps:
-    - "Triple assessment: clinical exam + imaging (ultrasound ± mammography) ± core biopsy."
-    - "Differential: fibroadenoma, simple cyst, lactating adenoma, and non-lactational disease
-      (periductal or idiopathic granulomatous mastitis, TB where endemic)."
+    - "Triple assessment: clinical exam + imaging (ultrasound ± mammography) ±
+      core biopsy."
+    - "Differential: fibroadenoma, simple cyst, lactating adenoma, and
+      non-lactational disease (periductal or idiopathic granulomatous mastitis,
+      TB where endemic)."
     - Do not attribute a persistent lump to lactation without imaging.
+  supports:
+    - finding: inf2
+      weight: 2
+  against:
+    - finding: inf1
+      weight: 1
+    - finding: inf7
+      weight: 1
+    - finding: inf8
+      weight: 1
+    - finding: inf9
+      weight: 1
+    - finding: inf10
+      weight: 1
 - id: dx-abscess
+  area: inflammation
   name: Breast abscess
   steps:
-    - Ultrasound-guided needle aspiration (repeat as needed) or drainage; send pus for culture.
+    - Ultrasound-guided needle aspiration (repeat as needed) or drainage; send
+      pus for culture.
     - Antibiotics covering S. aureus.
     - Keep removing milk; surgical referral.
+  supports:
+    - finding: inf3
+      weight: 2
+    - finding: inf4
+      weight: 2
+    - finding: inf5
+      weight: 2
+  against:
+    - finding: inf1
+      weight: 1
+    - finding: inf2
+      weight: 1
 - id: dx-phlegmon
+  area: inflammation
   name: Phlegmon
   steps:
     - Ultrasound to confirm no abscess.
     - Continue or broaden antibiotics (IV if unwell).
     - Do NOT incise; watchful management with breast-surgery involvement.
+  supports:
+    - finding: inf3
+      weight: 2
+    - finding: inf4
+      weight: 2
+    - finding: inf6
+      weight: 2
+  against:
+    - finding: inf1
+      weight: 1
+    - finding: inf2
+      weight: 1
+    - finding: inf5
+      weight: 1
 - id: dx-bacterial
+  area: inflammation
   name: Bacterial mastitis
   steps:
-    - Anti-staphylococcal antibiotics (e.g. dicloxacillin / flucloxacillin, or cephalexin; cover
-      MRSA per local rates).
+    - Anti-staphylococcal antibiotics (e.g. dicloxacillin / flucloxacillin, or
+      cephalexin; cover MRSA per local rates).
     - Send a milk culture.
-    - Continue feeding or expressing; adequate analgesia; escalate if no response in 48 h.
+    - Continue feeding or expressing; adequate analgesia; escalate if no
+      response in 48 h.
   coexists:
     - dx-trauma
     - dx-oald
+  supports:
+    - finding: inf3
+      weight: 2
+    - finding: inf4
+      weight: 2
+  against:
+    - finding: inf1
+      weight: 1
+    - finding: inf2
+      weight: 1
+    - finding: inf5
+      weight: 1
+    - finding: inf6
+      weight: 1
 - id: dx-inflammatory
+  area: inflammation
   name: Inflammatory mastitis
   steps:
-    - Conservative measures as for ductal inflammation, plus NSAIDs, adequate analgesia, and
-      rest.
+    - Conservative measures as for ductal inflammation, plus NSAIDs, adequate
+      analgesia, and rest.
     - Review at 24 h.
     - Antibiotics are NOT first-line if symptoms are under 24 h and improving.
+  supports:
+    - finding: inf3
+      weight: 2
+  against:
+    - finding: inf1
+      weight: 1
+    - finding: inf2
+      weight: 1
+    - finding: inf4
+      weight: 1
 - id: dx-plug
+  area: inflammation
   name: Ductal narrowing / inflammation (‘plugged duct’)
-  note: Reframed in 2022 as duct-wall oedema and inflammation on a hyperlactation background — not
-    a discrete ‘plug’ to push out.
+  note: Reframed in 2022 as duct-wall oedema and inflammation on a hyperlactation
+    background — not a discrete ‘plug’ to push out.
   steps:
     - Keep to the NORMAL feeding schedule — do not try to ‘empty’ the breast.
-    - Ice, NSAIDs, gentle lymphatic drainage toward the axilla, therapeutic ultrasound.
+    - Ice, NSAIDs, gentle lymphatic drainage toward the axilla, therapeutic
+      ultrasound.
     - AVOID deep massage, heat, extra pumping, and saline soaks.
     - Treat the underlying oversupply.
   seeAlso:
@@ -85,3 +207,29 @@
   coexists:
     - dx-oald
     - dx-bleb
+  supports: []
+  against:
+    - finding: inf1
+      weight: 1
+    - finding: inf2
+      weight: 1
+    - finding: inf3
+      weight: 1
+- id: mim-ibc
+  area: inflammation
+  name: "Mimic: non-resolving mastitis vs breast cancer"
+  flag: do-not-miss
+  note: Both give a red, swollen, warm breast.
+  points:
+    - "Mastitis: onset over hours to a day or two, systemic symptoms, responds
+      to conservative care ± antibiotics within 48 h."
+    - "IBC: does not settle on antibiotics, peau d'orange, skin thickening,
+      nipple retraction, a fixed mass, axillary nodes; may arise outside the
+      postpartum window."
+  steps:
+    - If a breast has not clearly improved after an appropriate antibiotic
+      course → imaging and core biopsy, NOT another prescription.
+  seeAlso:
+    - dx-ibc
+    - dx-bacterial
+  reference: true

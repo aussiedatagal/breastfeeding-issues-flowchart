@@ -1,0 +1,432 @@
+- id: dx-second
+  area: supply
+  name: Secondary downregulation / supplementation spiral
+  flag: often-mislabelled
+  note: Almost always a removal problem, often iatrogenic. Fix the frequency and
+    the completeness of removal and supply usually recovers.
+  steps:
+    - Increase feed and expression frequency; make sure transfer is effective.
+    - Wean unnecessary supplements gradually to a written plan; trigger top-ups
+      by weight, not anxiety.
+    - At-breast supplementer; power-pumping; correct the root latch or transfer
+      problem.
+    - Reduce dummy use; feed at early cues.
+  seeAlso:
+    - dx-perceived
+  coexists:
+    - dx-oral
+    - dx-lac2
+    - dx-igt
+  supports:
+    - finding: a1
+      weight: 2
+    - finding: a7
+      weight: 2
+    - finding: a10
+      weight: 2
+  against:
+    - finding: q1
+      weight: 1
+- id: dx-surg
+  area: supply
+  name: Post-surgical / structural production limit
+  steps:
+    - Assess for ductal and nerve disruption; check nipple sensation.
+    - An at-breast supplementer plus a galactagogue trial.
+    - Realistic counselling — supply is often partial and better with each
+      subsequent lactation.
+  supports:
+    - finding: a1
+      weight: 2
+    - finding: a7
+      weight: 2
+    - finding: a11
+      weight: 2
+  against:
+    - finding: q1
+      weight: 1
+    - finding: a10
+      weight: 1
+- id: dx-endo
+  area: supply
+  name: Endocrine / drug / pregnancy-related low supply
+  steps:
+    - Check TSH and free T4, prolactin, and glucose; endocrinology if abnormal.
+    - Obstetric referral for suspected retained products — supply usually
+      recovers after evacuation.
+    - Stop or switch the offending drug where possible (progestogen-only or
+      non-hormonal contraception; avoid decongestants).
+    - If pregnant, counsel that some decline is expected.
+  supports:
+    - finding: a1
+      weight: 2
+    - finding: a7
+      weight: 2
+    - finding: a12
+      weight: 2
+  against:
+    - finding: q1
+      weight: 1
+    - finding: a10
+      weight: 1
+    - finding: a11
+      weight: 1
+- id: dx-idio
+  area: supply
+  name: Idiopathic low supply
+  note: No primary, removal, surgical, endocrine or drug cause identified.
+  steps:
+    - Optimise removal and confirm effective transfer with an IBCLC.
+    - Trial a galactagogue only after removal is optimised.
+    - Bridge with an at-breast supplementer; reassess in 1–2 weeks.
+    - Re-screen for a subtle cause (posterior tongue restriction, occult thyroid
+      disease, retained products).
+  supports:
+    - finding: a1
+      weight: 2
+    - finding: a7
+      weight: 2
+  against:
+    - finding: q1
+      weight: 1
+    - finding: a10
+      weight: 1
+    - finding: a11
+      weight: 1
+    - finding: a12
+      weight: 1
+- id: dx-igt
+  area: supply
+  name: Primary glandular insufficiency (IGT)
+  flag: often-mislabelled
+  note: A production ceiling, present from the outset despite good technique and
+    frequency. Partial supply is still valuable.
+  steps:
+    - Optimise removal (8–12 effective feeds/expressions per 24 h).
+    - An at-breast supplementer bridges the shortfall while preserving
+      stimulation and the feeding relationship.
+    - Galactagogue trial only after removal is optimised.
+    - Refer to an IBCLC; counsel that capacity often improves with each
+      subsequent lactation.
+  coexists:
+    - dx-second
+  supports:
+    - finding: a1
+      weight: 2
+    - finding: a8
+      weight: 2
+  against:
+    - finding: q1
+      weight: 1
+    - finding: a7
+      weight: 1
+- id: dx-lac2
+  area: supply
+  name: Delayed lactogenesis II
+  steps:
+    - Intensive effective removal — feed plus express, 8–12×/24 h; skin-to-skin.
+    - Treat the contributing factor (glycaemic control, thyroid, pain, retained
+      products).
+    - Bridge with an at-breast supplementer while supply builds; reassess
+      transfer in 24–48 h.
+    - Most establish over days to 2–3 weeks with support.
+  seeAlso:
+    - dx-endo
+  coexists:
+    - dx-second
+  supports:
+    - finding: a1
+      weight: 2
+    - finding: a9
+      weight: 2
+  against:
+    - finding: q1
+      weight: 1
+    - finding: a7
+      weight: 1
+    - finding: a8
+      weight: 1
+- id: dx-oald
+  area: supply
+  name: Oversupply & overactive let-down
+  flag: often-mislabelled
+  note: One physiology — excess production with brisk ejection — that presents as
+    reflux, CMPA, colic, refusal, recurrent blocked ducts, and even perceived
+    low supply.
+  points:
+    - Choking, gulping, clamping, pulling off as milk sprays; short efficient
+      feeds; refusing the second breast.
+    - Gassy, straining, frequent large explosive green frothy stools; rapid
+      weight gain.
+    - Recurrent engorgement and blocked ducts; forceful spray on release.
+  steps:
+    - Finish the first breast before offering the second; block feeding (one
+      breast per 2–4 h) if marked.
+    - Laid-back or side-lying positioning; brief pre-latch expression.
+    - Stop rescue pumping — it feeds the loop.
+    - Most self-corrects by ~12 weeks.
+  seeAlso:
+    - mim-cmpa
+    - dx-plug
+    - dx-fastflow
+    - dx-perc-over
+  reference: true
+- id: mim-tie
+  area: supply
+  name: "Mimic: posterior tongue restriction vs immaturity"
+  flag: often-mislabelled
+  note: Both give a disorganised early latch that ‘might just need practice’.
+  points:
+    - "Restriction: persistent maternal pain, clicking, milk spilling, poor
+      weight gain, reflux-like symptoms from aerophagia, restricted tongue
+      elevation on a structured assessment."
+    - "Immaturity: late-preterm / early-term, improving week on week, adequate
+      transfer, less maternal pain."
+  steps:
+    - Use a validated oral-function assessment plus the weight trajectory;
+      frenotomy only for demonstrated functional restriction.
+  seeAlso:
+    - dx-oral
+    - dx-suck
+  reference: true
+- id: dx-perc-over
+  area: supply
+  name: Perceived low supply due to oversupply
+  flag: often-mislabelled
+  steps:
+    - Show the growth chart; explain the physiology.
+    - Manage as oversupply — finish the first breast, block feeding, stop rescue
+      pumping.
+    - Do NOT add pumping or galactagogues.
+    - Reassure — most settles by ~12 weeks.
+  seeAlso:
+    - dx-oald
+  coexists:
+    - dx-oald
+  supports:
+    - finding: q1
+      weight: 2
+    - finding: b5
+      weight: 2
+  against: []
+- id: dx-perceived
+  area: supply
+  name: Perceived insufficient milk supply (normal)
+  flag: likely-normal
+  note: A positive diagnosis made on normal growth and output — not a label of
+    exclusion.
+  steps:
+    - Reassure with the objective data; show the growth chart.
+    - Teach normal infant behaviour, hunger cues, cluster feeding, and the weeks
+      6–12 regulation changes (softer breasts, shorter feeds, less leaking are
+      all normal).
+    - A low pump yield is a poor proxy for supply — say so.
+    - Offer a review to confirm the trajectory rather than leaving the worry
+      open.
+  seeAlso:
+    - dx-perc-over
+  coexists:
+    - dx-oald
+    - dx-perc-over
+  supports:
+    - finding: q1
+      weight: 2
+  against:
+    - finding: b5
+      weight: 1
+- id: dx-position
+  area: supply
+  name: Positioning & attachment problem
+  steps:
+    - Hands-on latch and positioning correction; teach the parent to reproduce
+      it.
+    - Review within a few days.
+    - If it recurs despite good technique, reassess for infant oral restriction.
+  coexists:
+    - dx-oral
+    - dx-trauma
+  supports:
+    - finding: a2
+      weight: 2
+  against:
+    - finding: q1
+      weight: 1
+    - finding: a1
+      weight: 1
+    - finding: a1b
+      weight: 1
+- id: dx-oald-a
+  area: supply
+  name: Overactive let-down / oversupply disrupting feeding
+  note: Usually causes rapid weight gain — but marked refusal or one-sided
+    drainage can tip an infant into poor gain.
+  steps:
+    - Finish the first breast before offering the second; block feeding if
+      marked.
+    - Laid-back or side-lying positioning; brief pre-latch expression to take
+      the initial force off.
+    - Stop rescue pumping. Most settles by ~12 weeks.
+    - If gain stays poor, reassess transfer and consider a coexisting problem.
+  seeAlso:
+    - mim-cmpa
+    - dx-fastflow
+  coexists:
+    - dx-plug
+    - dx-perc-over
+    - mim-cmpa
+  supports:
+    - finding: a3
+      weight: 2
+  against:
+    - finding: q1
+      weight: 1
+    - finding: a1
+      weight: 1
+    - finding: a1b
+      weight: 1
+    - finding: a2
+      weight: 1
+- id: dx-oral
+  area: supply
+  name: Infant oral restriction / structural anomaly
+  flag: often-mislabelled
+  steps:
+    - Structured oral-function assessment (e.g. Hazelbaker) by an IBCLC or
+      feeding team.
+    - Positional compensation and pacing while deciding.
+    - Frenotomy only for demonstrated functional restriction — not for
+      appearance.
+    - ENT / plastics / genetics for cleft, marked micrognathia (Pierre Robin),
+      or macroglossia.
+  seeAlso:
+    - mim-tie
+  coexists:
+    - dx-oald-a
+    - dx-second
+    - dx-trauma
+  supports:
+    - finding: a4
+      weight: 2
+  against:
+    - finding: q1
+      weight: 1
+    - finding: a1
+      weight: 1
+    - finding: a1b
+      weight: 1
+    - finding: a2
+      weight: 1
+    - finding: a3
+      weight: 1
+- id: dx-suck
+  area: supply
+  name: Weak or uncoordinated suck (immaturity or neuromotor)
+  steps:
+    - Support tone and head position; external pacing; breast compression;
+      shorter, more frequent feeds.
+    - Physiotherapy / OT / SLT; paediatric review for abnormal neurology.
+    - Recheck as the infant matures or the cause resolves.
+  seeAlso:
+    - dx-cardio
+  supports:
+    - finding: a5
+      weight: 2
+  against:
+    - finding: q1
+      weight: 1
+    - finding: a1
+      weight: 1
+    - finding: a1b
+      weight: 1
+    - finding: a2
+      weight: 1
+    - finding: a3
+      weight: 1
+    - finding: a4
+      weight: 1
+- id: dx-cardio
+  area: supply
+  name: Cardiorespiratory disease
+  flag: do-not-miss
+  steps:
+    - Paediatric or cardiology assessment; measure SpO₂ at rest and during a
+      feed.
+    - Pace feeds and allow breaks; fortify or supplement to reduce the work of
+      feeding.
+    - Overlaps the infant red-flag list — escalate if unwell.
+  supports:
+    - finding: a6
+      weight: 2
+  against:
+    - finding: q1
+      weight: 1
+    - finding: a1
+      weight: 1
+    - finding: a1b
+      weight: 1
+    - finding: a2
+      weight: 1
+    - finding: a3
+      weight: 1
+    - finding: a4
+      weight: 1
+    - finding: a5
+      weight: 1
+- id: dx-barrier
+  area: supply
+  name: Mechanical barrier — engorgement or nipple shape
+  steps:
+    - Reverse-pressure softening and a little hand expression before latching.
+    - Laid-back positioning; cold packs between feeds; NSAIDs for engorgement.
+    - Nipple-everting techniques; a shield as a short-term bridge with a plan
+      and weight monitoring.
+    - Reassess as the infant grows and engorgement settles.
+  supports:
+    - finding: a6b
+      weight: 2
+  against:
+    - finding: q1
+      weight: 1
+    - finding: a1
+      weight: 1
+    - finding: a1b
+      weight: 1
+    - finding: a2
+      weight: 1
+    - finding: a3
+      weight: 1
+    - finding: a4
+      weight: 1
+    - finding: a5
+      weight: 1
+    - finding: a6
+      weight: 1
+- id: dx-transfer-unk
+  area: supply
+  name: Ineffective transfer — cause not yet identified
+  note: Transfer is poor but no single cause stands out.
+  steps:
+    - Refer to an IBCLC for repeated structured feed assessment.
+    - Re-screen for subtle posterior tongue restriction, disorganised state
+      regulation, and feeding frequency.
+    - Reassess within days — the picture often declares itself.
+  supports: []
+  against:
+    - finding: q1
+      weight: 1
+    - finding: a1
+      weight: 1
+    - finding: a1b
+      weight: 1
+    - finding: a2
+      weight: 1
+    - finding: a3
+      weight: 1
+    - finding: a4
+      weight: 1
+    - finding: a5
+      weight: 1
+    - finding: a6
+      weight: 1
+    - finding: a6b
+      weight: 1

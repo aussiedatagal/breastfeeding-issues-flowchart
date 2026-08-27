@@ -9,8 +9,8 @@ if (result.warnings.length > 0 && import.meta.env.DEV) {
 }
 
 export function App() {
-  if (!result.graph) {
+  if (!result.content) {
     return <ContentError errors={result.errors} />;
   }
-  return <QuizApp graph={result.graph} />;
+  return <QuizApp content={result.content} />;
 }

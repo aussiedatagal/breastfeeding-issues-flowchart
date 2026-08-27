@@ -51,27 +51,31 @@ async function walkAndShoot(page, dir, shot) {
     await help.click();
   }
 
-  // answer the first question "yes", the rest "no" until results are ready
+  // answer the first question "yes", the rest a mix until results are ready
   const yes = page.getByRole("button", { name: /^Yes$/ }).first();
   if (await yes.count()) {
     await yes.click();
     await page.waitForTimeout(220);
   }
-  for (let i = 0; i < 20 && !(await onResults(page)); i += 1) {
+  for (let i = 0; i < 40 && !(await onResults(page)); i += 1) {
     const reveal = page.getByRole("button", { name: /see what fits so far/i }).first();
     const no = page.getByRole("button", { name: /^No$/ }).first();
+    const next = page.getByRole("button", { name: /None of these — next|Next \(/i }).first();
     if (i === 3 && (await reveal.count())) {
       await shot("04-question-can-see-results");
     }
-    if ((await no.count()) === 0) break;
-    await no.click();
-    await page.waitForTimeout(200);
+    if (await no.count()) await no.click();
+    else if (await next.count()) await next.click();
+    else break;
+    await page.waitForTimeout(160);
   }
   await page.waitForTimeout(200);
   await shot("05-results", { fullPage: true });
 
-  // expand "considered and set aside"
-  const setAside = page.getByRole("button", { name: /considered and set aside/i }).first();
+  // expand the "ruled out" / "weak matches" disclosures
+  const setAside = page
+    .getByRole("button", { name: /ruled out by your answers|weak matches/i })
+    .first();
   if (await setAside.count()) {
     await setAside.click();
     await page.waitForTimeout(200);

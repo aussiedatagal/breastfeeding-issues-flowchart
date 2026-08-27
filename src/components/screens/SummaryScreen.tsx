@@ -1,12 +1,11 @@
-import type { Graph } from "../../graph/types.ts";
-import { domainOf, isDiagnosis } from "../../graph/types.ts";
+import type { Content } from "../../content/model.ts";
 import { Button } from "../ui/Button.tsx";
 import { Disclosure } from "../ui/Disclosure.tsx";
 import { Badge } from "../ui/Badge.tsx";
 import styles from "./SummaryScreen.module.css";
 
 interface Props {
-  graph: Graph;
+  content: Content;
   findings: string[];
   multifactorialNote?: string;
   onUnpin: (id: string) => void;
@@ -15,7 +14,7 @@ interface Props {
 }
 
 export function SummaryScreen({
-  graph,
+  content,
   findings,
   multifactorialNote,
   onUnpin,
@@ -23,8 +22,13 @@ export function SummaryScreen({
   onCheckAnother,
 }: Props) {
   const items = findings
-    .map((id) => graph.nodes.get(id))
-    .filter((n) => n !== undefined && isDiagnosis(n));
+    .map((id) => content.diagnosis.get(id))
+    .filter((d) => d !== undefined);
+
+  const areaLabel = (areaId: string) => {
+    const a = content.areas.find((x) => x.id === areaId);
+    return a?.short ?? a?.label ?? "";
+  };
 
   return (
     <section>
@@ -43,51 +47,41 @@ export function SummaryScreen({
           </p>
 
           <ul className={styles.list}>
-            {items.map(
-              (node) =>
-                node &&
-                isDiagnosis(node) && (
-                  <li key={node.id} className={styles.item}>
-                    <div className={styles.head}>
-                      <span
-                        className={styles.dot}
-                        data-flag={node.flag ?? "none"}
-                        aria-hidden="true"
-                      />
-                      <div className={styles.headText}>
-                        <p className={styles.name}>{node.name}</p>
-                        <p className={styles.area}>
-                          {domainOf(graph, node.id)?.short ?? domainOf(graph, node.id)?.label ?? ""}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        className={styles.remove}
-                        onClick={() => onUnpin(node.id)}
-                        aria-label={`Remove ${node.name}`}
-                      >
-                        ×
-                      </button>
-                    </div>
+            {items.map((node) => (
+              <li key={node!.id} className={styles.item}>
+                <div className={styles.head}>
+                  <span className={styles.dot} data-flag={node!.flag ?? "none"} aria-hidden="true" />
+                  <div className={styles.headText}>
+                    <p className={styles.name}>{node!.name}</p>
+                    <p className={styles.area}>{areaLabel(node!.area)}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.remove}
+                    onClick={() => onUnpin(node!.id)}
+                    aria-label={`Remove ${node!.name}`}
+                  >
+                    ×
+                  </button>
+                </div>
 
-                    {node.flag && (
-                      <div className={styles.badge}>
-                        <Badge flag={node.flag} />
-                      </div>
-                    )}
+                {node!.flag && (
+                  <div className={styles.badge}>
+                    <Badge flag={node!.flag} />
+                  </div>
+                )}
 
-                    {node.steps.length > 0 && (
-                      <Disclosure summary="First steps">
-                        <ul className={styles.steps}>
-                          {node.steps.map((s, i) => (
-                            <li key={i}>{s}</li>
-                          ))}
-                        </ul>
-                      </Disclosure>
-                    )}
-                  </li>
-                ),
-            )}
+                {node!.steps.length > 0 && (
+                  <Disclosure summary="First steps">
+                    <ul className={styles.steps}>
+                      {node!.steps.map((s, i) => (
+                        <li key={i}>{s}</li>
+                      ))}
+                    </ul>
+                  </Disclosure>
+                )}
+              </li>
+            ))}
           </ul>
         </>
       )}

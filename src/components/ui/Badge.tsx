@@ -1,4 +1,4 @@
-import type { Flag } from "../../graph/types.ts";
+import type { Flag } from "../../content/model.ts";
 import styles from "./Badge.module.css";
 
 const LABEL: Record<Flag, string> = {

@@ -1,11 +1,11 @@
 # Breastfeeding Difficulty — guided assessment
 
 A guided quiz for working up breastfeeding difficulty. Pick where the problem
-shows up, answer Yes/No questions, and get a **ranked list of what fits** — best
-fit, other possibilities, and everything that was considered and set aside (with
-the answer that argues against each). No answer ever removes a diagnosis from
-consideration; it only changes the score. Each result carries what points to it,
-first steps, and look-alikes to rule out.
+shows up, answer as many questions as you can (in any order, skipping the ones
+you can't judge), and get a **ranked list of what fits** — with a fit %, what
+matches, what doesn't, and what wasn't asked. No answer removes a diagnosis
+unless it makes it genuinely impossible; everything else is scored, not gated.
+Each result carries what points to it, first steps, and look-alikes to rule out.
 
 **Educational — for clinicians.** It works up the _breastfeeding_ problem; the
 infant's clinical care (hydration, jaundice, weight, top-ups) is assessed and
@@ -42,14 +42,14 @@ npm run dev        # http://localhost:5173
 ## Architecture
 
 ```
-content/            YAML — the clinical decision tree (educator-owned)
+content/            YAML — questions + diagnoses with weighted findings (educator-owned)
 src/
-  content/          zod schema + loader; turns YAML into a validated graph
-  graph/            framework-free graph model (build.ts, types.ts) — unit-tested
+  content/          zod schema, model, and loader; turns YAML into a validated Content
+    schema.ts         the authored shape
+    model.ts          the runtime shape (Question / Diagnosis / Finding maps)
+    build.ts          buildContent() — validate + normalise, never throws
   quiz/             framework-free scoring engine — unit-tested
-    profiles.ts       root→leaf tree paths → symptom profiles
-    score.ts          rankMatches() — score every diagnosis against the answers
-    flow.ts           nextQuestion() — adaptive questioning
+    score.ts          rankArea() — score every diagnosis against the answers
     session.ts        screenOf() + the reducer (pure state machine)
     url.ts            session <-> URL hash
   hooks/            useQuizSession, useTheme
@@ -58,27 +58,34 @@ scripts/            validate-content.mjs (CI), screenshots.mjs
 legacy/             earlier single-file prototypes, kept for reference
 ```
 
-`src/graph/*` and `src/quiz/*` have no React imports and are covered by unit
+`src/content/*` and `src/quiz/*` have no React imports and are covered by unit
 tests, so the logic is reasoned about and changed independently of the UI.
 Components are wiring and presentation only.
 
 ### Problem areas
 
-`map.yaml` lists **problem areas** (`domains`). They are independent: the
-clinician works one at a time, pins the result to **Findings**, and comes back
-for another. The output is a problem list, not a single answer — because pain,
-low supply and refusal are not mutually exclusive, and one often causes another.
+`map.yaml` lists **areas**. They are independent: the clinician works one at a
+time, pins the result to **Findings**, and comes back for another. The output is
+a problem list, not a single answer — because pain, low supply and refusal are
+not mutually exclusive, and one often causes another.
 
 ### Scoring, not walking
 
-The content is authored as Yes/No trees (natural for educators), but the app
-does not walk them as decision paths — that is what lets one early answer gate
-whole families of diagnoses out. Instead each root→leaf path is a _symptom
-profile_, and every diagnosis in the area is **scored** against the answers so
-far: matched findings, missing findings, and _conflicting_ ones. An answer that
-disagrees with a profile lowers its score; it never removes the diagnosis. The
-results screen ranks the fits and lists everything "considered and set aside"
-with the answer that argued against it.
+There is no decision path. Each question surfaces one or more **findings**
+(present / absent / unknown). Each diagnosis declares the findings that
+`support` it (weighted), the findings that argue `against` it, and — rarely —
+findings that `exclude` it outright. For every diagnosis in the area:
+
+```
+score  = Σ present support weight − Σ absent support weight − 1.5 · Σ against weight
+fit %  = present support weight ÷ assessed support weight
+```
+
+A diagnosis is dropped **only** when a hard `excludes` rule fires (e.g. no fever
+⇒ not an abscess). Everything else stays on the list, ranked strong / possible /
+weak, with ruled-out diagnoses shown last and the rule that removed them. A
+diagnosis with no `supports` is a **diagnosis of exclusion** — it surfaces as a
+low-confidence fallback that can never be "confirmed".
 
 ## Deploy (GitHub Pages)
 
@@ -96,10 +103,11 @@ workflow.
 ## State in the URL
 
 The session is written to the URL hash
-(`#area=pain&a=pain1:yes,pain2:no&f=dx-vasospasm,dx-oversupply`), so a particular
-assessment — or its findings list — can be linked or bookmarked. Answers are
-keyed by question id so a content edit can't silently change what an old link
-means.
+(`#area=pain&p=pain1,pain9&x=pain2&s=pain5&f=dx-vasospasm`), so a particular
+assessment — or its findings list — can be linked or bookmarked. `p` / `x` are
+the findings answered present / absent, `s` the skipped questions, `f` the
+pinned findings — all keyed by id so a content edit can't silently change what
+an old link means.
 
 ## Caveats
 

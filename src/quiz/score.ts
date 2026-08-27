@@ -1,110 +1,103 @@
 /**
- * Score every diagnosis in an area against the answers given so far. Nothing is
- * gated: an answer that goes against a diagnosis's profile lowers its score, it
- * never removes it. A diagnosis with more than one profile is scored on its
- * best-matching one.
+ * Score every diagnosis in an area against the answers. A diagnosis is only
+ * removed if one of its `excludes` rules fires (e.g. "no fever ⇒ not this").
+ * Otherwise it is ranked by how much of its picture the answers confirm, and
+ * every mismatch is reported.
  *
  * Pure.
  */
-import type { Answer, DiagnosisNode, Graph } from "../graph/types.ts";
-import { isDiagnosis } from "../graph/types.ts";
-import type { Finding, Profile } from "./profiles.ts";
+import type { Content, Diagnosis, HardExclusion, Presence, WeightedFinding } from "../content/model.ts";
 
-/** questionId → the answer given */
-export type Answers = Readonly<Record<string, Answer>>;
+/** findingId → present / absent (absent from the map === not assessed) */
+export type Answers = Readonly<Record<string, Presence>>;
 
-export type Tier = "best" | "likely" | "possible" | "unlikely";
+export type Tier = "strong" | "possible" | "unlikely" | "ruled-out";
 
 export interface Match {
-  diagnosis: DiagnosisNode;
-  profile: Profile;
-  /** profile findings the answers confirm */
-  matched: Finding[];
-  /** profile findings the answers contradict */
-  conflicting: Finding[];
-  /** profile findings not answered yet */
-  missing: Finding[];
-  score: number;
+  diagnosis: Diagnosis;
   tier: Tier;
+  /** confirmed support weight ÷ assessed support weight, 0–100 */
+  fitPct: number;
+  score: number;
+  present: WeightedFinding[];
+  absent: WeightedFinding[]; // expected, but answered "no" → doesn't fit
+  unknown: WeightedFinding[]; // not asked / skipped
+  againstHit: WeightedFinding[]; // an "argues against" finding is present
+  ruledOutBy?: HardExclusion;
+  /** a diagnosis of exclusion — it has no positive findings of its own */
+  fallback: boolean;
 }
 
-const MATCH = 1;
-const CONFLICT = 3;
-const MISSING = 0.15;
+const AGAINST_PENALTY = 1.5;
 
-function scoreProfile(profile: Profile, answers: Answers) {
-  const matched: Finding[] = [];
-  const conflicting: Finding[] = [];
-  const missing: Finding[] = [];
+const fires = (ex: HardExclusion, answers: Answers) => {
+  const a = answers[ex.finding];
+  return a !== undefined && a === (ex.when === "present" ? "present" : "absent");
+};
 
-  for (const f of profile.findings) {
-    const a = answers[f.questionId];
-    if (a === undefined) missing.push(f);
-    else if (a === f.answer) matched.push(f);
-    else conflicting.push(f);
+const sum = (fs: WeightedFinding[]) => fs.reduce((n, f) => n + f.weight, 0);
+
+function scoreDiagnosis(dx: Diagnosis, answers: Answers): Match {
+  const present: WeightedFinding[] = [];
+  const absent: WeightedFinding[] = [];
+  const unknown: WeightedFinding[] = [];
+  for (const s of dx.supports) {
+    const a = answers[s.finding];
+    if (a === undefined) unknown.push(s);
+    else if (a === "present") present.push(s);
+    else absent.push(s);
   }
+  const againstHit = dx.against.filter((g) => answers[g.finding] === "present");
 
-  const score = matched.length * MATCH - conflicting.length * CONFLICT - missing.length * MISSING;
-  return { matched, conflicting, missing, score };
+  const got = sum(present);
+  const missed = sum(absent);
+  const againstW = sum(againstHit);
+  const assessed = got + missed;
+  const fitPct = assessed > 0 ? Math.round((100 * got) / assessed) : 0;
+
+  const ruledOutBy = dx.excludes.find((ex) => fires(ex, answers));
+  const fallback = dx.supports.length === 0;
+
+  // a diagnosis of exclusion: no findings of its own, so it can't be "confirmed"
+  // — it stays on the table until something else is, and its `against` list
+  // (patterns that point elsewhere) is what pushes it down.
+  const score = fallback ? -AGAINST_PENALTY * againstW : got - missed - AGAINST_PENALTY * againstW;
+
+  let tier: Tier;
+  if (ruledOutBy) tier = "ruled-out";
+  else if (fallback) tier = againstHit.length > 0 ? "unlikely" : "possible";
+  else if (got === 0 || score <= 0) tier = "unlikely";
+  else if (score >= 4 && fitPct >= 60 && againstHit.length === 0) tier = "strong";
+  else tier = "possible";
+
+  return {
+    diagnosis: dx,
+    tier,
+    fitPct,
+    score,
+    present,
+    absent,
+    unknown,
+    againstHit,
+    fallback,
+    ...(ruledOutBy ? { ruledOutBy } : {}),
+  };
 }
 
-function tierOf(m: { matched: Finding[]; conflicting: Finding[]; missing: Finding[] }): Tier {
-  const { matched, conflicting, missing } = m;
-  if (conflicting.length > 0) return "unlikely";
-  if (missing.length === 0 && matched.length > 0) return "best";
-  if (matched.length >= 2 && missing.length <= 1) return "likely";
-  if (matched.length >= 1) return "possible";
-  return "possible";
-}
-
-/** Ranked matches for one area, best first. */
-export function rankMatches(
-  graph: Graph,
-  profiles: readonly Profile[],
-  areaId: string,
-  answers: Answers,
-): Match[] {
-  const byDiagnosis = new Map<string, Profile[]>();
-  for (const p of profiles) {
-    if (p.areaId !== areaId) continue;
-    const list = byDiagnosis.get(p.diagnosisId);
-    if (list) list.push(p);
-    else byDiagnosis.set(p.diagnosisId, [p]);
-  }
-
-  const matches: Match[] = [];
-  for (const [diagnosisId, list] of byDiagnosis) {
-    const node = graph.nodes.get(diagnosisId);
-    if (!node || !isDiagnosis(node)) continue;
-
-    const scored = list
-      .map((profile) => ({ profile, ...scoreProfile(profile, answers) }))
-      .sort((a, b) => b.score - a.score);
-    const best = scored[0]!;
-
-    matches.push({
-      diagnosis: node,
-      profile: best.profile,
-      matched: best.matched,
-      conflicting: best.conflicting,
-      missing: best.missing,
-      score: best.score,
-      tier: tierOf(best),
+/** Every scored diagnosis in the area, best first (ruled-out last). */
+export function rankArea(content: Content, areaId: string, answers: Answers): Match[] {
+  return content.diagnoses
+    .filter((d) => d.area === areaId && !d.reference)
+    .map((d) => scoreDiagnosis(d, answers))
+    .sort((a, b) => {
+      if ((a.tier === "ruled-out") !== (b.tier === "ruled-out")) {
+        return a.tier === "ruled-out" ? 1 : -1;
+      }
+      return (
+        b.score - a.score ||
+        b.fitPct - a.fitPct ||
+        b.present.length - a.present.length ||
+        a.diagnosis.name.localeCompare(b.diagnosis.name)
+      );
     });
-  }
-
-  return matches.sort(
-    (a, b) => b.score - a.score || a.diagnosis.name.localeCompare(b.diagnosis.name),
-  );
-}
-
-/**
- * The still-plausible front-runners: no contradicted finding and within reach of
- * the top score. Drives which question to ask next.
- */
-export function contenders(matches: Match[]): Match[] {
-  const live = matches.filter((m) => m.conflicting.length === 0);
-  if (live.length === 0) return matches.slice(0, 1);
-  const top = live[0]!.score;
-  return live.filter((m) => m.score >= top - 2);
 }

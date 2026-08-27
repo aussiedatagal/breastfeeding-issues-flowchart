@@ -1,15 +1,15 @@
 /**
- * Integration checks against the real /content: every diagnosis must be
- * reachable as a symptom profile, and answering an area's whole question set
- * one way or another must always surface a best match.
+ * Integration checks against the real /content: it builds, every scored
+ * diagnosis can actually rank, and answering an area's whole question set one
+ * way still produces a coherent ordering.
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { buildFromFiles } from "../content/load.ts";
-import { isDiagnosis } from "../graph/types.ts";
-import { buildProfiles, areaQuestionOrder } from "./profiles.ts";
-import { rankMatches } from "./score.ts";
+import { questionsInArea } from "../content/model.ts";
+import { questionFindings } from "./session.ts";
+import { rankArea } from "./score.ts";
 
 const contentDir = resolve(__dirname, "../../content");
 function readContent(dir = contentDir): Record<string, string> {
@@ -23,39 +23,69 @@ function readContent(dir = contentDir): Record<string, string> {
   return out;
 }
 
-const { graph, errors } = buildFromFiles(readContent());
+const { content, errors } = buildFromFiles(readContent());
+
+/** deliberate diagnoses of exclusion — no positive findings of their own; the
+ *  engine surfaces them as fallbacks (see score.ts) */
+const DIAGNOSES_OF_EXCLUSION = new Set([
+  "dx-plug",
+  "dx-deeppain",
+  "dx-refuse-unk",
+  "dx-transfer-unk",
+]);
 
 describe("content", () => {
   it("builds cleanly", () => {
     expect(errors).toEqual([]);
-    expect(graph).toBeDefined();
+    expect(content).toBeDefined();
   });
 
-  it("every non-reference diagnosis has at least one symptom profile", () => {
-    if (!graph) throw new Error("no graph");
-    const profiled = new Set(buildProfiles(graph).map((p) => p.diagnosisId));
-    const missing = [...graph.nodes.values()]
-      .filter((n) => isDiagnosis(n) && !n.reference)
-      .filter((n) => !profiled.has(n.id))
-      .map((n) => n.id);
-    expect(missing).toEqual([]);
+  it("every non-reference diagnosis either has supports or is a known diagnosis of exclusion", () => {
+    if (!content) throw new Error("no content");
+    const gaps = content.diagnoses
+      .filter((d) => !d.reference && d.supports.length === 0)
+      .map((d) => d.id)
+      .filter((id) => !DIAGNOSES_OF_EXCLUSION.has(id));
+    expect(gaps).toEqual([]);
   });
 
-  it("answering an area produces a coherent ranking with a clear best match", () => {
-    if (!graph) throw new Error("no graph");
-    const profiles = buildProfiles(graph);
+  it("a diagnosis of exclusion surfaces as a fallback, never ruled out by absence", () => {
+    if (!content) throw new Error("no content");
+    for (const id of DIAGNOSES_OF_EXCLUSION) {
+      const d = content.diagnosis.get(id);
+      if (!d) continue;
+      const ranked = rankArea(content, d.area, {});
+      const m = ranked.find((x) => x.diagnosis.id === id)!;
+      expect(m.fallback).toBe(true);
+      expect(m.tier).toBe("possible");
+    }
+  });
 
-    for (const area of graph.domains) {
-      const questions = areaQuestionOrder(graph, profiles, area.id);
-      expect(questions.length).toBeGreaterThan(0);
+  it("supports and excludes reference findings that exist", () => {
+    if (!content) throw new Error("no content");
+    for (const d of content.diagnoses) {
+      for (const s of [...d.supports, ...d.against, ...d.excludes]) {
+        expect(content.finding.has(s.finding)).toBe(true);
+      }
+    }
+  });
 
-      // answer every question of the area "no", then check the ranking holds up
-      const answers = Object.fromEntries(questions.map((q) => [q.id, "no" as const]));
-      const ranked = rankMatches(graph, profiles, area.id, answers);
+  it("answering a whole area 'present' still gives a coherent ranking", () => {
+    if (!content) throw new Error("no content");
+    for (const area of content.areas) {
+      const qs = questionsInArea(content, area.id);
+      expect(qs.length).toBeGreaterThan(0);
+
+      const answers: Record<string, "present"> = {};
+      for (const q of qs) for (const f of questionFindings(q)) answers[f] = "present";
+
+      const ranked = rankArea(content, area.id, answers);
       expect(ranked.length).toBeGreaterThan(0);
-      expect(ranked[0]!.score).toBeGreaterThanOrEqual(ranked[ranked.length - 1]!.score);
-      // the top match for an all-"no" walk should not itself be contradicted
-      expect(ranked[0]!.conflicting).toHaveLength(0);
+      // sorted by score (ruled-out sinks to the back)
+      const live = ranked.filter((m) => m.tier !== "ruled-out");
+      for (let i = 1; i < live.length; i += 1) {
+        expect(live[i - 1]!.score).toBeGreaterThanOrEqual(live[i]!.score);
+      }
     }
   });
 });

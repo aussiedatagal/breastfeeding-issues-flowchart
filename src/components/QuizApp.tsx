@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { Graph } from "../graph/types.ts";
+import type { Content } from "../content/model.ts";
 import { useQuizSession } from "../hooks/useQuizSession.ts";
 import { useTheme } from "../hooks/useTheme.ts";
 import { TopBar } from "./ui/TopBar.tsx";
@@ -9,11 +9,10 @@ import { ResultsScreen } from "./screens/ResultsScreen.tsx";
 import { SummaryScreen } from "./screens/SummaryScreen.tsx";
 import styles from "./QuizApp.module.css";
 
-export function QuizApp({ graph }: { graph: Graph }) {
-  const { screen, findings, pinned, actions } = useQuizSession(graph);
+export function QuizApp({ content }: { content: Content }) {
+  const { screen, findings, pinned, actions } = useQuizSession(content);
   const theme = useTheme();
 
-  // scroll to the top of the column whenever the screen meaningfully changes
   const mainRef = useRef<HTMLElement>(null);
   const signature =
     screen.name === "question"
@@ -50,7 +49,7 @@ export function QuizApp({ graph }: { graph: Graph }) {
         <div key={signature} className={styles.screen}>
           {screen.name === "start" && (
             <StartScreen
-              graph={graph}
+              content={content}
               findingsCount={findings.length}
               onPickArea={actions.pickArea}
               onOpenSummary={actions.openSummary}
@@ -59,39 +58,49 @@ export function QuizApp({ graph }: { graph: Graph }) {
 
           {screen.name === "question" && (
             <QuestionScreen
-              graph={graph}
+              content={content}
               area={screen.area}
               question={screen.question}
-              answered={screen.answered}
-              minUseful={screen.minUseful}
-              given={screen.given}
-              onAnswer={actions.answer}
+              index={screen.index}
+              total={screen.total}
+              answers={screen.answers}
+              canReveal={screen.canReveal}
+              onAnswer={actions.answerQuestion}
+              onSkip={actions.skipQuestion}
+              onSetFinding={actions.setFinding}
               onReveal={actions.reveal}
             />
           )}
 
           {screen.name === "results" && (
             <ResultsScreen
-              graph={graph}
+              content={content}
               area={screen.area}
               matches={screen.matches}
-              given={screen.given}
-              exhausted={screen.exhausted}
+              answers={screen.answers}
+              complete={screen.complete}
+              answeredCount={screen.answeredCount}
+              skippedCount={screen.skippedCount}
               pinned={pinned}
-              multifactorialNote={graph.multifactorialNote}
-              onAnswer={actions.answer}
+              {...(content.multifactorialNote
+                ? { multifactorialNote: content.multifactorialNote }
+                : {})}
+              onSetFinding={actions.setFinding}
+              onClearFinding={actions.clearFinding}
               onPin={actions.pinFinding}
               onUnpin={actions.unpinFinding}
-              onAnswerMore={actions.probe}
+              onResume={actions.resume}
               onCheckAnother={actions.restart}
             />
           )}
 
           {screen.name === "summary" && (
             <SummaryScreen
-              graph={graph}
+              content={content}
               findings={findings}
-              multifactorialNote={graph.multifactorialNote}
+              {...(content.multifactorialNote
+                ? { multifactorialNote: content.multifactorialNote }
+                : {})}
               onUnpin={actions.unpinFinding}
               onClear={actions.clearFindings}
               onCheckAnother={actions.restart}
