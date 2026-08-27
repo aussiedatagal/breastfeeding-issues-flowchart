@@ -28,14 +28,15 @@ npm install
 npm run dev        # http://localhost:5173
 ```
 
-| Script             | Does                                                     |
-| ------------------ | -------------------------------------------------------- |
-| `npm run dev`      | Vite dev server with hot reload                          |
-| `npm run validate` | Structural check of `content/` (part of `build` and CI)  |
-| `npm test`         | Vitest — quiz logic, content checks, a render test       |
-| `npm run lint`     | ESLint                                                   |
-| `npm run build`    | `validate` → type-check → production bundle into `dist/` |
-| `npm run preview`  | Serve the production build locally                       |
+| Script                | Does                                                                                               |
+| --------------------- | -------------------------------------------------------------------------------------------------- |
+| `npm run dev`         | Vite dev server with hot reload                                                                    |
+| `npm run validate`    | Structural check of `content/` (part of `build` and CI)                                            |
+| `npm test`            | Vitest — quiz logic, content checks, a render test                                                 |
+| `npm run lint`        | ESLint                                                                                             |
+| `npm run build`       | `validate` → type-check → production bundle into `dist/`                                           |
+| `npm run preview`     | Serve the production build locally                                                                 |
+| `npm run screenshots` | Walk the whole quiz at 3 viewports × light/dark, PNGs into `screenshots/` (needs Chrome installed) |
 
 ## Architecture
 

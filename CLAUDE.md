@@ -116,7 +116,12 @@ endpoints, flagged `do-not-miss`.
 - `src/components/QuizApp.test.tsx` — happy-dom render + full interaction
   (pick area → answer → result → pin → summary; two-area findings list).
 
-No browser E2E dep; visual QA is ad hoc with Playwright against system Chrome.
+`npm run screenshots` (`scripts/screenshots.mjs`, Playwright + your installed
+Chrome) serves the build and walks the whole quiz at phone / small-phone /
+desktop × light / dark, writing PNGs to `screenshots/` (gitignored). Not a
+pass/fail gate — it's for eyeballing every screen after a change — but it does
+exit non-zero on a console/page error. Area cards carry `data-area="<id>"` as a
+stable hook for it.
 
 ## Working here
 
