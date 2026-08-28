@@ -8,7 +8,7 @@ import styles from "./ResultsScreen.module.css";
 
 interface Props {
   content: Content;
-  area: Area;
+  areas: Area[];
   matches: Match[];
   answers: Record<string, Presence>;
   complete: boolean;
@@ -21,12 +21,13 @@ interface Props {
   onPin: (id: string) => void;
   onUnpin: (id: string) => void;
   onResume: () => void;
-  onCheckAnother: () => void;
+  onEditAreas: () => void;
+  onRestart: () => void;
 }
 
 export function ResultsScreen({
   content,
-  area,
+  areas,
   matches,
   answers,
   complete,
@@ -39,15 +40,34 @@ export function ResultsScreen({
   onPin,
   onUnpin,
   onResume,
-  onCheckAnother,
+  onEditAreas,
+  onRestart,
 }: Props) {
+  const showArea = areas.length > 1;
   const cardProps = (m: Match) => ({
     content,
     match: m,
+    showArea,
     pinned: pinned(m.diagnosis.id),
     onPin: () => onPin(m.diagnosis.id),
     onUnpin: () => onUnpin(m.diagnosis.id),
   });
+
+  if (areas.length === 0) {
+    return (
+      <section className={styles.section}>
+        <h1 className={styles.kicker}>Nothing to work up</h1>
+        <p className={styles.based}>
+          You didn't flag any problem area. Start over to answer the screening questions again.
+        </p>
+        <div className={styles.actions}>
+          <Button variant="primary" block onClick={onEditAreas}>
+            Back to screening
+          </Button>
+        </div>
+      </section>
+    );
+  }
 
   const strong = matches.filter((m) => m.tier === "strong");
   const possible = matches.filter((m) => m.tier === "possible");
@@ -61,20 +81,22 @@ export function ResultsScreen({
   const closest = strong.length + possible.length === 0 ? unlikely.slice(0, 3) : [];
   if (closest.length > 0) unlikely = unlikely.slice(closest.length);
 
+  const areaNames = areas.map((a) => a.short ?? a.label).join(" · ");
+
   return (
     <section className={styles.section}>
-      <h1 className={styles.kicker}>{area.short ?? area.label} · what fits</h1>
+      <h1 className={styles.kicker}>What fits — {areaNames}</h1>
       <p className={styles.based}>
         {nothingYet
           ? "Answer a few questions to see what fits."
-          : `Ranked against your ${answeredCount} answer${answeredCount === 1 ? "" : "s"}` +
+          : `A probability for each diagnosis across ${areas.length === 1 ? "this area" : `${areas.length} areas`}, from your ${answeredCount} answer${answeredCount === 1 ? "" : "s"}` +
             (skippedCount ? ` (${skippedCount} skipped).` : ".") +
             " Nothing is ruled out unless your answers make it impossible."}
       </p>
 
       {!complete && !nothingYet && (
         <button type="button" className={styles.more} onClick={onResume}>
-          Keep answering — more questions sharpen the ranking →
+          Keep answering — more questions sharpen the probabilities →
         </button>
       )}
 
@@ -161,12 +183,14 @@ export function ResultsScreen({
       </div>
 
       <div className={styles.actions}>
-        <Button variant="primary" block onClick={onCheckAnother}>
-          Check another area
+        <Button variant="primary" block onClick={onEditAreas}>
+          Screen a different set of areas
         </Button>
+        <button type="button" className={styles.restart} onClick={onRestart}>
+          Start over
+        </button>
         <p className={styles.hint}>
-          More than one can be in play. Pin what fits, then work another area — the result is a
-          problem list, not one answer.
+          More than one can be in play. Pin what fits to build a problem list.
         </p>
       </div>
     </section>

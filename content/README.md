@@ -14,14 +14,22 @@ tells you which diagnosis and which field.
 
 ## How the assessment works
 
-There is **no decision tree**. The clinician picks a problem area, answers as
-many questions as they can (in any order, skipping the ones they can't judge),
-and every diagnosis in that area is **scored against the answers**. A diagnosis
-is only removed from the list if the answers make it genuinely impossible (a
-hard `excludes` rule). Everything else is ranked by how much of its picture the
-answers confirm, and every mismatch is shown.
+There is **no decision tree**. The clinician first answers a short yes/no
+**screening** question for each area ("Is there nipple or breast pain?"), then
+answers as many detail questions as they can from every area they flagged (in
+any order, skipping the ones they can't judge). Every diagnosis across those
+areas is scored with a small **Bayesian model**:
 
-So your job as an author is to describe, for each diagnosis:
+- it starts from a **prior** — roughly how common that diagnosis is among
+  mothers with this problem;
+- each answered finding then nudges the probability up or down by how strongly
+  that finding speaks (its authored `weight`);
+- the result is a **probability** per diagnosis. The list is ranked by it.
+
+A diagnosis is only removed if the answers make it genuinely impossible (a hard
+`excludes` rule). Everything else stays, and every mismatch is shown.
+
+So your job as an author is to give each diagnosis a `prior` and describe:
 
 - which **findings support it** (and how strongly),
 - which findings **argue against it**,
@@ -43,12 +51,13 @@ every file.
 ```yaml
 areas:
   - id: supply # short label, unique
-    label: Not enough milk, poor weight gain, or supply feels low # the line on the picker
+    label: Not enough milk, poor weight gain, or supply feels low # the long line
     short: Milk supply & weight # 2–4 words — the name in the header and results
+    ask: Is low milk supply, poor weight gain, or ineffective feeding a concern? # the screening question
 ```
 
 Every question and diagnosis names its `area`. To add an area, add an `areas:`
-entry and give its questions and diagnoses that `id`.
+entry (with an `ask:`) and give its questions and diagnoses that `id`.
 
 ---
 
@@ -98,25 +107,30 @@ absent.
   area: pain
   name: Nipple / areolar dermatitis
   flag: often-mislabelled # optional — see "Flags"
+  prior: uncommon # common | uncommon | rare | very-rare, or a number 0–1
   points: # "what points to it" in the detail panel
     - Itch, burning, scale, well-demarcated erythema.
   steps: # first steps for the feeding problem
     - Remove candidate allergens; short course of a topical corticosteroid.
   supports:
-    - { finding: skin-rash, weight: 2 } # weight 1–5; 2 is the default
+    - { finding: skin-rash, weight: 3 } # weight 1–5 = how strongly it speaks
     - { finding: pain-between-feeds, weight: 1 }
   against:
-    - { finding: pain-at-latch, weight: 1 } # present ⇒ score down, never removed
+    - { finding: pain-at-latch, weight: 2 } # present ⇒ probability down, never removed
   seeAlso: [dx-trauma] # "distinguish from" — look-alikes, shown as links
   coexists: [dx-vasospasm] # "also check" — things that travel with it
 ```
 
-- **`supports`** — findings that, when **present**, raise the score. `weight`
-  1–5 (default 2). A diagnosis with no `supports` is treated as a **diagnosis of
-  exclusion**: it stays on the list as a low-confidence fallback and is never
-  "confirmed".
-- **`against`** — findings that, when **present**, lower the score (penalty
-  1.5× weight). They never remove the diagnosis.
+- **`prior`** — how common the diagnosis is among mothers with this problem.
+  Keywords map to `common` ≈ 30%, `uncommon` ≈ 8%, `rare` ≈ 2%, `very-rare`
+  ≈ 0.4%; or give a raw number like `0.15`. Default `uncommon`.
+- **`supports`** — findings that shift the probability. `weight` 1–5 is how
+  strongly the finding speaks (1 ≈ weak nudge, 5 ≈ decisive). A **present**
+  supporting finding raises the probability; an **absent** one lowers it; an
+  unanswered one does nothing. A diagnosis with no `supports` is a **diagnosis
+  of exclusion**: it stays at its prior and is never "confirmed".
+- **`against`** — findings that, when **present**, lower the probability. They
+  never remove the diagnosis.
 - **`excludes`** — findings that make the diagnosis **impossible**. Use
   sparingly and only where it is clinically safe.
 

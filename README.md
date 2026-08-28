@@ -1,11 +1,12 @@
 # Breastfeeding Difficulty — guided assessment
 
-A guided quiz for working up breastfeeding difficulty. Pick where the problem
-shows up, answer as many questions as you can (in any order, skipping the ones
-you can't judge), and get a **ranked list of what fits** — with a fit %, what
-matches, what doesn't, and what wasn't asked. No answer removes a diagnosis
-unless it makes it genuinely impossible; everything else is scored, not gated.
-Each result carries what points to it, first steps, and look-alikes to rule out.
+A guided quiz for working up breastfeeding difficulty. Run a short yes/no
+**screening pass** to flag which problems are in play, answer as many questions
+as you can from each (in any order, skipping the ones you can't judge), and get
+**one combined list** ranked by a **probability** per diagnosis — what matches,
+what doesn't, and what wasn't asked. No answer removes a diagnosis unless it
+makes it genuinely impossible; everything else is scored, not gated. Each result
+carries what points to it, first steps, and look-alikes to rule out.
 
 **Educational — for clinicians.** It works up the _breastfeeding_ problem; the
 infant's clinical care (hydration, jaundice, weight, top-ups) is assessed and
@@ -42,14 +43,14 @@ npm run dev        # http://localhost:5173
 ## Architecture
 
 ```
-content/            YAML — questions + diagnoses with weighted findings (educator-owned)
+content/            YAML — questions + diagnoses (prior + weighted findings), educator-owned
 src/
   content/          zod schema, model, and loader; turns YAML into a validated Content
     schema.ts         the authored shape
     model.ts          the runtime shape (Question / Diagnosis / Finding maps)
     build.ts          buildContent() — validate + normalise, never throws
   quiz/             framework-free scoring engine — unit-tested
-    score.ts          rankArea() — score every diagnosis against the answers
+    score.ts          rankAcross() — Bayesian posterior per diagnosis across the picked areas
     session.ts        screenOf() + the reducer (pure state machine)
     url.ts            session <-> URL hash
   hooks/            useQuizSession, useTheme
@@ -64,28 +65,33 @@ Components are wiring and presentation only.
 
 ### Problem areas
 
-`map.yaml` lists **areas**. They are independent: the clinician works one at a
-time, pins the result to **Findings**, and comes back for another. The output is
-a problem list, not a single answer — because pain, low supply and refusal are
-not mutually exclusive, and one often causes another.
+`map.yaml` lists **areas**, each with a yes/no screening question. The clinician
+answers all of them; every "yes" area is worked in the same pass and its
+diagnoses are ranked into one combined list — because pain, low supply and
+refusal are not mutually exclusive, and one often causes another.
 
-### Scoring, not walking
+### Scoring — a Bayesian classifier
 
 There is no decision path. Each question surfaces one or more **findings**
-(present / absent / unknown). Each diagnosis declares the findings that
-`support` it (weighted), the findings that argue `against` it, and — rarely —
-findings that `exclude` it outright. For every diagnosis in the area:
+(present / absent / unknown). Each diagnosis declares a **prior** (roughly how
+common it is), the findings that `support` it (weighted 1–5 for evidence
+strength), the findings that argue `against` it, and — rarely — findings that
+`exclude` it outright. For every diagnosis across the picked areas:
 
 ```
-score  = Σ present support weight − Σ absent support weight − 1.5 · Σ against weight
-fit %  = present support weight ÷ assessed support weight
+logOdds  = ln(prior / (1 − prior))
+         + Σ ln(LR+)  for each present supporting finding   (weight → likelihood ratio)
+         + Σ ln(LR−)  for each absent  supporting finding
+         − Σ ln(LR+)  for each present "against" finding
+probability = odds / (1 + odds)
 ```
 
-A diagnosis is dropped **only** when a hard `excludes` rule fires (e.g. no fever
-⇒ not an abscess). Everything else stays on the list, ranked strong / possible /
-weak, with ruled-out diagnoses shown last and the rule that removed them. A
-diagnosis with no `supports` is a **diagnosis of exclusion** — it surfaces as a
-low-confidence fallback that can never be "confirmed".
+Probabilities are **per-diagnosis, not normalised** against each other —
+diagnoses co-occur. A diagnosis is dropped **only** when a hard `excludes` rule
+fires (e.g. no fever ⇒ not an abscess). Everything else stays on the list,
+ranked strong / possible / weak, ruled-out last with the rule that removed them.
+A diagnosis with no `supports` is a **diagnosis of exclusion** — it sits at its
+prior and can never be "confirmed".
 
 ## Deploy (GitHub Pages)
 
@@ -103,11 +109,11 @@ workflow.
 ## State in the URL
 
 The session is written to the URL hash
-(`#area=pain&p=pain1,pain9&x=pain2&s=pain5&f=dx-vasospasm`), so a particular
-assessment — or its findings list — can be linked or bookmarked. `p` / `x` are
-the findings answered present / absent, `s` the skipped questions, `f` the
-pinned findings — all keyed by id so a content edit can't silently change what
-an old link means.
+(`#area=pain,supply&no=refusal&p=pain1,pain9&x=pain2&s=pain5&f=dx-vasospasm`),
+so a particular assessment — or its findings list — can be linked or bookmarked.
+`area` / `no` are the areas screened in / out, `p` / `x` the findings answered
+present / absent, `s` the skipped questions, `f` the pinned findings — all keyed
+by id so a content edit can't silently change what an old link means.
 
 ## Caveats
 

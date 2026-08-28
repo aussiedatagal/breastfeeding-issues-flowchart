@@ -4,6 +4,7 @@ import {
   questionFile,
   type Exclusion,
   type FindingRef,
+  type Prior,
   type RawDiagnosis,
   type RawQuestion,
 } from "./schema.ts";
@@ -22,6 +23,20 @@ export interface BuildResult {
 }
 
 const DEFAULT_WEIGHT = 2;
+
+/** the Bayesian prior a diagnosis gets when it doesn't declare one */
+const DEFAULT_PRIOR = 0.08;
+const PRIOR_KEYWORD: Record<string, number> = {
+  common: 0.3,
+  uncommon: 0.08,
+  rare: 0.02,
+  "very-rare": 0.004,
+};
+
+const asPrior = (p: Prior | undefined): number => {
+  if (p === undefined) return DEFAULT_PRIOR;
+  return typeof p === "number" ? p : PRIOR_KEYWORD[p]!;
+};
 
 const asWeighted = (r: FindingRef): WeightedFinding =>
   typeof r === "string" ? { finding: r, weight: DEFAULT_WEIGHT } : r;
@@ -137,6 +152,7 @@ export function buildContent(input: BuildInput): BuildResult {
       area: d.area,
       name: d.name,
       ...(d.flag ? { flag: d.flag } : {}),
+      prior: asPrior(d.prior),
       ...(d.note ? { note: d.note } : {}),
       points: d.points ?? [],
       steps: d.steps ?? [],

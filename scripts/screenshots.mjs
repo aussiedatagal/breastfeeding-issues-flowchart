@@ -26,19 +26,25 @@ const VIEWPORTS = [
 
 const onResults = (page) =>
   page
-    .getByText(/· what fits/i)
+    .getByRole("heading", { name: /what fits/i })
     .count()
     .then((n) => n > 0);
 
-/** Walk from the start screen to a result and shoot every screen on the way. */
+/** Walk from the screening pass to a result and shoot every screen on the way. */
 async function walkAndShoot(page, dir, shot) {
   await page.goto(dir.base, { waitUntil: "networkidle" });
   await page.waitForTimeout(400);
   await shot("01-start");
 
-  // open the "nipple & breast pain" area (or fall back to the first)
-  const pain = page.locator('[data-area="pain"]');
-  await ((await pain.count()) ? pain : page.locator("[data-area]").first()).click();
+  // yes/no screening pass — areas are supply, pain, inflammation, refusal;
+  // say yes to supply + pain, no to the rest
+  const gates = ["Yes", "Yes", "No", "No"];
+  for (let i = 0; i < gates.length; i += 1) {
+    if (await page.getByText(/question 1 of/i).count()) break;
+    if (i === 1) await shot("01b-screening");
+    await page.getByRole("button", { name: new RegExp(`^${gates[i]}$`) }).first().click();
+    await page.waitForTimeout(220);
+  }
   await page.waitForTimeout(300);
   await shot("02-question");
 
@@ -87,11 +93,11 @@ async function walkAndShoot(page, dir, shot) {
   if (await pin.count()) await pin.click();
   await page.waitForTimeout(150);
 
-  const another = page.getByRole("button", { name: /check another area/i }).first();
+  const another = page.getByRole("button", { name: /screen a different set|screen another/i }).first();
   if (await another.count()) {
     await another.click();
     await page.waitForTimeout(300);
-    await shot("07-start-with-a-finding");
+    await shot("07-rescreen-with-a-finding");
   }
 
   const findings = page.getByRole("button", { name: /^Findings/ }).first();

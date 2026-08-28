@@ -3,13 +3,16 @@
 ## What this repo is
 
 A React + TypeScript single-page app (Vite, deployed to GitHub Pages) — a
-**guided quiz** for working up breastfeeding difficulty. The clinician picks a
-problem area, answers as many questions as they can (any order, skipping the
-ones they can't judge), and gets a **ranked list of what fits**: a fit %, what
-matches, what doesn't, what wasn't asked, and — last — what the answers ruled
-out and why. No answer removes a diagnosis unless the answers make it genuinely
-impossible. Audience: clinicians (IBCLCs, GPs, midwives, NPs, RNs), often
-chairside with a parent. Educational, not a substitute for hands-on assessment.
+**guided quiz** for working up breastfeeding difficulty. The clinician runs a
+short **yes/no screening pass** (one question per area — "Is there nipple or
+breast pain?") to flag which problems are in play, then answers as many
+questions as they can from every flagged area (any order, skipping the ones
+they can't judge). The output is **one combined list** ranked by a **posterior
+probability** per diagnosis: what matches, what doesn't, what wasn't asked, and
+— last — what the answers ruled out and why. No answer removes a diagnosis
+unless the answers make it genuinely impossible. Audience: clinicians (IBCLCs,
+GPs, midwives, NPs, RNs), often chairside with a parent. Educational, not a
+substitute for hands-on assessment.
 
 The clinical content is the durable asset. The UI and the engine have been
 rebuilt more than once; the content in `content/` is what carries over.
@@ -19,22 +22,22 @@ Predecessors are in `legacy/` (research/reference only, not build artifacts).
 
 ```
 content/            YAML — EDUCATOR-OWNED, no code to edit. content/README.md is for them.
-                      map.yaml         title, intro, areas, multifactorialNote
+                      map.yaml         title, intro, areas (each with a screening `ask`), multifactorialNote
                       questions/*.yaml boolean + multi questions (split by area, for readability)
-                      diagnoses/*.yaml diagnoses with weighted supporting / opposing findings
+                      diagnoses/*.yaml diagnoses: a `prior` + weighted supporting / opposing findings
 src/content/        zod schema + model + loader:
                       schema.ts   the authored shape (rawQuestion / rawDiagnosis / mapMeta)
                       model.ts    the runtime shape (Question / Diagnosis / Finding + maps)
                       build.ts    buildContent() — validate + normalise, never throws
                       load.ts     assemble the YAML files → buildContent (Vite glob + scripts)
 src/quiz/           framework-free engine, unit-tested:
-                      score.ts    rankArea() — score every diagnosis vs the answers
+                      score.ts    rankAcross() — Bayesian posterior per diagnosis across the picked areas
                       session.ts  screenOf() + the reducer (pure state machine)
                       url.ts      session <-> URL hash
 src/hooks/          useQuizSession (session + hash), useTheme
 src/components/     React, no UI framework. Plain CSS Modules + tokens.
                       QuizApp.tsx   orchestrator: TopBar + the current screen
-                      screens/      StartScreen · QuestionScreen · ResultsScreen · SummaryScreen
+                      screens/      ScreeningScreen · QuestionScreen · ResultsScreen · SummaryScreen
                       quiz/         MatchCard · AnswerGrid · DetailList · RelatedList
                       ui/           Button · Disclosure · Badge · TopBar
 scripts/            validate-content.mjs (build + CI), screenshots.mjs (npm run screenshots)
@@ -45,74 +48,85 @@ Import style: relative imports carry the `.ts` / `.tsx` extension
 (`allowImportingTsExtensions`) so the same modules run under Vite, Vitest, and
 `node scripts/*.mjs` with no build step.
 
-## The decision model — scoring, not a tree
+## The decision model — a Bayesian classifier, not a tree
 
-There is **no decision tree and no path**. This is deliberate: any tree walk (or
-tree-derived scoring) lets one early answer gate whole families of diagnoses
-out, which was the recurring complaint about every earlier version.
+There is **no decision tree and no path**. Any tree walk (or tree-derived
+scoring) lets one early answer gate whole families of diagnoses out, which was
+the recurring complaint about every earlier version.
 
-- `map.yaml` lists **areas**. They are independent — the clinician works one at
-  a time, pins the result, and comes back for another. Findings from all areas
-  build one problem list.
+- `map.yaml` lists **areas**, each with a screening `ask`. The clinician
+  answers all four yes/no; the "yes" areas are worked together and produce one
+  combined list.
 - A **question** surfaces one or more **findings**, each `present` / `absent` /
   `unknown`:
   - `type: boolean` — the question id **is** the finding id. Yes = present,
     No = absent, "Not sure" = skipped.
   - `type: multi` — pick-any; each option is its own finding, unpicked options
     are recorded absent.
-- A **diagnosis** declares `supports: [{finding, weight}]` (present ⇒ score up),
-  `against: [{finding, weight}]` (present ⇒ score down), and — rarely —
-  `excludes: [{finding, when}]` (makes it impossible). `area` scopes it.
+- A **diagnosis** declares a `prior` (`common | uncommon | rare | very-rare`, or
+  a raw 0–1; default 0.08), `supports: [{finding, weight}]`, `against: [{finding,
+  weight}]`, and — rarely — `excludes: [{finding, when}]` (makes it impossible).
+  `area` scopes it.
 - `reference: true` diagnoses are look-alike / concept notes — never scored,
   surfaced only through `seeAlso` / `coexists`.
 
-### `score.ts` — `rankArea(content, areaId, answers)`
+### `score.ts` — `rankAcross(content, areaIds, answers)`
 
-For every non-reference diagnosis in the area:
+Naive-Bayes odds update, per diagnosis, in log space:
 
 ```
-score  = Σ present-support-weight − Σ absent-support-weight − 1.5 · Σ against-weight
-fit %  = present-support-weight ÷ (present + absent support weight)
+logOdds  = ln(prior / (1 − prior))
+         + Σ ln(LR+  for each present supporting finding)
+         + Σ ln(LR−  for each absent  supporting finding)
+         − Σ ln(LR+  for each present "against" finding)
+probability = odds / (1 + odds)          // 0 if a hard `excludes` fired
 ```
 
-Tiers: `strong` (score ≥ 4, fit ≥ 60 %, no against hit) · `possible` · `unlikely`
-(no support confirmed or score ≤ 0) · `ruled-out` (a hard `excludes` fired —
-sorted last, carries `ruledOutBy`). A diagnosis with **no `supports`** is a
-`fallback` (diagnosis of exclusion): it can never be "confirmed", surfaces as a
-low-confidence `possible`, and drops to `unlikely` if an `against` finding hits.
+`weight` 1–5 maps to a likelihood ratio (`LR_PLUS` / `LR_MINUS` tables in
+`score.ts`) — 1 ≈ weak, 5 ≈ decisive. Unknown / skipped findings don't move the
+odds. The probability is **per-diagnosis, not normalised** across the list —
+diagnoses co-occur.
+
+Tiers: `strong` (p ≥ 0.5) · `possible` (p ≥ 0.15) · `unlikely` · `ruled-out`
+(a hard `excludes` fired — sorted last, carries `ruledOutBy`). A diagnosis with
+**no `supports`** is a `fallback` (diagnosis of exclusion): it sits at its prior
+and can never be "confirmed".
 
 ### `session.ts`
 
-`SessionState { areaId, handled: qid[], skipped: qid[], answers: Record<finding,
-Presence>, revealed, findings: dxId[], viewingSummary }`. `screenOf` →
-`start | question | results | summary`. `reduce(content, state, action)` handles
-`pickArea`, `answerQuestion` (findings map — order doesn't matter), `skipQuestion`,
-`setFinding` / `clearFinding` (revise from the results grid), `reveal` ("see what
-fits so far") / `resume`, `back` (undoes the last handled question),
-`restart`, `pin` / `unpinFinding`, `open` / `closeSummary`. All pure.
+`SessionState { areaGate: Record<areaId, boolean>, handled: qid[], skipped:
+qid[], answers: Record<finding, Presence>, revealed, findings: dxId[],
+viewingSummary }`. `screenOf` → `screening | question | results | summary`.
+`reduce(content, state, action)` handles `gateArea` (screening yes/no),
+`answerQuestion` (findings map — order doesn't matter), `skipQuestion`,
+`setFinding` / `clearFinding` (revise from the results grid), `reveal` ("see
+what fits so far") / `resume`, `back` (undoes the last handled question, then
+steps back through the screening pass), `editAreas` (re-run screening, keep
+findings), `restart`, `pin` / `unpinFinding`, `open` / `closeSummary`. All pure.
 `useQuizSession` binds it to React + the URL hash
-(`#area=pain&p=pain1,pain9&x=pain2&s=pain5&show=1&f=dx-a`).
+(`#area=pain,supply&no=refusal&p=pain1&x=pain2&s=pain5&show=1&f=dx-a`).
 
 ## Not cutting off other explanations (do not regress without asking)
 
 1. **Only `excludes` removes a diagnosis.** `against` and absent supports lower
-   the score; the diagnosis stays on the list.
-2. **Results screen** shows every diagnosis: best fit / possible / a collapsed
-   "weak matches", then a collapsed "ruled out by your answers (N)" naming the
-   rule that fired. Each is still pinnable. When nothing rises above "unlikely"
-   the closest few are promoted to a "Closest so far" block so the screen is
-   never empty.
+   the posterior; the diagnosis stays on the list.
+2. **Results screen** merges every picked area into one list: best fit /
+   possible / a collapsed "weak matches", then a collapsed "ruled out by your
+   answers (N)" naming the rule that fired. Each is still pinnable, each carries
+   its area label. When nothing rises above "unlikely" the closest few are
+   promoted to a "Closest so far" block so the screen is never empty.
 3. **Every question is answerable in any order and skippable**; the answer grid
    on the results screen re-scores live, no "rewind".
 4. **`coexists`** → "Often occurs alongside"; **`seeAlso`** → "Distinguish from".
-5. **Findings** — pin any match, "check another area", build a problem list.
-   `multifactorialNote` in `map.yaml` frames it.
+5. **Findings** — pin any match, re-screen a different set of areas, build a
+   problem list. `multifactorialNote` in `map.yaml` frames it.
 
 Known content gaps (migrated from the old tree, need educator enrichment):
-`supports` / `against` are minimal; hard `excludes` are not yet authored;
-`dx-plug`, `dx-deeppain`, `dx-refuse-unk`, `dx-transfer-unk` are intentional
-diagnoses of exclusion (0 supports). Multi questions are supported end-to-end
-but the real content is still all `boolean`.
+every diagnosis currently uses the **default prior** (0.08) — set real
+`prior:`s; `supports` / `against` are minimal; hard `excludes` are not yet
+authored; `dx-plug`, `dx-deeppain`, `dx-refuse-unk`, `dx-transfer-unk` are
+intentional diagnoses of exclusion (0 supports). Multi questions are supported
+end-to-end but the real content is still all `boolean`.
 
 ## Interaction
 
@@ -120,6 +134,8 @@ but the real content is still all `boolean`.
 - Mobile-first: full-bleed column, sticky Yes/No at the thumb line, "Not sure —
   skip", a "see what fits so far" shortcut once anything is answered. Desktop
   (`min-width: 40rem`) puts the same column in a contained card.
+- The start screen IS the first screening question (with the intro above it) —
+  there is no separate landing screen.
 - Opt-in detail everywhere — "How do I check this?", per-match detail, and the
   look-alikes are collapsed `Disclosure`s.
 - `do-not-miss` diagnoses get a red badge / note — but still nothing pops up.
@@ -136,14 +152,15 @@ endpoints, flagged `do-not-miss`.
 
 `npm test` runs vitest:
 
-- `src/quiz/session.test.ts` — scoring (incl. "contradicted stays, only
-  `excludes` removes", multi questions, fallbacks) and the reducer, on a tiny
-  fixture built with `buildFromFiles`.
+- `src/quiz/session.test.ts` — the Bayesian scoring (higher prior + confirmed
+  findings lifts the posterior; absent support lowers but keeps; only `excludes`
+  removes; multi questions; cross-area ranking) and the reducer (screening pass,
+  `back` through it, `editAreas`), on a tiny fixture built with `buildFromFiles`.
 - `src/quiz/content.test.ts` — against real `/content`: it builds; every scored
-  diagnosis references real findings; answering a whole area gives a coherent
-  ranking; the four diagnoses of exclusion behave as fallbacks.
-- `src/components/QuizApp.test.tsx` — happy-dom render + full interaction (pick
-  area → answer / skip → results → pin → summary; two-area findings list).
+  diagnosis references real findings; a whole area answered gives a coherent
+  probability ordering; the four diagnoses of exclusion behave as fallbacks.
+- `src/components/QuizApp.test.tsx` — happy-dom render + full interaction
+  (screening pass → answer / skip → combined results → pin → summary).
 
 `npm run screenshots` (`scripts/screenshots.mjs`, Playwright + your installed
 Chrome) serves the build and walks the whole quiz at phone / small-phone /

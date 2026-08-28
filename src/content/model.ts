@@ -42,6 +42,8 @@ export interface Diagnosis {
   area: string;
   name: string;
   flag?: Flag;
+  /** Bayesian prior — P(this diagnosis) among mothers with this problem, 0–1 */
+  prior: number;
   note?: string;
   points: string[];
   steps: string[];

@@ -20,6 +20,8 @@ interface Props {
   match: Match;
   /** the hero treatment for a top strong match */
   prominent?: boolean;
+  /** show the area label — the result list spans more than one area */
+  showArea?: boolean;
   pinned: boolean;
   onPin: () => void;
   onUnpin: () => void;
@@ -28,11 +30,22 @@ interface Props {
 const labels = (content: Content, list: { finding: string }[]) =>
   list.map((f) => findingShort(content, f.finding));
 
-export function MatchCard({ content, match, prominent = false, pinned, onPin, onUnpin }: Props) {
-  const { diagnosis, tier, fitPct, present, absent, unknown, againstHit, ruledOutBy, fallback } =
+export function MatchCard({
+  content,
+  match,
+  prominent = false,
+  showArea = false,
+  pinned,
+  onPin,
+  onUnpin,
+}: Props) {
+  const { diagnosis, tier, probability, present, absent, unknown, againstHit, ruledOutBy, fallback } =
     match;
   const ruledOut = tier === "ruled-out";
-  const showFit = !ruledOut && !fallback;
+  const pct = Math.round(probability * 100);
+  const areaLabel = showArea
+    ? (content.areas.find((a) => a.id === diagnosis.area)?.short ?? diagnosis.area)
+    : null;
 
   const detail = (
     <>
@@ -57,20 +70,23 @@ export function MatchCard({ content, match, prominent = false, pinned, onPin, on
     <article className={styles.card} data-tier={tier} data-prominent={prominent}>
       <div className={styles.head}>
         <div className={styles.headText}>
-          <p className={styles.kicker}>{TIER_LABEL[tier]}</p>
+          <p className={styles.kicker}>
+            {TIER_LABEL[tier]}
+            {areaLabel && <span className={styles.area}> · {areaLabel}</span>}
+          </p>
           <h2 className={styles.name}>{diagnosis.name}</h2>
         </div>
-        {showFit && (
-          <div className={styles.fit} aria-label={`Fits ${fitPct}% of assessed findings`}>
-            <span className={styles.fitPct}>{fitPct}%</span>
-            <span className={styles.fitWord}>fit</span>
+        {!ruledOut && (
+          <div className={styles.fit} aria-label={`Probability ${pct} percent`}>
+            <span className={styles.fitPct}>{pct}%</span>
+            <span className={styles.fitWord}>likely</span>
           </div>
         )}
       </div>
 
-      {showFit && (
+      {!ruledOut && (
         <div className={styles.bar} aria-hidden="true">
-          <span className={styles.barFill} style={{ width: `${fitPct}%` }} />
+          <span className={styles.barFill} style={{ width: `${Math.max(2, pct)}%` }} />
         </div>
       )}
 
