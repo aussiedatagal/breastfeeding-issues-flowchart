@@ -110,4 +110,11 @@ describe("<QuizApp>", () => {
     fireEvent.click(screen.getByRole("button", { name: /see what fits so far/i }));
     expect(onResults()).toBe(true);
   });
+
+  it("the Sources button opens the evidence list", () => {
+    render(<QuizApp content={content} />);
+    fireEvent.click(screen.getByRole("button", { name: /sources and evidence/i }));
+    expect(screen.getByRole("heading", { name: /^Sources$/ })).toBeDefined();
+    expect(screen.getAllByRole("listitem").length).toBe(content.references.length);
+  });
 });

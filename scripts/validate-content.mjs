@@ -41,6 +41,7 @@ const questions = content.questions.length;
 const diagnoses = content.diagnoses.filter((d) => !d.reference).length;
 const reference = content.diagnoses.filter((d) => d.reference).length;
 console.log(
-  `content ok — ${questions} questions, ${diagnoses} diagnoses, ${reference} reference nodes` +
+  `content ok — ${questions} questions, ${diagnoses} diagnoses, ${reference} reference nodes, ` +
+    `${content.references.length} sources` +
     (warnings.length ? `, ${warnings.length} warning(s)` : ""),
 );

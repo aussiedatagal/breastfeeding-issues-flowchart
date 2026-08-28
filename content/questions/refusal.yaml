@@ -1,78 +1,90 @@
+# Questions the PARENT answers, in plain language. `short` is the label on the
+# clinician's results grid.
+
 - id: ref1
   area: refusal
   type: boolean
-  ask: Was the refusal SUDDEN, in an infant who had been feeding well?
-  short: Sudden onset?
-  assess: A discrete change from established, effective feeding — as opposed to
-    feeding that was never comfortable or effective.
+  ask: Did the refusal start suddenly, in a baby who had been feeding fine?
+  short: Started suddenly?
+  assess: >
+    A clear change from settled, effective feeding — rather than feeding that was
+    never comfortable or working well.
 - id: ref2
   area: refusal
   type: boolean
-  ask: Is there an identifiable acute trigger?
-  short: Acute trigger?
-  assess: Nursing strikes almost always have a proximate cause. Examine ears,
-    mouth and nose; ask about recent changes at home and a recent choking or
-    spraying episode at the breast.
+  ask: Can you think of something that set it off — an illness, teething, a big
+    fright at the breast, or a change at home?
+  short: Something set it off?
+  assess: >
+    Sudden refusal (a "nursing strike") usually has a cause. Worth checking the
+    baby's ears, nose, and mouth, and thinking about recent changes, or a recent
+    choking or milk-spraying episode at the breast.
 - id: ref3
   area: refusal
   type: boolean
-  ask: Does the infant take the breast, then pull off crying, arch or stiffen, and
-    stay windy or unsettled between feeds?
-  short: Latches then pulls off crying?
+  ask: Does your baby latch on, then pull off crying, arch or go stiff, and stay
+    unsettled and windy between feeds?
+  short: Latches then pulls off crying, unsettled?
   assess: >
-    A discomfort pattern rather than a flow or distraction pattern: repeated
-    breaking off mid-feed with crying and back-arching, hiccups, frequent
-    posseting, disturbed sleep, and fussiness that continues away from the
-    breast. Look in the mouth (thrush — white plaques that do not wipe off) and
-    the ears (otitis) while you are there.
+    A pattern of discomfort: breaking off mid-feed crying and arching, hiccups,
+    frequent bringing up of milk, poor sleep, and fussiness that carries on away
+    from the breast. Worth checking the mouth for thrush (white patches that
+    don't wipe off) and the ears.
 - id: ref3b
   area: refusal
   type: boolean
-  ask: Blood or mucus in the stools, worsening eczema, or a strong first-degree
-    family history of allergy or asthma?
-  short: Blood/mucus stool or eczema?
+  ask: Is there blood or mucus in your baby's poo, worsening eczema, or a strong
+    family history of allergies or asthma?
+  short: Blood / mucus in poo, or eczema?
   assess: >
-    The cluster that separates cow's-milk protein allergy from uncomplicated
-    reflux: visible blood streaks or mucus in the stool, eczema that flares, a
-    first-degree family history of atopy, and often loose frequent stools.
-    Feed-linked discomfort without any of these is usually reflux, managed by
-    position and paced feeds alone.
+    Blood streaks or mucus in the poo, flaring eczema, a close family history of
+    allergy, and often loose frequent poos can point to a cow's-milk protein
+    allergy rather than ordinary reflux.
 - id: ref4
   area: refusal
   type: boolean
-  ask: Does the infant fight the flow EARLY in the feed and settle later?
-  short: Fast flow?
-  assess: "Fast-flow refusal: the infant is overwhelmed by the ejection, clamps or
-    pulls off as milk sprays, and feeds better once the flow slows."
+  ask: Does your baby struggle or pull off early in the feed when the milk is
+    flowing fast, then settle once it slows?
+  short: Fights the fast flow early on?
+  assess: >
+    The baby is overwhelmed by the spray at let-down, clamps or pulls off, and
+    feeds better once the flow eases.
 - id: ref5
   area: refusal
   type: boolean
-  ask: ~3–4 months old, feeding well only when sleepy or in a calm room?
-  short: Distractible age?
-  assess: "Developmental distractibility peaks around 3–4 months: efficient feeds
-    when drowsy, frequent pulling off with the nipple still in the mouth, better
-    feeding at night."
+  ask: Is your baby around 3 to 4 months old and only feeds well when sleepy or
+    in a quiet, dim room?
+  short: 3–4 months, easily distracted?
+  assess: >
+    Around 3 to 4 months many babies become very distractible: they feed
+    efficiently when drowsy, pull off often to look around, and feed better at
+    night.
 - id: ref6
   area: refusal
   type: boolean
-  ask: Did refusal emerge after regular bottle use, with the infant preferring a
-    fast teat flow?
-  short: Teat preference?
-  assess: "Flow preference: the infant roots and will take a bottle eagerly but
-    fusses and pulls at the breast, especially before let-down."
+  ask: Did the fussing start after regular bottle use, and does your baby take a
+    fast bottle teat eagerly but fuss at the breast?
+  short: Prefers the bottle since bottles started?
+  assess: >
+    Some babies come to prefer the fast, constant flow of a bottle teat and then
+    fuss and pull at the breast, especially before the milk lets down.
 - id: ref7
   area: refusal
   type: boolean
-  ask: An aversive oral history, with defensive behaviour at the breast?
-  short: Aversive history?
-  assess: "Oral aversion follows negative oral experiences: the infant is
-    otherwise well and growing on an alternative route but defends against
-    anything approaching the mouth."
+  ask: Has your baby had a lot of unpleasant experiences around the mouth (tubes,
+    suctioning, force-feeding) and now pushes away anything near the mouth?
+  short: Defensive about the mouth?
+  assess: >
+    Oral aversion follows negative experiences around the mouth: the baby is
+    otherwise well and growing, but defends against anything approaching the
+    mouth.
 - id: ref8
   area: refusal
   type: boolean
-  ask: Does the infant fuss and escalate THROUGH the feed, calmer on a bottle?
-  short: Escalates through feed?
-  assess: The pattern of frustration at a slow or falling supply — as opposed to
-    fighting a fast flow at the start. If weight gain is also slipping, work the
-    low-supply branch.
+  ask: Does your baby start okay but get more and more frustrated as the feed
+    goes on, and take a bottle more calmly?
+  short: Frustration builds through the feed?
+  assess: >
+    Frustration that builds through the feed can mean the flow is slow or the
+    supply is falling — rather than fighting a fast flow at the start. If weight
+    gain is also slipping, the milk-supply questions are worth doing too.

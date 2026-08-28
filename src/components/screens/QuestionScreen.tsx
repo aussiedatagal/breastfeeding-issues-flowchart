@@ -41,7 +41,7 @@ export function QuestionScreen({
 
       {question.assess && (
         <div className={styles.assess}>
-          <Disclosure summary="How do I check this?">
+          <Disclosure summary="What does this mean?">
             <p>{question.assess}</p>
           </Disclosure>
         </div>

@@ -31,6 +31,7 @@ export interface SessionState {
   /** pinned diagnosis ids — the running problem list */
   findings: string[];
   viewingSummary: boolean;
+  viewingSources: boolean;
 }
 
 export const emptySession = (): SessionState => ({
@@ -41,6 +42,7 @@ export const emptySession = (): SessionState => ({
   revealed: false,
   findings: [],
   viewingSummary: false,
+  viewingSources: false,
 });
 
 /** which findings a question sets — one for boolean, several for multi */
@@ -110,9 +112,11 @@ export type Screen =
       answeredCount: number;
       skippedCount: number;
     }
-  | { name: "summary" };
+  | { name: "summary" }
+  | { name: "sources" };
 
 export function screenOf(content: Content, state: SessionState): Screen {
+  if (state.viewingSources) return { name: "sources" };
   if (state.viewingSummary) return { name: "summary" };
 
   const pending = pendingGate(content, state);
@@ -179,6 +183,8 @@ export type SessionAction =
   | { type: "editAreas" }
   | { type: "openSummary" }
   | { type: "closeSummary" }
+  | { type: "openSources" }
+  | { type: "closeSources" }
   | { type: "pinFinding"; id: string }
   | { type: "unpinFinding"; id: string }
   | { type: "clearFindings" };
@@ -259,7 +265,13 @@ export function reduce(
     case "editAreas":
       return { ...state, areaGate: {}, revealed: false, viewingSummary: false };
 
+    case "openSources":
+      return { ...state, viewingSources: true };
+    case "closeSources":
+      return { ...state, viewingSources: false };
+
     case "back": {
+      if (state.viewingSources) return { ...state, viewingSources: false };
       if (state.viewingSummary) return { ...state, viewingSummary: false };
       if (state.revealed) return { ...state, revealed: false };
       if (state.handled.length > 0) {

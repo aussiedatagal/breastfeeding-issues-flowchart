@@ -7,6 +7,7 @@ import { ScreeningScreen } from "./screens/ScreeningScreen.tsx";
 import { QuestionScreen } from "./screens/QuestionScreen.tsx";
 import { ResultsScreen } from "./screens/ResultsScreen.tsx";
 import { SummaryScreen } from "./screens/SummaryScreen.tsx";
+import { SourcesScreen } from "./screens/SourcesScreen.tsx";
 import styles from "./QuizApp.module.css";
 
 export function QuizApp({ content }: { content: Content }) {
@@ -37,7 +38,9 @@ export function QuizApp({ content }: { content: Content }) {
           ? "Results"
           : screen.name === "summary"
             ? "Findings"
-            : undefined;
+            : screen.name === "sources"
+              ? "Sources"
+              : undefined;
 
   return (
     <div className={styles.app}>
@@ -46,6 +49,7 @@ export function QuizApp({ content }: { content: Content }) {
         {...(eyebrow ? { eyebrow } : {})}
         findingsCount={screen.name === "summary" ? 0 : findings.length}
         onFindings={actions.openSummary}
+        onSources={actions.openSources}
         theme={theme.choice}
         onCycleTheme={theme.cycle}
       />
@@ -104,6 +108,8 @@ export function QuizApp({ content }: { content: Content }) {
               onRestart={actions.restart}
             />
           )}
+
+          {screen.name === "sources" && <SourcesScreen content={content} />}
 
           {screen.name === "summary" && (
             <SummaryScreen

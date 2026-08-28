@@ -8,9 +8,14 @@ what doesn't, and what wasn't asked. No answer removes a diagnosis unless it
 makes it genuinely impossible; everything else is scored, not gated. Each result
 carries what points to it, first steps, and look-alikes to rule out.
 
-**Educational — for clinicians.** It works up the _breastfeeding_ problem; the
-infant's clinical care (hydration, jaundice, weight, top-ups) is assessed and
-managed separately, in parallel.
+**The parent fills in the quiz; the clinician reads the results.** The questions
+are in plain language; the diagnoses, probabilities, and clinical detail are for
+the health professional. Every diagnosis links to its evidence — the "?" in the
+top bar opens a Sources screen.
+
+**Educational.** It works up the _breastfeeding_ problem; the infant's clinical
+care (hydration, jaundice, weight, top-ups) is assessed and managed separately,
+in parallel.
 
 ## Who edits what
 
@@ -43,7 +48,7 @@ npm run dev        # http://localhost:5173
 ## Architecture
 
 ```
-content/            YAML — questions + diagnoses (prior + weighted findings), educator-owned
+content/            YAML — parent-facing questions + clinical diagnoses + references, educator-owned
 src/
   content/          zod schema, model, and loader; turns YAML into a validated Content
     schema.ts         the authored shape

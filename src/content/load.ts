@@ -6,15 +6,17 @@ import { buildContent, type BuildInput, type BuildResult } from "./build.ts";
 export function assembleInput(files: Record<string, string>): BuildInput {
   const questions: unknown[] = [];
   const diagnoses: unknown[] = [];
+  const references: unknown[] = [];
   let meta: unknown = undefined;
 
   for (const [path, textContent] of Object.entries(files)) {
     const doc = parse(textContent) as unknown;
     if (path === "map.yaml") meta = doc;
+    else if (path === "references.yaml" && Array.isArray(doc)) references.push(...doc);
     else if (path.startsWith("questions/") && Array.isArray(doc)) questions.push(...doc);
     else if (path.startsWith("diagnoses/") && Array.isArray(doc)) diagnoses.push(...doc);
   }
-  return { meta, questions, diagnoses };
+  return { meta, questions, diagnoses, references };
 }
 
 export function buildFromFiles(files: Record<string, string>): BuildResult {

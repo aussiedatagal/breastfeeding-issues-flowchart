@@ -1,80 +1,95 @@
+# Questions the PARENT answers, in plain language. `short` is the label on the
+# clinician's results grid.
+
 - id: inf1
   area: inflammation
   type: boolean
-  ask: Is the swelling BILATERAL and diffuse — both breasts full, firm and tender
-    — in the first 2–5 days?
-  short: Bilateral, day 2–5?
-  assess: Physiological engorgement is bilateral, generalised, and time-locked to
-    lactogenesis II. A focal or unilateral problem is not this.
+  ask: Are BOTH breasts full, firm, and tender all over, in the first 2 to 5 days
+    after birth?
+  short: Both breasts, firm all over, day 2–5?
+  assess: >
+    Normal early engorgement affects both breasts all over as the milk comes in.
+    A problem in one spot, or one breast only, is something else.
 - id: inf2
   area: inflammation
   type: boolean
-  ask: Is there a discrete LUMP (rather than an area of firmness and inflammation)?
-  short: Discrete lump?
-  assess: Separate a well-defined mass you can get your fingers around (abscess,
-    galactocele, cyst, tumour) from a diffuse zone of firm, inflamed tissue (the
-    mastitis continuum).
+  ask: Can you feel a distinct lump you can get your fingers around, rather than a
+    general firm, sore area?
+  short: A distinct lump?
+  assess: >
+    A well-defined lump you can feel the edges of — rather than a spread-out
+    firm, inflamed area.
 - id: inf7
   area: inflammation
   type: boolean
-  ask: Is the lump fluctuant and exquisitely tender, ± overlying erythema or
-    pointing?
-  short: Fluctuant + tender?
-  assess: A tense, fluid-feeling, very tender mass, often with red thinned
-    overlying skin — an abscess until proven otherwise. Confirm with ultrasound.
+  ask: Is the lump soft or fluid-feeling, very tender, with red, thin, shiny skin
+    over it?
+  short: Soft, very tender lump + red skin?
+  assess: >
+    A tense, fluid-feeling, very painful lump with red thinned skin over it can
+    be an abscess (a pocket of pus) and needs a scan and prompt treatment.
 - id: inf8
   area: inflammation
   type: boolean
-  ask: A smooth, non-tender, cystic swelling, often after weaning?
-  short: Cystic, post-wean?
-  assess: "A galactocele is a milk-filled cyst: soft or tense but not hot or
-    tender, common as feeds reduce, with milk-density fluid on ultrasound and a
-    milky aspirate."
+  ask: Is it a smooth, painless, soft swelling that appeared as feeds reduced or
+    after stopping breastfeeding?
+  short: Smooth painless swelling as feeds reduced?
+  assess: >
+    A milk-filled cyst (galactocele) feels smooth and soft or tense, but is not
+    hot or painful, and is common as feeds drop off.
 - id: inf9
   area: inflammation
   type: boolean
-  ask: Not settling on antibiotics, or features atypical for mastitis?
-  short: Not settling?
-  assess: "The features that separate inflammatory breast cancer from mastitis: no
-    clear improvement after an appropriate antibiotic course, skin oedema and
-    thickening (peau d'orange), nipple retraction, a fixed mass, palpable nodes,
-    and a time course or age that does not fit lactational mastitis."
+  ask: Has a red, swollen breast failed to improve after a course of antibiotics
+    — or is there puckered "orange-peel" skin, a pulled-in nipple, or a hard
+    fixed lump?
+  short: Not improving on antibiotics / skin or nipple change?
+  assess: >
+    If mastitis-like changes don't clear with antibiotics, or there is
+    orange-peel skin, a pulled-in nipple, or a fixed hard lump, a scan and a
+    biopsy are needed to rule out a rarer cause.
 - id: inf10
   area: inflammation
   type: boolean
-  ask: Is this recurrent inflammation or a recurrent lump at the SAME site?
-  short: Recurrent, same site?
-  assess: Repeated episodes in one quadrant suggest a fixed local factor — an
-    obstructing lesion, a persistent bleb, a duct anomaly, or an underlying
-    mass.
+  ask: Has inflammation or a lump come back more than once in the same spot?
+  short: Keeps coming back, same spot?
+  assess: >
+    Repeated problems in exactly the same place suggest something fixed there — a
+    blockage, a persistent blister, or an underlying lump — and are worth a scan.
 - id: inf3
   area: inflammation
   type: boolean
-  ask: Are there systemic features — fever ≥38.5°C, rigors, myalgia, tachycardia,
-    malaise?
-  short: Systemic features?
-  assess: Distinguish simple ductal inflammation (a tender lumpy area, feels well)
-    from mastitis with a systemic inflammatory response.
+  ask: Do you feel unwell with it — fever, shivers, body aches, racing heart?
+  short: Feeling unwell / feverish?
+  assess: >
+    This separates a sore lumpy area where you feel basically well from mastitis,
+    where you feel flu-like and unwell.
 - id: inf4
   area: inflammation
   type: boolean
-  ask: Failing 24–48 h of conservative care, septic, or spreading cellulitis?
-  short: Failing / septic?
-  assess: This is the decision point for antibiotics. Early inflammatory mastitis
-    that is improving does not need them; a non-responder, a septic parent, or
-    an obvious bacterial portal of entry does.
+  ask: Has it got worse, or not improved, after 24 to 48 hours of rest, feeding,
+    and pain relief — or are you very unwell?
+  short: Worse after 1–2 days / very unwell?
+  assess: >
+    Early inflammation that is improving often settles without antibiotics.
+    Getting worse after a day or two, or feeling very unwell, means you need to
+    be seen.
 - id: inf5
   area: inflammation
   type: boolean
-  ask: On ultrasound (or exam) is there a drainable fluid collection?
-  short: Drainable collection?
-  assess: Image a non-responding or severe presentation. A discrete collection is
-    an abscess; a solid ill-defined mass is a phlegmon; neither is simple
-    bacterial mastitis.
+  ask: Has a scan or a doctor found a pocket of fluid or pus in the breast?
+  short: Scan shows a fluid pocket?
+  assess: >
+    An ultrasound can show whether a firm area is a pocket of fluid (an abscess,
+    which may need draining) or solid inflamed tissue. Choose "Not sure" if you
+    have not had a scan.
 - id: inf6
   area: inflammation
   type: boolean
-  ask: An enlarging, firm, ill-defined mass despite antibiotics, no collection?
-  short: Enlarging solid mass?
-  assess: A phlegmon is a mass of inflamed, oedematous tissue without a drainable
-    pocket — it worsens if incised.
+  ask: Despite antibiotics, is there a firm area that is getting bigger, with no
+    fluid pocket found on a scan?
+  short: Growing firm area despite antibiotics?
+  assess: >
+    A spreading mass of inflamed tissue with no drainable pocket is managed
+    carefully with a breast specialist and should not be cut into. Choose "Not
+    sure" if this does not apply to you.
