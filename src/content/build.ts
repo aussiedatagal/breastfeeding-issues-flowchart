@@ -2,11 +2,13 @@ import {
   diagnosisFile,
   mapMeta,
   questionFile,
+  referenceFile,
   type Exclusion,
   type FindingRef,
   type Prior,
   type RawDiagnosis,
   type RawQuestion,
+  type Reference,
 } from "./schema.ts";
 import type { Content, Diagnosis, Finding, HardExclusion, Question, WeightedFinding } from "./model.ts";
 
@@ -14,6 +16,7 @@ export interface BuildInput {
   meta: unknown;
   questions: unknown[];
   diagnoses: unknown[];
+  references: unknown[];
 }
 
 export interface BuildResult {
@@ -52,11 +55,13 @@ export function buildContent(input: BuildInput): BuildResult {
   const metaParsed = mapMeta.safeParse(input.meta);
   const questionsParsed = questionFile.safeParse(input.questions);
   const diagnosesParsed = diagnosisFile.safeParse(input.diagnoses);
+  const referencesParsed = referenceFile.safeParse(input.references);
 
   for (const [label, res] of [
     ["map.yaml", metaParsed],
     ["questions", questionsParsed],
     ["diagnoses", diagnosesParsed],
+    ["references", referencesParsed],
   ] as const) {
     if (!res.success) {
       for (const issue of res.error.issues) {
@@ -64,13 +69,20 @@ export function buildContent(input: BuildInput): BuildResult {
       }
     }
   }
-  if (!metaParsed.success || !questionsParsed.success || !diagnosesParsed.success) {
+  if (
+    !metaParsed.success ||
+    !questionsParsed.success ||
+    !diagnosesParsed.success ||
+    !referencesParsed.success
+  ) {
     return { errors, warnings };
   }
 
   const meta = metaParsed.data;
   const rawQuestions: RawQuestion[] = questionsParsed.data;
   const rawDiagnoses: RawDiagnosis[] = diagnosesParsed.data;
+  const references: Reference[] = referencesParsed.data;
+  const referenceIds = new Set(references.map((r) => r.id));
 
   const areaIds = new Set(meta.areas.map((a) => a.id));
 
@@ -147,6 +159,11 @@ export function buildContent(input: BuildInput): BuildResult {
       );
     }
 
+    const sources = d.sources ?? [];
+    for (const s of sources) {
+      if (!referenceIds.has(s)) warnings.push(`diagnosis "${d.id}" sources: unknown reference "${s}"`);
+    }
+
     const model: Diagnosis = {
       id: d.id,
       area: d.area,
@@ -161,6 +178,7 @@ export function buildContent(input: BuildInput): BuildResult {
       supports: isRef ? [] : supports,
       against: isRef ? [] : against,
       excludes: isRef ? [] : excludes,
+      sources,
       reference: isRef,
     };
     diagnosis.set(d.id, model);
@@ -179,9 +197,11 @@ export function buildContent(input: BuildInput): BuildResult {
     title: meta.title,
     intro: meta.intro,
     ...(meta.multifactorialNote ? { multifactorialNote: meta.multifactorialNote } : {}),
+    ...(meta.evidenceNote ? { evidenceNote: meta.evidenceNote } : {}),
     areas: meta.areas,
     questions,
     diagnoses,
+    references,
     finding,
     question,
     diagnosis,

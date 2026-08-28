@@ -75,8 +75,9 @@ export function ScreeningScreen({
 
       {first && (
         <p className={styles.note}>
-          Educational, for clinicians. It works up the <em>breastfeeding</em> problem — the infant's
-          clinical care is assessed separately.
+          This helps work out what's happening with <em>breastfeeding</em>. Your baby's general
+          health — feeding enough, weight, jaundice — is checked separately by your health
+          professional.
         </p>
       )}
     </section>

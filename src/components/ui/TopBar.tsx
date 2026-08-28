@@ -8,13 +8,22 @@ interface Props {
   eyebrow?: string;
   findingsCount: number;
   onFindings: () => void;
+  onSources: () => void;
   theme: ThemeChoice;
   onCycleTheme: () => void;
 }
 
 const THEME_ICON: Record<ThemeChoice, string> = { system: "◐", light: "○", dark: "●" };
 
-export function TopBar({ onBack, eyebrow, findingsCount, onFindings, theme, onCycleTheme }: Props) {
+export function TopBar({
+  onBack,
+  eyebrow,
+  findingsCount,
+  onFindings,
+  onSources,
+  theme,
+  onCycleTheme,
+}: Props) {
   return (
     <header className={styles.bar}>
       <div className={styles.left}>
@@ -34,6 +43,15 @@ export function TopBar({ onBack, eyebrow, findingsCount, onFindings, theme, onCy
             Findings <span className={styles.count}>{findingsCount}</span>
           </button>
         )}
+        <button
+          type="button"
+          className={styles.theme}
+          onClick={onSources}
+          aria-label="Sources and evidence"
+          title="Sources"
+        >
+          ?
+        </button>
         <button
           type="button"
           className={styles.theme}

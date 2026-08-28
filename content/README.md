@@ -35,13 +35,24 @@ So your job as an author is to give each diagnosis a `prior` and describe:
 - which findings **argue against it**,
 - which findings make it **impossible** (rare — use with care).
 
+## Who reads what
+
+**The parent fills in the quiz.** Every question (`ask`) and its "What does this
+mean?" help (`assess`) must be plain, everyday language — imagine a tired parent
+with a crying baby. **The clinician reads the results.** Diagnosis names,
+`points`, `steps`, and the look-alikes can stay clinical. `short` is the
+clinician's shorthand label on the results grid.
+
 ## The files
 
-- **`map.yaml`** — the page title, the intro on the start screen, the list of
-  **areas**, and the standing `multifactorialNote`.
-- **`questions/`** — the observations. Split by area only to keep files short;
-  the app only cares about the `id`.
-- **`diagnoses/`** — the diagnoses, with their supporting / opposing findings.
+- **`map.yaml`** — the page title, the intro, the list of **areas** (each with a
+  yes/no screening `ask`), the `multifactorialNote`, and the `evidenceNote`
+  shown on the Sources screen.
+- **`questions/`** — the observations the parent answers. Split by area only to
+  keep files short; the app only cares about the `id`.
+- **`diagnoses/`** — the diagnoses, with their prior, supporting / opposing
+  findings, and `sources`.
+- **`references.yaml`** — the citations shown on the Sources screen.
 
 An `id` is a short label with no spaces (e.g. `pain-at-latch`), unique across
 every file.
@@ -133,6 +144,20 @@ absent.
   never remove the diagnosis.
 - **`excludes`** — findings that make the diagnosis **impossible**. Use
   sparingly and only where it is clinically safe.
+- **`sources`** — a list of ids from `references.yaml` (the evidence behind this
+  diagnosis and its prior). Shown in the diagnosis's detail and on the Sources
+  screen.
+
+### references.yaml
+
+```yaml
+- id: abm-36
+  title: "ABM Clinical Protocol #36: The Mastitis Spectrum, Revised 2022"
+  detail: Mitchell KB, et al. Breastfeeding Medicine 2022;17(5):360–376. # optional
+  url: https://doi.org/10.1089/bfm.2022.29207.kbm # optional, must resolve
+```
+
+Keep every `url` a real link a reader can open.
 
   ```yaml
   excludes:

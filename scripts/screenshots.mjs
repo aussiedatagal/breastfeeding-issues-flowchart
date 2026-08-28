@@ -48,8 +48,8 @@ async function walkAndShoot(page, dir, shot) {
   await page.waitForTimeout(300);
   await shot("02-question");
 
-  // expand the "how do I check this?" help, then collapse it again
-  const help = page.getByRole("button", { name: /how do i check this/i }).first();
+  // expand the "what does this mean?" help, then collapse it again
+  const help = page.getByRole("button", { name: /what does this mean/i }).first();
   if (await help.count()) {
     await help.click();
     await page.waitForTimeout(200);
@@ -105,6 +105,13 @@ async function walkAndShoot(page, dir, shot) {
     await findings.click();
     await page.waitForTimeout(300);
     await shot("08-findings-summary", { fullPage: true });
+  }
+
+  const sources = page.getByRole("button", { name: /sources and evidence/i }).first();
+  if (await sources.count()) {
+    await sources.click();
+    await page.waitForTimeout(300);
+    await shot("09-sources", { fullPage: true });
   }
 }
 

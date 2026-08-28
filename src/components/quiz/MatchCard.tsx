@@ -47,6 +47,10 @@ export function MatchCard({
     ? (content.areas.find((a) => a.id === diagnosis.area)?.short ?? diagnosis.area)
     : null;
 
+  const sourceTitles = diagnosis.sources
+    .map((id) => content.references.find((r) => r.id === id))
+    .filter((r) => r !== undefined);
+
   const detail = (
     <>
       <DetailList title="What points to it" items={diagnosis.points} />
@@ -63,6 +67,9 @@ export function MatchCard({
         content={content}
         ids={diagnosis.seeAlso}
       />
+      {sourceTitles.length > 0 && (
+        <DetailList title="Sources" items={sourceTitles.map((r) => r!.title)} />
+      )}
     </>
   );
 

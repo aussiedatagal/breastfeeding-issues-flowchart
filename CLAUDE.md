@@ -10,9 +10,13 @@ questions as they can from every flagged area (any order, skipping the ones
 they can't judge). The output is **one combined list** ranked by a **posterior
 probability** per diagnosis: what matches, what doesn't, what wasn't asked, and
 — last — what the answers ruled out and why. No answer removes a diagnosis
-unless the answers make it genuinely impossible. Audience: clinicians (IBCLCs,
-GPs, midwives, NPs, RNs), often chairside with a parent. Educational, not a
-substitute for hands-on assessment.
+unless the answers make it genuinely impossible.
+
+**Audience split:** the **parent fills in the quiz** (screening + questions), so
+every `ask` and `assess` is plain, non-medical language. The **clinician reads
+the results** — diagnoses, probabilities, `points` / `steps`, look-alikes stay
+clinical. `short` is the clinician's shorthand on the results grid. Educational,
+not a substitute for hands-on assessment.
 
 The clinical content is the durable asset. The UI and the engine have been
 rebuilt more than once; the content in `content/` is what carries over.
@@ -22,9 +26,10 @@ Predecessors are in `legacy/` (research/reference only, not build artifacts).
 
 ```
 content/            YAML — EDUCATOR-OWNED, no code to edit. content/README.md is for them.
-                      map.yaml         title, intro, areas (each with a screening `ask`), multifactorialNote
-                      questions/*.yaml boolean + multi questions (split by area, for readability)
-                      diagnoses/*.yaml diagnoses: a `prior` + weighted supporting / opposing findings
+                      map.yaml         title, intro, areas (each with a screening `ask`), notes
+                      questions/*.yaml boolean + multi questions, PARENT-FACING plain language
+                      diagnoses/*.yaml diagnoses: a `prior` + weighted findings + `sources`
+                      references.yaml  citations shown on the Sources screen
 src/content/        zod schema + model + loader:
                       schema.ts   the authored shape (rawQuestion / rawDiagnosis / mapMeta)
                       model.ts    the runtime shape (Question / Diagnosis / Finding + maps)
@@ -103,8 +108,17 @@ viewingSummary }`. `screenOf` → `screening | question | results | summary`.
 what fits so far") / `resume`, `back` (undoes the last handled question, then
 steps back through the screening pass), `editAreas` (re-run screening, keep
 findings), `restart`, `pin` / `unpinFinding`, `open` / `closeSummary`. All pure.
-`useQuizSession` binds it to React + the URL hash
+`editAreas` re-runs screening, `openSources` / `closeSources` show the Sources
+screen. `useQuizSession` binds it to React + the URL hash
 (`#area=pain,supply&no=refusal&p=pain1&x=pain2&s=pain5&show=1&f=dx-a`).
+
+### Sources
+
+`content/references.yaml` is a flat list of `{ id, title, detail?, url? }`. A
+diagnosis cites them with `sources: [id]` (validated; shown in its detail). The
+TopBar "?" opens the **Sources screen** listing every reference with its link,
+plus `map.yaml`'s `evidenceNote`. Priors are currently all the default 0.08 —
+real per-diagnosis prevalence data + citations is an open task.
 
 ## Not cutting off other explanations (do not regress without asking)
 
@@ -121,12 +135,13 @@ findings), `restart`, `pin` / `unpinFinding`, `open` / `closeSummary`. All pure.
 5. **Findings** — pin any match, re-screen a different set of areas, build a
    problem list. `multifactorialNote` in `map.yaml` frames it.
 
-Known content gaps (migrated from the old tree, need educator enrichment):
-every diagnosis currently uses the **default prior** (0.08) — set real
-`prior:`s; `supports` / `against` are minimal; hard `excludes` are not yet
-authored; `dx-plug`, `dx-deeppain`, `dx-refuse-unk`, `dx-transfer-unk` are
-intentional diagnoses of exclusion (0 supports). Multi questions are supported
-end-to-end but the real content is still all `boolean`.
+Known content gaps (need educator / research work): every diagnosis currently
+uses the **default prior** (0.08) — real prevalence data + `sources:` per
+diagnosis is an assigned task (see the evidence-sources memory); `supports` /
+`against` are minimal; hard `excludes` are not yet authored; `dx-plug`,
+`dx-deeppain`, `dx-refuse-unk`, `dx-transfer-unk` are intentional diagnoses of
+exclusion (0 supports). Multi questions are supported end-to-end but the real
+content is still all `boolean`.
 
 ## Interaction
 

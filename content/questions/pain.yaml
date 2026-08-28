@@ -1,108 +1,121 @@
+# Questions the PARENT answers, in plain language. `short` is the label on the
+# clinician's results grid.
+
 - id: pain1
   area: pain
   type: boolean
-  ask: Does the pain occur ONLY in the first ~30 seconds of latch, then ease as
-    milk flows?
-  short: Pain at latch only?
-  assess: "Classic mechanical pattern: a sharp pinch as the infant draws the
-    nipple in, gone once milk is flowing, with the nipple rounded (not creased
-    or blanched) on release."
+  ask: Does the pain happen only in the first 30 seconds or so as the baby latches
+    on, then ease once the milk flows?
+  short: Pain only at latch-on?
+  assess: >
+    A sharp pinch as the baby draws the nipple in that goes away once milk is
+    flowing, with the nipple looking rounded (not squashed flat or white) when
+    the baby comes off.
 - id: pain2
   area: pain
   type: boolean
-  ask: Is there a focal wedge or area of redness with firmness and warmth (± fever)?
-  short: Red firm wedge?
-  assess: A segment of the breast that is red, indurated, hot and tender — as
-    opposed to pain confined to the nipple or felt deep and diffuse. This is the
-    mastitis spectrum.
+  ask: Is there a wedge or patch of your breast that is red, firm, hot, and sore
+    (you may also feel feverish)?
+  short: Red, firm, hot patch?
+  assess: >
+    A section of the breast that is red, hard, hot, and tender — rather than pain
+    only in the nipple, or a deep ache all over. This is the "mastitis" range of
+    problems.
 - id: pain3
   area: pain
   type: boolean
-  ask: Is there a VISIBLE skin change on the nipple or areola?
-  short: Skin change?
-  assess: "Inspect in good light: erythema, scale, a rash, a discrete wound,
-    vesicles or crusting, a white spot at the tip, or a colour change. ‘No’
-    means the nipple and areola look essentially normal."
+  ask: Can you see any change in the skin of your nipple or areola?
+  short: Visible skin change?
+  assess: >
+    Look in good light for redness, flaking, a rash, a crack or sore, tiny
+    blisters or crusting, a white spot on the tip, or a colour change. "No" means
+    the skin looks normal.
 - id: pain4
   area: pain
   type: boolean
-  ask: Grouped vesicles, punched-out ulcers, or honey-coloured crusting?
-  short: Vesicles / crusting?
-  assess: Grouped vesicles or shallow ‘punched-out’ ulcers with prodromal tingling
-    suggest HSV. Golden-crusted erosions suggest bullous impetigo.
+  ask: Are there small blisters grouped together, small round ulcers, or
+    golden-yellow crusty patches on the nipple?
+  short: Blisters / ulcers / crusting?
+  assess: >
+    Clusters of little blisters or shallow round sores (sometimes with tingling
+    first) can be a cold-sore-type (herpes) infection. Honey-coloured crusts can
+    be a bacterial skin infection. Both should be seen promptly.
 - id: pain5
   area: pain
   type: boolean
-  ask: Is there a discrete wound — a crack, fissure, abrasion, bruise, or scab?
-  short: Nipple wound?
-  assess: A localised break in the skin, with pain that maps to the wound.
-    Distinguish from a diffuse rash or dermatitis.
+  ask: Is there a specific wound on the nipple — a crack, split, graze, bruise,
+    or scab?
+  short: Nipple wound / crack?
+  assess: >
+    A clear break in the skin, with pain in that exact spot — rather than a
+    spread-out rash.
 - id: pain6
   area: pain
   type: boolean
-  ask: Is the wound failing to heal after 48–72 h, spreading redness, or purulent
-    / honey-crusted?
-  short: Wound infected?
-  assess: Signs of bacterial superinfection of a nipple fissure — usually
-    Staphylococcus aureus, sometimes MRSA.
+  ask: Has a nipple wound failed to heal after 2 to 3 days, or is the redness
+    spreading or oozing pus or yellow crust?
+  short: Wound not healing / infected?
+  assess: >
+    Signs that a nipple crack has become infected: not healing after a couple of
+    days, spreading redness, pus, or yellow crusting.
 - id: pain7
   area: pain
   type: boolean
-  ask: A well-demarcated, scaly, itchy rash (dermatitis pattern)?
-  short: Rash / dermatitis?
-  assess: Look for a sharply marginated, scaly, itchy or burning area of the
-    areola or nipple. Contact dermatitis flares with lanolin, fragrances,
-    topical antibiotics, breast pads or detergents; atopic and psoriatic forms
-    have clues elsewhere on the skin.
+  ask: Is there a scaly, itchy, or burning rash with a clear edge on the nipple
+    or areola?
+  short: Scaly, itchy rash?
+  assess: >
+    A well-defined patch that is scaly, itchy, or burning. It can flare after a
+    new cream, nipple cream, breast pads, fragrance, or laundry detergent, or go
+    along with eczema or psoriasis elsewhere on your skin.
 - id: pain8
   area: pain
   type: boolean
-  ask: A white or yellow spot at one point on the nipple, with a tender cord
-    behind it?
-  short: Bleb?
-  assess: "A milk bleb (blister): a pinpoint blocked nipple pore, often recurrent
-    at the same spot, with a tender duct proximally, usually on a background of
-    oversupply."
+  ask: Is there a white or yellow spot at one point on the nipple, with a tender
+    firm line or lump in the breast behind it?
+  short: White spot + tender lump behind?
+  assess: >
+    A tiny blocked pore on the nipple (a "bleb" or milk blister), often coming
+    back in the same spot, with a sore firm area in the breast behind it.
 - id: pain9
   area: pain
   type: boolean
-  ask: Does the nipple blanch and change colour, triggered by cold?
-  short: Colour change?
-  assess: "Nipple vasospasm / Raynaud's: a biphasic or triphasic colour change, a
-    clear cold trigger, pain between feeds (not just during), and relief with
-    heat. Ask about Raynaud's elsewhere and precipitating drugs (beta-blockers,
-    fluconazole, the combined pill)."
+  ask: Does your nipple turn white, then blue or red, especially in the cold —
+    with pain between feeds as well as during?
+  short: Nipple turns white then blue / red?
+  assess: >
+    A colour change triggered by cold, often with a stinging or throbbing pain
+    between feeds that eases with warmth. Some people get the same thing in their
+    fingers and toes.
 - id: pain10
   area: pain
   type: boolean
-  ask: A brief wave of dysphoria at let-down, clearing within ~90 seconds?
-  short: Dysphoria at let-down?
-  assess: "D-MER (dysphoric milk ejection reflex): an abrupt, time-locked wave of
-    dread, hollowness or sadness immediately before each ejection (including on
-    the pump), resolving within 30–90 seconds. The parent is well between feeds.
-    It is a dopamine-drop phenomenon, not a mood disorder — though the two can
-    coexist."
+  ask: Just before the milk lets down, do you get a sudden brief wave of dread,
+    sadness, or hollowness that passes within a minute or two?
+  short: Brief low feeling at let-down?
+  assess: >
+    A sudden dip in mood in the seconds before each let-down (including when
+    pumping), lifting again within a minute or two, and you feel fine between
+    feeds. It is a reflex tied to a brief hormone drop — not the same as
+    postnatal depression, though the two can happen together.
 - id: pain11
   area: pain
   type: boolean
-  ask: A deep, dull, bilateral ache or burning that continues DURING and AFTER
-    feeds, worst in the lower breast?
-  short: Deep ache during + after?
+  ask: Is there a deep, dull ache or burning inside the breast that carries on
+    during and after feeds, often in both breasts and worse lower down?
+  short: Deep ache during + after feeds?
   assess: >
-    The pattern of mammary dysbiosis / subacute mastitis: a fairly constant deep
-    ache or burning felt in the breast (not on the nipple surface), present
-    between feeds as well as during, often bilateral and worst in the lower
-    quadrants. Ask about a history of recurrent blocked ducts, blebs, cracked
-    nipples or previous mastitis, exclusive pumping or nipple-shield use, and
-    unresolved oversupply.
+    A fairly constant deep ache or burning felt inside the breast (not on the
+    nipple surface), there between feeds as well as during. Often linked to a
+    history of blocked ducts, blebs, cracked nipples, past mastitis, a lot of
+    pumping, or oversupply.
 - id: pain12
   area: pain
   type: boolean
   ask: Does light touch hurt — clothing brushing the nipple, the shower spray, or
-    patting dry with a towel?
-  short: Pain to light touch?
+    drying with a towel?
+  short: Even light touch hurts?
   assess: >
-    Allodynia — pain from a stimulus that would not normally hurt — points to
-    central sensitisation rather than a local breast problem, especially
-    alongside other chronic pain conditions (fibromyalgia, IBS, migraine, TMJ
-    pain, painful intercourse) and where the breast and nipple exam is normal.
+    Pain from things that would not normally hurt can mean the nerves have become
+    over-sensitive, especially if the breast looks normal and you have other
+    conditions like fibromyalgia, migraine, or irritable bowel.

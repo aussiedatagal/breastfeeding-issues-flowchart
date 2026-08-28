@@ -90,6 +90,8 @@ export const rawDiagnosis = z
     supports: z.array(findingRef).optional(),
     against: z.array(findingRef).optional(),
     excludes: z.array(exclusion).optional(),
+    /** ids from references.yaml — the evidence behind this entry and its prior */
+    sources: z.array(id).optional(),
     /** a look-alike / concept note — never scored, only shown via seeAlso / coexists */
     reference: z.boolean().optional(),
   })
@@ -102,9 +104,25 @@ export const mapMeta = z
     intro: text,
     areas: z.array(area).min(1),
     multifactorialNote: text.optional(),
+    /** standing line shown on the Sources screen */
+    evidenceNote: text.optional(),
   })
   .strict();
 export type MapMeta = z.infer<typeof mapMeta>;
 
+/** A citation the reader can inspect — listed on the Sources screen and
+ *  referenced by `sources: [id]` on a diagnosis. */
+export const reference = z
+  .object({
+    id,
+    title: text,
+    /** authors · journal · year, free text */
+    detail: text.optional(),
+    url: z.string().url().optional(),
+  })
+  .strict();
+export type Reference = z.infer<typeof reference>;
+
 export const questionFile = z.array(rawQuestion);
 export const diagnosisFile = z.array(rawDiagnosis);
+export const referenceFile = z.array(reference);

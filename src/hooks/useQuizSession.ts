@@ -58,6 +58,8 @@ export function useQuizSession(content: Content) {
       restart: () => dispatch({ type: "restart" }),
       openSummary: () => dispatch({ type: "openSummary" }),
       closeSummary: () => dispatch({ type: "closeSummary" }),
+      openSources: () => dispatch({ type: "openSources" }),
+      closeSources: () => dispatch({ type: "closeSources" }),
       pinFinding: (id: string) => dispatch({ type: "pinFinding", id }),
       unpinFinding: (id: string) => dispatch({ type: "unpinFinding", id }),
       clearFindings: () => dispatch({ type: "clearFindings" }),

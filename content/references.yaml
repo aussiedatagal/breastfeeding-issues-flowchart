@@ -1,0 +1,25 @@
+# The evidence base. Each entry has an `id` a diagnosis can cite with
+# `sources: [id]`, and every entry is listed on the app's Sources screen.
+#
+# Keep `url` a real, resolvable link so a reader can check it directly.
+# Quote any `title` / `detail` that contains a "#" (YAML treats " #" as a comment).
+
+- id: abm-26
+  title: "ABM Clinical Protocol #26: Persistent Pain with Breastfeeding"
+  detail: "Berens P, Eglash A, Malloy M, Steube AM, and the Academy of Breastfeeding Medicine. Breastfeeding Medicine 2016;11(2):46–53."
+  url: https://doi.org/10.1089/bfm.2016.29002.pjb
+
+- id: abm-36
+  title: "Academy of Breastfeeding Medicine Clinical Protocol #36: The Mastitis Spectrum, Revised 2022"
+  detail: "Mitchell KB, Johnson HM, Rodríguez JM, Eglash A, Scherzinger C, Widmer K, Berens P, Miller B, and the Academy of Breastfeeding Medicine. Breastfeeding Medicine 2022;17(5):360–376."
+  url: https://doi.org/10.1089/bfm.2022.29207.kbm
+
+- id: iblce-dco
+  title: "IBLCE Detailed Content Outline for the IBCLC certification examination (effective 2023)"
+  detail: International Board of Lactation Consultant Examiners.
+  url: https://iblce.org/certify/detailed-content-outline/
+
+- id: abm-protocols
+  title: "Academy of Breastfeeding Medicine — Clinical Protocol library"
+  detail: "Includes protocols #9 (galactogogues), #11 (ankyloglossia), and #35 (breastfeeding during hospitalisation). Consult the current version of each."
+  url: https://www.bfmed.org/protocols

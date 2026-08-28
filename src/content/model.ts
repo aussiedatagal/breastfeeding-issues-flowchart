@@ -1,6 +1,6 @@
-import type { Area, Flag } from "./schema.ts";
+import type { Area, Flag, Reference } from "./schema.ts";
 
-export type { Area, Flag };
+export type { Area, Flag, Reference };
 export type Presence = "present" | "absent";
 
 /** One observable thing. A boolean question is a single finding; a multi
@@ -52,6 +52,8 @@ export interface Diagnosis {
   supports: WeightedFinding[];
   against: WeightedFinding[];
   excludes: HardExclusion[];
+  /** reference ids — the evidence behind this diagnosis and its prior */
+  sources: string[];
   reference: boolean;
 }
 
@@ -59,9 +61,11 @@ export interface Content {
   title: string;
   intro: string;
   multifactorialNote?: string;
+  evidenceNote?: string;
   areas: Area[];
   questions: Question[];
   diagnoses: Diagnosis[];
+  references: Reference[];
   finding: ReadonlyMap<string, Finding>;
   question: ReadonlyMap<string, Question>;
   diagnosis: ReadonlyMap<string, Diagnosis>;

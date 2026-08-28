@@ -70,6 +70,19 @@ describe("content", () => {
     }
   });
 
+  it("every diagnosis `sources` entry resolves to a real reference", () => {
+    if (!content) throw new Error("no content");
+    const ids = new Set(content.references.map((r) => r.id));
+    for (const d of content.diagnoses) {
+      for (const s of d.sources) expect(ids.has(s)).toBe(true);
+    }
+    // references themselves are well-formed
+    for (const r of content.references) {
+      expect(r.title.length).toBeGreaterThan(0);
+      if (r.url) expect(r.url).toMatch(/^https?:\/\//);
+    }
+  });
+
   it("answering a whole area 'present' still gives a coherent ranking", () => {
     if (!content) throw new Error("no content");
     for (const area of content.areas) {
