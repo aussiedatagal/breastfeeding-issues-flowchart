@@ -88,7 +88,7 @@ export function SummaryScreen({
 
       <div className={styles.actions}>
         <Button variant="primary" block onClick={onCheckAnother}>
-          Check another area
+          Screen another set of areas
         </Button>
         {items.length > 0 && (
           <button type="button" className={styles.clear} onClick={onClear}>

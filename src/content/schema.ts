@@ -29,7 +29,13 @@ export const exclusion = z.union([
 export type Exclusion = z.infer<typeof exclusion>;
 
 export const area = z
-  .object({ id, label: text, short: text.optional() })
+  .object({
+    id,
+    label: text,
+    short: text.optional(),
+    /** the yes/no screening question on the start flow ("Is there nipple pain?") */
+    ask: text.optional(),
+  })
   .strict();
 export type Area = z.infer<typeof area>;
 
@@ -61,12 +67,21 @@ export const multiQuestion = z
 export const rawQuestion = z.discriminatedUnion("type", [booleanQuestion, multiQuestion]);
 export type RawQuestion = z.infer<typeof rawQuestion>;
 
+/** how common the diagnosis is among mothers presenting with this problem —
+ *  the Bayesian prior. A keyword, or a raw probability 0–1. */
+export const prior = z.union([
+  z.enum(["common", "uncommon", "rare", "very-rare"]),
+  z.number().gt(0).lt(1),
+]);
+export type Prior = z.infer<typeof prior>;
+
 export const rawDiagnosis = z
   .object({
     id,
     area: id,
     name: text,
     flag: flag.optional(),
+    prior: prior.optional(),
     note: text.optional(),
     points: list.optional(),
     steps: list.optional(),

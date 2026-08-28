@@ -1,22 +1,25 @@
 /**
- * The quiz session — a framework-free state machine. Pick an area, answer every
- * question you can (or skip the ones you can't judge), then get a ranked list
- * of what fits. React binds to it in `useQuizSession`.
+ * The quiz session — a framework-free state machine.
+ *
+ * 1. A short yes/no **screening** pass, one question per area, decides which
+ *    problem areas are in play ("Is there nipple or breast pain?").
+ * 2. The clinician answers the questions from every picked area, in any order,
+ *    skipping the ones they can't judge.
+ * 3. One combined, probability-ranked list of what fits.
  *
  * There is no tree walk: order doesn't matter, and no answer removes a
  * diagnosis unless a hard `excludes` rule fires (see `score.ts`).
  *
- * Pure.
+ * Pure. React binds to it in `useQuizSession`.
  */
 import type { Area, Content, Presence, Question } from "../content/model.ts";
-import { questionsInArea } from "../content/model.ts";
-import { rankArea, type Match } from "./score.ts";
+import { rankAcross, type Match } from "./score.ts";
 
 export type { Presence };
 
 export interface SessionState {
-  /** the area being worked, or null on the start screen */
-  areaId: string | null;
+  /** areaId → included? A key means its screening question has been answered. */
+  areaGate: Record<string, boolean>;
   /** question ids in the order they were answered or skipped */
   handled: string[];
   /** question ids the reader chose to skip ("not sure") */
@@ -31,7 +34,7 @@ export interface SessionState {
 }
 
 export const emptySession = (): SessionState => ({
-  areaId: null,
+  areaGate: {},
   handled: [],
   skipped: [],
   answers: {},
@@ -42,6 +45,20 @@ export const emptySession = (): SessionState => ({
 
 /** which findings a question sets — one for boolean, several for multi */
 export const questionFindings = (q: Question): string[] => q.options.map((o) => o.finding);
+
+/** the areas whose screening question was answered "yes", in map order */
+export const selectedAreas = (content: Content, state: SessionState): Area[] =>
+  content.areas.filter((a) => state.areaGate[a.id] === true);
+
+/** the first area whose screening question hasn't been answered yet */
+const pendingGate = (content: Content, state: SessionState): Area | undefined =>
+  content.areas.find((a) => state.areaGate[a.id] === undefined);
+
+/** questions from every picked area, in area then authored order */
+const selectedQuestions = (content: Content, state: SessionState): Question[] => {
+  const areas = new Set(selectedAreas(content, state).map((a) => a.id));
+  return content.questions.filter((q) => areas.has(q.area));
+};
 
 /** every finding the reader has answered, in the order the questions were handled */
 export function answeredFindings(content: Content, state: SessionState): string[] {
@@ -58,39 +75,38 @@ export function answeredFindings(content: Content, state: SessionState): string[
 }
 
 const isHandled = (q: Question, state: SessionState) =>
-  state.skipped.includes(q.id) ||
-  questionFindings(q).every((f) => state.answers[f] !== undefined);
-
-/** the next question the reader hasn't answered or skipped, in authored order */
-function nextPending(content: Content, areaId: string, state: SessionState): Question | null {
-  for (const q of questionsInArea(content, areaId)) {
-    if (!isHandled(q, state)) return q;
-  }
-  return null;
-}
+  state.skipped.includes(q.id) || questionFindings(q).every((f) => state.answers[f] !== undefined);
 
 export type Screen =
-  | { name: "start" }
+  | {
+      name: "screening";
+      area: Area;
+      /** 1-based position in the screening pass */
+      index: number;
+      total: number;
+      /** areas already flagged "yes" */
+      picked: Area[];
+      /** the very first screen — carries the intro */
+      first: boolean;
+    }
   | {
       name: "question";
       area: Area;
       question: Question;
-      /** 1-based position of this question in the area */
+      /** 1-based position across every picked area */
       index: number;
       total: number;
       answers: Record<string, Presence>;
-      /** something has been answered, so results are worth a peek */
       canReveal: boolean;
     }
   | {
       name: "results";
-      area: Area;
+      areas: Area[];
       matches: Match[];
       answered: string[];
       answers: Record<string, Presence>;
-      /** every question in the area has been answered or skipped */
+      /** every question in every picked area has been answered or skipped */
       complete: boolean;
-      /** count of questions answered (not skipped) */
       answeredCount: number;
       skippedCount: number;
     }
@@ -99,35 +115,50 @@ export type Screen =
 export function screenOf(content: Content, state: SessionState): Screen {
   if (state.viewingSummary) return { name: "summary" };
 
-  const area = state.areaId ? content.areas.find((a) => a.id === state.areaId) : undefined;
-  if (!area) return { name: "start" };
+  const pending = pendingGate(content, state);
+  if (pending && !state.revealed) {
+    const answered = content.areas.filter((a) => state.areaGate[a.id] !== undefined).length;
+    return {
+      name: "screening",
+      area: pending,
+      index: answered + 1,
+      total: content.areas.length,
+      picked: selectedAreas(content, state),
+      first: answered === 0,
+    };
+  }
 
-  const areaQuestions = questionsInArea(content, area.id);
-  const next = nextPending(content, area.id, state);
+  const areas = selectedAreas(content, state);
+  const questions = selectedQuestions(content, state);
+  const next = questions.find((q) => !isHandled(q, state)) ?? null;
   const answered = answeredFindings(content, state);
-  const answeredCount = areaQuestions.filter(
+  const answeredCount = questions.filter(
     (q) => !state.skipped.includes(q.id) && questionFindings(q).every((f) => state.answers[f] !== undefined),
   ).length;
 
   if (next === null || state.revealed) {
     return {
       name: "results",
-      area,
-      matches: rankArea(content, area.id, state.answers),
+      areas,
+      matches: rankAcross(content, areas.map((a) => a.id), state.answers),
       answered,
       answers: state.answers,
       complete: next === null,
       answeredCount,
-      skippedCount: state.skipped.length,
+      skippedCount: state.skipped.filter((qid) => {
+        const q = content.question.get(qid);
+        return q !== undefined && areas.some((a) => a.id === q.area);
+      }).length,
     };
   }
 
+  const area = content.areas.find((a) => a.id === next.area)!;
   return {
     name: "question",
     area,
     question: next,
-    index: areaQuestions.indexOf(next) + 1,
-    total: areaQuestions.length,
+    index: questions.filter((q) => isHandled(q, state)).length + 1,
+    total: questions.length,
     answers: state.answers,
     canReveal: answered.length > 0,
   };
@@ -136,7 +167,7 @@ export function screenOf(content: Content, state: SessionState): Screen {
 // --- transitions -----------------------------------------------------------
 
 export type SessionAction =
-  | { type: "pickArea"; areaId: string }
+  | { type: "gateArea"; areaId: string; include: boolean }
   | { type: "answerQuestion"; questionId: string; findings: Record<string, Presence> }
   | { type: "skipQuestion"; questionId: string }
   | { type: "setFinding"; finding: string; value: Presence }
@@ -145,6 +176,7 @@ export type SessionAction =
   | { type: "resume" }
   | { type: "back" }
   | { type: "restart" }
+  | { type: "editAreas" }
   | { type: "openSummary" }
   | { type: "closeSummary" }
   | { type: "pinFinding"; id: string }
@@ -156,7 +188,6 @@ const without = <T,>(list: T[], value: T) => list.filter((v) => v !== value);
 const dropAnswers = (answers: Record<string, Presence>, findings: string[]) =>
   Object.fromEntries(Object.entries(answers).filter(([f]) => !findings.includes(f)));
 
-/** every finding a question could have set, so `back` fully undoes it */
 const findingsOf = (content: Content, questionId: string): string[] => {
   const q = content.question.get(questionId);
   return q ? questionFindings(q) : [questionId];
@@ -170,8 +201,13 @@ export function reduce(
   if (!("type" in action)) return action; // hydration from the URL
 
   switch (action.type) {
-    case "pickArea":
-      return { ...emptySession(), findings: state.findings, areaId: action.areaId };
+    case "gateArea":
+      return {
+        ...state,
+        areaGate: { ...state.areaGate, [action.areaId]: action.include },
+        revealed: false,
+        viewingSummary: false,
+      };
 
     case "answerQuestion": {
       const handled = state.handled.includes(action.questionId)
@@ -220,6 +256,9 @@ export function reduce(
     case "resume":
       return { ...state, revealed: false, viewingSummary: false };
 
+    case "editAreas":
+      return { ...state, areaGate: {}, revealed: false, viewingSummary: false };
+
     case "back": {
       if (state.viewingSummary) return { ...state, viewingSummary: false };
       if (state.revealed) return { ...state, revealed: false };
@@ -232,7 +271,15 @@ export function reduce(
           answers: dropAnswers(state.answers, findingsOf(content, last)),
         };
       }
-      return { ...state, areaId: null };
+      // step back through the screening pass
+      const answeredGates = content.areas.filter((a) => state.areaGate[a.id] !== undefined);
+      const lastGate = answeredGates[answeredGates.length - 1];
+      if (lastGate) {
+        const rest = { ...state.areaGate };
+        delete rest[lastGate.id];
+        return { ...state, areaGate: rest };
+      }
+      return state;
     }
 
     case "restart":

@@ -2,11 +2,11 @@
  * The session in the URL hash, so an assessment (or its findings list) can be
  * linked or bookmarked:
  *
- *   #area=pain&p=pain1,pain9&x=pain2&s=pain5&f=dx-vasospasm&view=summary
+ *   #area=pain,supply&no=refusal&p=pain1,pain9&x=pain2&s=pain5&f=dx-vasospasm
  *
- * `p` = findings answered present, `x` = findings answered absent, `s` =
- * skipped questions, keyed by id so a content edit can't silently change what
- * an old link means.
+ * `area` = areas screened in, `no` = areas screened out, `p` / `x` = findings
+ * answered present / absent, `s` = skipped questions — all keyed by id so a
+ * content edit can't silently change what an old link means.
  */
 import type { Content, Presence } from "../content/model.ts";
 import type { SessionState } from "./session.ts";
@@ -16,8 +16,12 @@ export function encode(content: Content, state: SessionState): string {
   const answered = answeredFindings(content, state);
   const present = answered.filter((f) => state.answers[f] === "present");
   const absent = answered.filter((f) => state.answers[f] === "absent");
+  const gatesIn = content.areas.filter((a) => state.areaGate[a.id] === true).map((a) => a.id);
+  const gatesOut = content.areas.filter((a) => state.areaGate[a.id] === false).map((a) => a.id);
+
   const parts: string[] = [];
-  if (state.areaId) parts.push(`area=${state.areaId}`);
+  if (gatesIn.length) parts.push(`area=${gatesIn.join(",")}`);
+  if (gatesOut.length) parts.push(`no=${gatesOut.join(",")}`);
   if (present.length) parts.push(`p=${present.join(",")}`);
   if (absent.length) parts.push(`x=${absent.join(",")}`);
   if (state.skipped.length) parts.push(`s=${state.skipped.join(",")}`);
@@ -37,41 +41,38 @@ export function decode(content: Content, hash: string): SessionState {
   const state = emptySession();
   const csv = (key: string) => (params.get(key) ?? "").split(",").filter(Boolean);
   const uniq = (list: string[]) => list.filter((v, i) => list.indexOf(v) === i);
+  const isArea = (id: string) => content.areas.some((a) => a.id === id);
 
-  const areaId = params.get("area");
-  if (areaId && content.areas.some((a) => a.id === areaId)) {
-    state.areaId = areaId;
+  for (const id of csv("area")) if (isArea(id)) state.areaGate[id] = true;
+  for (const id of csv("no")) if (isArea(id) && state.areaGate[id] === undefined) state.areaGate[id] = false;
 
-    const take = (key: string, value: Presence) => {
-      for (const f of csv(key)) {
-        if (content.finding.has(f) && state.answers[f] === undefined) {
-          state.answers[f] = value;
-        }
-      }
-    };
-    take("p", "present");
-    take("x", "absent");
-
-    state.skipped = uniq(
-      csv("s").filter((id) => {
-        const q = content.question.get(id);
-        return q !== undefined && q.area === areaId;
-      }),
-    );
-
-    // rebuild the handled order: questions whose findings are all answered,
-    // then the skipped ones
-    const answeredQ = new Set<string>();
-    for (const [fid] of Object.entries(state.answers)) {
-      const q = content.finding.get(fid)?.questionId;
-      const qq = q ? content.question.get(q) : undefined;
-      if (qq && questionFindings(qq).every((f) => state.answers[f] !== undefined)) {
-        answeredQ.add(qq.id);
-      }
+  const take = (key: string, value: Presence) => {
+    for (const f of csv(key)) {
+      if (content.finding.has(f) && state.answers[f] === undefined) state.answers[f] = value;
     }
-    state.handled = uniq([...answeredQ, ...state.skipped]);
-    state.revealed = params.get("show") === "1";
+  };
+  take("p", "present");
+  take("x", "absent");
+
+  const selected = new Set(
+    content.areas.filter((a) => state.areaGate[a.id] === true).map((a) => a.id),
+  );
+  state.skipped = uniq(
+    csv("s").filter((id) => {
+      const q = content.question.get(id);
+      return q !== undefined && selected.has(q.area);
+    }),
+  );
+
+  // rebuild the handled order: answered questions, then skipped ones
+  const answeredQ = new Set<string>();
+  for (const fid of Object.keys(state.answers)) {
+    const qid = content.finding.get(fid)?.questionId;
+    const q = qid ? content.question.get(qid) : undefined;
+    if (q && questionFindings(q).every((f) => state.answers[f] !== undefined)) answeredQ.add(q.id);
   }
+  state.handled = uniq([...answeredQ, ...state.skipped]);
+  state.revealed = params.get("show") === "1";
 
   state.findings = uniq(
     csv("f").filter((id) => {

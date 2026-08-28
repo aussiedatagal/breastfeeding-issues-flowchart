@@ -1,21 +1,27 @@
 title: Breastfeeding Difficulty
-intro: Answer what you can observe — skip anything you're not sure of. Nothing
-  is ruled out unless your answers make it impossible. You get a ranked list of
-  what fits, with how much each matches and which findings don't.
+intro: >
+  First, a few yes/no questions to flag which problems are in play. Then answer
+  what you can observe in each — skip anything you're not sure of. Nothing is
+  ruled out unless your answers make it impossible. You get one ranked list of
+  what fits, with a probability for each.
 areas:
   - id: supply
     label: Not enough milk, poor weight gain, or supply feels low
     short: Milk supply & weight
+    ask: Is low milk supply, poor weight gain, or ineffective feeding a concern?
   - id: pain
     label: Sore, cracked, burning, or a deep ache — at or between feeds
     short: Nipple & breast pain
+    ask: Is there nipple or breast pain — at latch, during, or between feeds?
   - id: inflammation
     label: A breast lump, or a red, hot, or inflamed area
     short: Lump or inflammation
+    ask: Is there a breast lump, or a red, hot, swollen, or inflamed area?
   - id: refusal
     label: The baby fights, fusses at, or refuses the breast
     short: Fussing or refusing
+    ask: Does the baby fight, fuss at, pull off, or refuse the breast?
 multifactorialNote: >
   Treat each result as one contributing factor, not the whole answer. If it
-  doesn't explain everything, pin it, revise an answer or two, or work another
+  doesn't explain everything, pin it, revise an answer or two, or screen another
   area — the aim is a problem list.

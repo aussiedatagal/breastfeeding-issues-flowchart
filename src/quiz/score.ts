@@ -1,8 +1,18 @@
 /**
- * Score every diagnosis in an area against the answers. A diagnosis is only
- * removed if one of its `excludes` rules fires (e.g. "no fever ⇒ not this").
- * Otherwise it is ranked by how much of its picture the answers confirm, and
- * every mismatch is reported.
+ * Rank the diagnoses across the areas the clinician picked, as a Bayesian
+ * classifier.
+ *
+ * Each diagnosis carries a **prior** — roughly how common it is among mothers
+ * presenting with that problem. Each answered finding then shifts the odds by a
+ * **likelihood ratio** derived from its authored `weight` (1–5 = how strongly
+ * that finding speaks): a present supporting finding multiplies the odds up, an
+ * absent one multiplies them down, a finding that argues against multiplies
+ * them down when present. Unknown / skipped findings don't move the odds.
+ *
+ * The result is a posterior probability per diagnosis, 0–1. It is NOT
+ * normalised across diagnoses — they co-occur, so each stands on its own.
+ *
+ * A hard `excludes` rule sets the probability to zero (ruled out).
  *
  * Pure.
  */
@@ -16,9 +26,8 @@ export type Tier = "strong" | "possible" | "unlikely" | "ruled-out";
 export interface Match {
   diagnosis: Diagnosis;
   tier: Tier;
-  /** confirmed support weight ÷ assessed support weight, 0–100 */
-  fitPct: number;
-  score: number;
+  /** posterior P(diagnosis | answers), 0–1 */
+  probability: number;
   present: WeightedFinding[];
   absent: WeightedFinding[]; // expected, but answered "no" → doesn't fit
   unknown: WeightedFinding[]; // not asked / skipped
@@ -28,14 +37,21 @@ export interface Match {
   fallback: boolean;
 }
 
-const AGAINST_PENALTY = 1.5;
+/**
+ * Likelihood ratios from an authored weight (1 = weak … 5 = decisive).
+ * LR+ applies when a supporting finding is present, LR− when it's absent.
+ */
+const LR_PLUS = [0, 1.8, 3, 5, 9, 16];
+const LR_MINUS = [0, 0.8, 0.62, 0.45, 0.3, 0.15];
+const lrPlus = (w: number) => LR_PLUS[Math.max(1, Math.min(5, Math.round(w)))]!;
+const lrMinus = (w: number) => LR_MINUS[Math.max(1, Math.min(5, Math.round(w)))]!;
 
 const fires = (ex: HardExclusion, answers: Answers) => {
   const a = answers[ex.finding];
   return a !== undefined && a === (ex.when === "present" ? "present" : "absent");
 };
 
-const sum = (fs: WeightedFinding[]) => fs.reduce((n, f) => n + f.weight, 0);
+const clampPrior = (p: number) => Math.min(0.9, Math.max(0.001, p));
 
 function scoreDiagnosis(dx: Diagnosis, answers: Answers): Match {
   const present: WeightedFinding[] = [];
@@ -49,32 +65,29 @@ function scoreDiagnosis(dx: Diagnosis, answers: Answers): Match {
   }
   const againstHit = dx.against.filter((g) => answers[g.finding] === "present");
 
-  const got = sum(present);
-  const missed = sum(absent);
-  const againstW = sum(againstHit);
-  const assessed = got + missed;
-  const fitPct = assessed > 0 ? Math.round((100 * got) / assessed) : 0;
+  const prior = clampPrior(dx.prior);
+  let logOdds = Math.log(prior / (1 - prior));
+  for (const s of present) logOdds += Math.log(lrPlus(s.weight));
+  for (const s of absent) logOdds += Math.log(lrMinus(s.weight));
+  for (const g of againstHit) logOdds -= Math.log(lrPlus(g.weight));
 
+  const odds = Math.exp(logOdds);
   const ruledOutBy = dx.excludes.find((ex) => fires(ex, answers));
+  const probability = ruledOutBy ? 0 : odds / (1 + odds);
   const fallback = dx.supports.length === 0;
-
-  // a diagnosis of exclusion: no findings of its own, so it can't be "confirmed"
-  // — it stays on the table until something else is, and its `against` list
-  // (patterns that point elsewhere) is what pushes it down.
-  const score = fallback ? -AGAINST_PENALTY * againstW : got - missed - AGAINST_PENALTY * againstW;
 
   let tier: Tier;
   if (ruledOutBy) tier = "ruled-out";
   else if (fallback) tier = againstHit.length > 0 ? "unlikely" : "possible";
-  else if (got === 0 || score <= 0) tier = "unlikely";
-  else if (score >= 4 && fitPct >= 60 && againstHit.length === 0) tier = "strong";
-  else tier = "possible";
+  else if (present.length === 0) tier = "unlikely"; // nothing confirms it yet
+  else if (probability >= 0.5) tier = "strong";
+  else if (probability >= 0.15) tier = "possible";
+  else tier = "unlikely";
 
   return {
     diagnosis: dx,
     tier,
-    fitPct,
-    score,
+    probability,
     present,
     absent,
     unknown,
@@ -84,18 +97,23 @@ function scoreDiagnosis(dx: Diagnosis, answers: Answers): Match {
   };
 }
 
-/** Every scored diagnosis in the area, best first (ruled-out last). */
-export function rankArea(content: Content, areaId: string, answers: Answers): Match[] {
+/** Every scored diagnosis across the given areas, most probable first
+ *  (ruled-out last). */
+export function rankAcross(
+  content: Content,
+  areaIds: readonly string[],
+  answers: Answers,
+): Match[] {
+  const areas = new Set(areaIds);
   return content.diagnoses
-    .filter((d) => d.area === areaId && !d.reference)
+    .filter((d) => areas.has(d.area) && !d.reference)
     .map((d) => scoreDiagnosis(d, answers))
     .sort((a, b) => {
       if ((a.tier === "ruled-out") !== (b.tier === "ruled-out")) {
         return a.tier === "ruled-out" ? 1 : -1;
       }
       return (
-        b.score - a.score ||
-        b.fitPct - a.fitPct ||
+        b.probability - a.probability ||
         b.present.length - a.present.length ||
         a.diagnosis.name.localeCompare(b.diagnosis.name)
       );

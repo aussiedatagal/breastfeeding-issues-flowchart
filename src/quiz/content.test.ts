@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 import { buildFromFiles } from "../content/load.ts";
 import { questionsInArea } from "../content/model.ts";
 import { questionFindings } from "./session.ts";
-import { rankArea } from "./score.ts";
+import { rankAcross } from "./score.ts";
 
 const contentDir = resolve(__dirname, "../../content");
 function readContent(dir = contentDir): Record<string, string> {
@@ -54,7 +54,7 @@ describe("content", () => {
     for (const id of DIAGNOSES_OF_EXCLUSION) {
       const d = content.diagnosis.get(id);
       if (!d) continue;
-      const ranked = rankArea(content, d.area, {});
+      const ranked = rankAcross(content, [d.area], {});
       const m = ranked.find((x) => x.diagnosis.id === id)!;
       expect(m.fallback).toBe(true);
       expect(m.tier).toBe("possible");
@@ -79,12 +79,12 @@ describe("content", () => {
       const answers: Record<string, "present"> = {};
       for (const q of qs) for (const f of questionFindings(q)) answers[f] = "present";
 
-      const ranked = rankArea(content, area.id, answers);
+      const ranked = rankAcross(content, [area.id], answers);
       expect(ranked.length).toBeGreaterThan(0);
-      // sorted by score (ruled-out sinks to the back)
+      // sorted by posterior probability (ruled-out sinks to the back)
       const live = ranked.filter((m) => m.tier !== "ruled-out");
       for (let i = 1; i < live.length; i += 1) {
-        expect(live[i - 1]!.score).toBeGreaterThanOrEqual(live[i]!.score);
+        expect(live[i - 1]!.probability).toBeGreaterThanOrEqual(live[i]!.probability);
       }
     }
   });

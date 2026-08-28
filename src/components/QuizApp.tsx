@@ -3,7 +3,7 @@ import type { Content } from "../content/model.ts";
 import { useQuizSession } from "../hooks/useQuizSession.ts";
 import { useTheme } from "../hooks/useTheme.ts";
 import { TopBar } from "./ui/TopBar.tsx";
-import { StartScreen } from "./screens/StartScreen.tsx";
+import { ScreeningScreen } from "./screens/ScreeningScreen.tsx";
 import { QuestionScreen } from "./screens/QuestionScreen.tsx";
 import { ResultsScreen } from "./screens/ResultsScreen.tsx";
 import { SummaryScreen } from "./screens/SummaryScreen.tsx";
@@ -15,24 +15,29 @@ export function QuizApp({ content }: { content: Content }) {
 
   const mainRef = useRef<HTMLElement>(null);
   const signature =
-    screen.name === "question"
-      ? `q:${screen.question.id}`
-      : screen.name === "results"
-        ? `r:${screen.area.id}`
+    screen.name === "screening"
+      ? `s:${screen.area.id}`
+      : screen.name === "question"
+        ? `q:${screen.question.id}`
         : screen.name;
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0 });
     window.scrollTo({ top: 0 });
   }, [signature]);
 
-  const onBack = screen.name === "start" ? undefined : actions.back;
+  const atStart = screen.name === "screening" && screen.first;
+  const onBack = atStart ? undefined : actions.back;
 
   const eyebrow =
-    screen.name === "question" || screen.name === "results"
+    screen.name === "question"
       ? (screen.area.short ?? screen.area.label)
-      : screen.name === "summary"
-        ? "Findings"
-        : undefined;
+      : screen.name === "screening"
+        ? "Screening"
+        : screen.name === "results"
+          ? "Results"
+          : screen.name === "summary"
+            ? "Findings"
+            : undefined;
 
   return (
     <div className={styles.app}>
@@ -47,11 +52,16 @@ export function QuizApp({ content }: { content: Content }) {
 
       <main ref={mainRef} className={styles.main}>
         <div key={signature} className={styles.screen}>
-          {screen.name === "start" && (
-            <StartScreen
+          {screen.name === "screening" && (
+            <ScreeningScreen
               content={content}
+              area={screen.area}
+              index={screen.index}
+              total={screen.total}
+              picked={screen.picked}
+              first={screen.first}
               findingsCount={findings.length}
-              onPickArea={actions.pickArea}
+              onGate={actions.gateArea}
               onOpenSummary={actions.openSummary}
             />
           )}
@@ -75,7 +85,7 @@ export function QuizApp({ content }: { content: Content }) {
           {screen.name === "results" && (
             <ResultsScreen
               content={content}
-              area={screen.area}
+              areas={screen.areas}
               matches={screen.matches}
               answers={screen.answers}
               complete={screen.complete}
@@ -90,7 +100,8 @@ export function QuizApp({ content }: { content: Content }) {
               onPin={actions.pinFinding}
               onUnpin={actions.unpinFinding}
               onResume={actions.resume}
-              onCheckAnother={actions.restart}
+              onEditAreas={actions.editAreas}
+              onRestart={actions.restart}
             />
           )}
 
@@ -103,7 +114,7 @@ export function QuizApp({ content }: { content: Content }) {
                 : {})}
               onUnpin={actions.unpinFinding}
               onClear={actions.clearFindings}
-              onCheckAnother={actions.restart}
+              onCheckAnother={actions.editAreas}
             />
           )}
         </div>

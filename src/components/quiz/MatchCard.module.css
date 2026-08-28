@@ -38,6 +38,10 @@
 .card[data-tier="strong"] .kicker {
   color: var(--accent);
 }
+.area {
+  color: var(--ink-faint);
+  font-weight: 600;
+}
 
 .name {
   margin-top: 2px;

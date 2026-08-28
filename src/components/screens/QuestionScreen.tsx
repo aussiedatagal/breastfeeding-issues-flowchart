@@ -34,7 +34,7 @@ export function QuestionScreen({
   return (
     <section className={styles.section} key={question.id}>
       <p className={styles.progress}>
-        {area.short ?? area.label} · question {index} of {total}
+        {area.short ?? area.label} <span className={styles.progressCount}>· question {index} of {total}</span>
       </p>
 
       <h1 className={styles.question}>{question.ask}</h1>
