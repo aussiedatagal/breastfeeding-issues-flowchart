@@ -28,6 +28,16 @@ export const exclusion = z.union([
 ]);
 export type Exclusion = z.infer<typeof exclusion>;
 
+/** A display condition on a question: `q-lump` (show when present) or
+ *  `{ finding: q-lump, is: absent }`. This is UI flow only — a hidden question's
+ *  findings stay UNKNOWN, so nothing is ruled out by hiding it. */
+export const condition = z.union([
+  id,
+  z.object({ finding: id, is: z.enum(["present", "absent"]) }).strict(),
+]);
+export const showIf = z.union([condition, z.array(condition).min(1)]);
+export type ShowIf = z.infer<typeof showIf>;
+
 export const area = z
   .object({
     id,
@@ -49,6 +59,8 @@ export const booleanQuestion = z
     ask: text,
     short: text,
     assess: text.optional(),
+    /** only show this question in the parent's flow when the condition holds */
+    showIf: showIf.optional(),
   })
   .strict();
 
@@ -62,6 +74,7 @@ export const multiQuestion = z
     ask: text,
     assess: text.optional(),
     options: z.array(multiOption).min(2),
+    showIf: showIf.optional(),
   })
   .strict();
 

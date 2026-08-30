@@ -70,6 +70,12 @@ the recurring complaint about every earlier version.
     No = absent, "Not sure" = skipped.
   - `type: multi` — pick-any; each option is its own finding, unpicked options
     are recorded absent.
+  - `showIf: <finding>` (or `{finding, is}`, or a list — AND) hides the question
+    from the parent's flow until the condition holds. **This is UI flow only**:
+    a hidden question's findings stay `unknown`, so nothing is ruled out by
+    hiding it. `pruneHidden` in the reducer clears a question's answers if a
+    later edit hides it again. Conditions must point at an earlier question in
+    the same area (validated).
 - A **diagnosis** declares a `prior` (`common | uncommon | rare | very-rare`, or
   a raw 0–1; default 0.08), `supports: [{finding, weight}]`, `against: [{finding,
   weight}]`, and — rarely — `excludes: [{finding, when}]` (makes it impossible).
@@ -103,8 +109,10 @@ and can never be "confirmed".
 
 `SessionState { screenAnswers: Record<`${areaId}:${i}`, boolean>, screenOrder,
 handled: qid[], skipped: qid[], answers: Record<finding, Presence>, revealed,
-findings: dxId[], viewingSummary, viewingSources }`. `screenOf` → `screening |
-question | results | summary | sources`. `reduce(content, state, action)`
+submitted, findings: dxId[], viewingSummary, viewingSources }`. `submitted` (the
+forward pass finished once) keeps you on results while revising from the grid,
+even if an edit surfaces a `showIf` question. `screenOf` → `screening | question
+| results | summary | sources`. `reduce(content, state, action)`
 handles `answerScreen` (one screening yes/no),
 `answerQuestion` (findings map — order doesn't matter), `skipQuestion`,
 `setFinding` / `clearFinding` (revise from the results grid), `reveal` ("see

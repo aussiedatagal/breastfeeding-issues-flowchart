@@ -27,6 +27,12 @@ export interface QuestionOption {
   label: string;
 }
 
+/** a display condition — the question shows only while `finding` has this value */
+export interface ShowCondition {
+  finding: string;
+  is: Presence;
+}
+
 export interface Question {
   id: string;
   area: string;
@@ -35,6 +41,9 @@ export interface Question {
   type: "boolean" | "multi";
   /** boolean → one option (finding === question id); multi → the pick list */
   options: QuestionOption[];
+  /** ALL must hold for the question to appear (empty = always). UI flow only —
+   *  a hidden question's findings stay unknown, nothing is ruled out. */
+  showIf: ShowCondition[];
 }
 
 export interface WeightedFinding {

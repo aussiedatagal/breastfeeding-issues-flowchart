@@ -17,6 +17,7 @@ import type {
   Finding,
   HardExclusion,
   Question,
+  ShowCondition,
   WeightedFinding,
 } from "./model.ts";
 
@@ -54,6 +55,12 @@ const asWeighted = (r: FindingRef): WeightedFinding =>
 
 const asExclusion = (e: Exclusion): HardExclusion =>
   typeof e === "string" ? { finding: e, when: "present" } : e;
+
+const asConditions = (raw: RawQuestion["showIf"]): ShowCondition[] => {
+  if (raw === undefined) return [];
+  const list = Array.isArray(raw) ? raw : [raw];
+  return list.map((c) => (typeof c === "string" ? { finding: c, is: "present" as const } : c));
+};
 
 /** Turn authored content into a validated `Content`. Never throws. */
 export function buildContent(input: BuildInput): BuildResult {
@@ -122,6 +129,7 @@ export function buildContent(input: BuildInput): BuildResult {
       ...(q.assess ? { assess: q.assess } : {}),
       type: q.type,
       options,
+      showIf: asConditions(q.showIf),
     };
     question.set(q.id, model);
     questions.push(model);
@@ -133,6 +141,27 @@ export function buildContent(input: BuildInput): BuildResult {
     for (const d of defs) {
       if (finding.has(d.id)) errors.push(`duplicate finding id "${d.id}"`);
       finding.set(d.id, { id: d.id, short: d.short, questionId: q.id });
+    }
+  }
+
+  // showIf conditions must point at a real finding from an EARLIER question in
+  // the same area (so the gate is answerable before the gated question)
+  for (let i = 0; i < questions.length; i += 1) {
+    const q = questions[i]!;
+    const earlier = new Set(
+      questions.slice(0, i).flatMap((p) => p.options.map((o) => o.finding)),
+    );
+    for (const c of q.showIf) {
+      const f = finding.get(c.finding);
+      if (!f) {
+        warnings.push(`question "${q.id}" showIf: unknown finding "${c.finding}"`);
+      } else if (question.get(f.questionId)?.area !== q.area) {
+        warnings.push(`question "${q.id}" showIf "${c.finding}" is in another area`);
+      } else if (!earlier.has(c.finding)) {
+        warnings.push(
+          `question "${q.id}" showIf "${c.finding}" — that question comes later, so the gate never opens`,
+        );
+      }
     }
   }
 

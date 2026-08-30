@@ -1,5 +1,6 @@
 # Questions the PARENT answers, in plain language. `short` is the label on the
-# clinician's results grid.
+# clinician's results grid. `showIf` hides a question from the parent's flow when
+# it wouldn't make sense — the finding then stays unknown (nothing is ruled out).
 
 - id: inf1
   area: inflammation
@@ -10,6 +11,7 @@
   assess: >
     Normal early engorgement affects both breasts all over as the milk comes in.
     A problem in one spot, or one breast only, is something else.
+
 - id: inf2
   area: inflammation
   type: boolean
@@ -19,35 +21,50 @@
   assess: >
     A well-defined lump you can feel the edges of — rather than a spread-out
     firm, inflamed area.
+
 - id: inf7
   area: inflammation
   type: boolean
-  ask: Is the lump soft or fluid-feeling, very tender, with red, thin, shiny skin
-    over it?
+  showIf: inf2
+  ask: Is the lump soft or fluid-feeling and very tender, with red, thin, shiny
+    skin over it?
   short: Soft, very tender lump + red skin?
   assess: >
     A tense, fluid-feeling, very painful lump with red thinned skin over it can
     be an abscess (a pocket of pus) and needs a scan and prompt treatment.
+
 - id: inf8
   area: inflammation
   type: boolean
-  ask: Is it a smooth, painless, soft swelling that appeared as feeds reduced or
-    after stopping breastfeeding?
+  showIf: inf2
+  ask: Is the lump smooth, painless, and soft — and did it appear as feeds
+    reduced or after stopping breastfeeding?
   short: Smooth painless swelling as feeds reduced?
   assess: >
     A milk-filled cyst (galactocele) feels smooth and soft or tense, but is not
     hot or painful, and is common as feeds drop off.
+
 - id: inf9
   area: inflammation
   type: boolean
-  ask: Has a red, swollen breast failed to improve after a course of antibiotics
-    — or is there puckered "orange-peel" skin, a pulled-in nipple, or a hard
-    fixed lump?
-  short: Not improving on antibiotics / skin or nipple change?
+  ask: Is there dimpled or "orange-peel" skin on the breast, a nipple that has
+    recently turned inward, or a hard lump that stays fixed in place?
+  short: Orange-peel skin / pulled-in nipple / fixed lump?
   assess: >
-    If mastitis-like changes don't clear with antibiotics, or there is
-    orange-peel skin, a pulled-in nipple, or a fixed hard lump, a scan and a
-    biopsy are needed to rule out a rarer cause.
+    These skin and nipple changes need a scan and a biopsy to rule out a rarer
+    cause of a red, swollen breast. Look in a mirror in good light.
+
+- id: inf9b
+  area: inflammation
+  type: boolean
+  ask: Have you finished a course of antibiotics for this breast without it
+    clearing up?
+  short: Not cleared after antibiotics?
+  assess: >
+    A red, swollen breast that does not settle after an appropriate antibiotic
+    course needs imaging, not another prescription. Answer "No" if you haven't
+    had antibiotics for it.
+
 - id: inf10
   area: inflammation
   type: boolean
@@ -56,6 +73,7 @@
   assess: >
     Repeated problems in exactly the same place suggest something fixed there — a
     blockage, a persistent blister, or an underlying lump — and are worth a scan.
+
 - id: inf3
   area: inflammation
   type: boolean
@@ -64,31 +82,35 @@
   assess: >
     This separates a sore lumpy area where you feel basically well from mastitis,
     where you feel flu-like and unwell.
+
 - id: inf4
   area: inflammation
   type: boolean
-  ask: Has it got worse, or not improved, after 24 to 48 hours of rest, feeding,
-    and pain relief — or are you very unwell?
-  short: Worse after 1–2 days / very unwell?
+  ask: Has the red, sore area got worse, or lasted more than 2 days — or do you
+    feel very unwell?
+  short: Worse / lasting > 2 days / very unwell?
   assess: >
-    Early inflammation that is improving often settles without antibiotics.
-    Getting worse after a day or two, or feeling very unwell, means you need to
-    be seen.
+    Early inflammation that is improving often settles on its own. Getting worse,
+    dragging on, or feeling very unwell means you need to be seen.
+
 - id: inf5
   area: inflammation
   type: boolean
+  showIf: inf2
   ask: Has a scan or a doctor found a pocket of fluid or pus in the breast?
   short: Scan shows a fluid pocket?
   assess: >
     An ultrasound can show whether a firm area is a pocket of fluid (an abscess,
     which may need draining) or solid inflamed tissue. Choose "Not sure" if you
     have not had a scan.
+
 - id: inf6
   area: inflammation
   type: boolean
-  ask: Despite antibiotics, is there a firm area that is getting bigger, with no
-    fluid pocket found on a scan?
-  short: Growing firm area despite antibiotics?
+  showIf: inf2
+  ask: Is a firm area in the breast getting bigger even though it is being
+    treated?
+  short: Firm area growing despite treatment?
   assess: >
     A spreading mass of inflamed tissue with no drainable pocket is managed
     carefully with a breast specialist and should not be cut into. Choose "Not
