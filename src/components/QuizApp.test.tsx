@@ -25,9 +25,16 @@ const onResults = () => screen.queryByRole("heading", { name: /what fits/i }) !=
 const topMatchName = () => screen.getAllByRole("heading", { level: 2 })[0]!.textContent!.trim();
 
 /** walk the yes/no screening pass, saying yes only to the wanted areas */
+const screenTextToArea = new Map<string, string>();
+for (const a of content.areas) for (const q of a.screens) screenTextToArea.set(q, a.id);
+
+/** walk the yes/no screening pass, saying yes only to the wanted areas */
 function screenIn(wanted: string[]) {
-  for (const area of content.areas) {
-    const yes = wanted.includes(area.id);
+  for (let i = 0; i < 20; i += 1) {
+    const h2 = screen.queryAllByRole("heading", { level: 2 })[0];
+    const areaId = h2 && screenTextToArea.get(h2.textContent!.trim());
+    if (!areaId) break; // left the screening pass
+    const yes = wanted.includes(areaId);
     fireEvent.click(screen.getByRole("button", { name: yes ? /^Yes$/ : /^No$/ }));
   }
 }
@@ -54,7 +61,7 @@ describe("<QuizApp>", () => {
   it("starts on the first screening question", () => {
     render(<QuizApp content={content} />);
     expect(screen.getByRole("heading", { level: 1 })).toBeDefined();
-    expect(screen.getByText(content.areas[0]!.ask!)).toBeDefined();
+    expect(screen.getByText(content.areas[0]!.screens[0]!)).toBeDefined();
     expect(screen.getByRole("button", { name: /^Yes$/ })).toBeDefined();
   });
 

@@ -43,8 +43,8 @@ export function useQuizSession(content: Content) {
 
   const actions = useMemo(
     () => ({
-      gateArea: (areaId: string, include: boolean) =>
-        dispatch({ type: "gateArea", areaId, include }),
+      answerScreen: (areaId: string, screenIndex: number, yes: boolean) =>
+        dispatch({ type: "answerScreen", areaId, screenIndex, yes }),
       editAreas: () => dispatch({ type: "editAreas" }),
       answerQuestion: (questionId: string, findings: Record<string, Presence>) =>
         dispatch({ type: "answerQuestion", questionId, findings }),

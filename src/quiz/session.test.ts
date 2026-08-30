@@ -6,8 +6,8 @@ import { emptySession, reduce, screenOf, type SessionAction, type SessionState }
 
 /**
  * Two tiny areas:
- *   area "a"  q1 boolean "Fever?"   q2 boolean "Red wedge?"   q3 multi "Skin change?"
- *   area "b"  q4 boolean "Sudden?"
+ *   area "a"  TWO screening questions   q1 boolean "Fever?"   q2 boolean "Red wedge?"   q3 multi
+ *   area "b"  one screening question    q4 boolean "Sudden?"
  *
  *   dMastitis (a)   prior common, supported by q1 + q2
  *   dAbscess (a)    supported by q2, IMPOSSIBLE without fever (excludes)
@@ -18,7 +18,7 @@ function miniContent(): Content {
   const { content, errors } = buildFromFiles({
     "map.yaml":
       "title: T\nintro: i\nareas:\n" +
-      "  - { id: a, label: Area A, ask: 'A problem?' }\n" +
+      "  - { id: a, label: Area A, ask: ['A one?', 'A two?'] }\n" +
       "  - { id: b, label: Area B, ask: 'B problem?' }\n",
     "questions/q.yaml":
       "- { id: q1, area: a, type: boolean, ask: 'Fever?', short: 'Fever' }\n" +
@@ -42,9 +42,10 @@ const content = miniContent();
 const after = (...actions: SessionAction[]): SessionState =>
   actions.reduce<SessionState>((s, a) => reduce(content, s, a), emptySession());
 
+/** flag area "a" in (yes to its 1st screen), area "b" in */
 const gateBoth: SessionAction[] = [
-  { type: "gateArea", areaId: "a", include: true },
-  { type: "gateArea", areaId: "b", include: true },
+  { type: "answerScreen", areaId: "a", screenIndex: 0, yes: true },
+  { type: "answerScreen", areaId: "b", screenIndex: 0, yes: true },
 ];
 
 describe("rankAcross — Bayesian, nothing gated out unless impossible", () => {
@@ -89,10 +90,28 @@ describe("screening → questions → results", () => {
     }
   });
 
+  it("a 'yes' to any of an area's screening questions flags it in and skips the rest", () => {
+    const s = after({ type: "answerScreen", areaId: "a", screenIndex: 0, yes: true });
+    // area a is in after one yes; screening moves to area b, not a's 2nd question
+    const screen = screenOf(content, s);
+    expect(screen.name).toBe("screening");
+    if (screen.name === "screening") expect(screen.area.id).toBe("b");
+  });
+
+  it("must say 'no' to every screening question in an area to exclude it", () => {
+    const oneNo = after({ type: "answerScreen", areaId: "a", screenIndex: 0, yes: false });
+    const still = screenOf(content, oneNo);
+    expect(still.name).toBe("screening");
+    if (still.name === "screening") {
+      expect(still.area.id).toBe("a"); // still asking area a's 2nd question
+      expect(still.screenIndex).toBe(1);
+    }
+  });
+
   it("only asks questions from areas screened in", () => {
     const s = after(
-      { type: "gateArea", areaId: "a", include: true },
-      { type: "gateArea", areaId: "b", include: false },
+      { type: "answerScreen", areaId: "a", screenIndex: 0, yes: true },
+      { type: "answerScreen", areaId: "b", screenIndex: 0, yes: false },
     );
     const screen = screenOf(content, s);
     expect(screen.name).toBe("question");
@@ -104,8 +123,9 @@ describe("screening → questions → results", () => {
 
   it("no area screened in → an empty results screen", () => {
     const s = after(
-      { type: "gateArea", areaId: "a", include: false },
-      { type: "gateArea", areaId: "b", include: false },
+      { type: "answerScreen", areaId: "a", screenIndex: 0, yes: false },
+      { type: "answerScreen", areaId: "a", screenIndex: 1, yes: false },
+      { type: "answerScreen", areaId: "b", screenIndex: 0, yes: false },
     );
     const screen = screenOf(content, s);
     expect(screen.name).toBe("results");
@@ -129,15 +149,13 @@ describe("screening → questions → results", () => {
     }
   });
 
-  it("skipping a screening question steps forward; back steps into it", () => {
-    const s = after({ type: "gateArea", areaId: "a", include: true });
-    const screen = screenOf(content, s);
-    expect(screen.name).toBe("screening");
-    if (screen.name === "screening") expect(screen.area.id).toBe("b");
-
+  it("back steps out of the last screening answer", () => {
+    const s = after({ type: "answerScreen", areaId: "a", screenIndex: 0, yes: true });
     const stepped = reduce(content, s, { type: "back" });
-    expect(screenOf(content, stepped).name).toBe("screening");
-    expect(stepped.areaGate).toEqual({});
+    const screen = screenOf(content, stepped);
+    expect(screen.name).toBe("screening");
+    if (screen.name === "screening") expect(screen.area.id).toBe("a");
+    expect(stepped.screenAnswers).toEqual({});
   });
 
   it("reveal shows results early; back returns to the question", () => {
@@ -157,7 +175,7 @@ describe("screening → questions → results", () => {
       { type: "answerQuestion", questionId: "q1", findings: { q1: "present" } },
       { type: "editAreas" },
     );
-    expect(s.areaGate).toEqual({});
+    expect(s.screenAnswers).toEqual({});
     expect(screenOf(content, s).name).toBe("screening");
     expect(s.findings).toEqual(["dMastitis"]);
   });

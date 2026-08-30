@@ -10,7 +10,15 @@ import {
   type RawQuestion,
   type Reference,
 } from "./schema.ts";
-import type { Content, Diagnosis, Finding, HardExclusion, Question, WeightedFinding } from "./model.ts";
+import type {
+  Area,
+  Content,
+  Diagnosis,
+  Finding,
+  HardExclusion,
+  Question,
+  WeightedFinding,
+} from "./model.ts";
 
 export interface BuildInput {
   meta: unknown;
@@ -84,7 +92,14 @@ export function buildContent(input: BuildInput): BuildResult {
   const references: Reference[] = referencesParsed.data;
   const referenceIds = new Set(references.map((r) => r.id));
 
-  const areaIds = new Set(meta.areas.map((a) => a.id));
+  const areas: Area[] = meta.areas.map((a) => ({
+    id: a.id,
+    label: a.label,
+    ...(a.short ? { short: a.short } : {}),
+    screens:
+      a.ask === undefined ? [`${a.label}?`] : Array.isArray(a.ask) ? a.ask : [a.ask],
+  }));
+  const areaIds = new Set(areas.map((a) => a.id));
 
   // --- questions + findings ---
   const question = new Map<string, Question>();
@@ -198,7 +213,7 @@ export function buildContent(input: BuildInput): BuildResult {
     intro: meta.intro,
     ...(meta.multifactorialNote ? { multifactorialNote: meta.multifactorialNote } : {}),
     ...(meta.evidenceNote ? { evidenceNote: meta.evidenceNote } : {}),
-    areas: meta.areas,
+    areas,
     questions,
     diagnoses,
     references,

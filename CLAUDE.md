@@ -3,11 +3,11 @@
 ## What this repo is
 
 A React + TypeScript single-page app (Vite, deployed to GitHub Pages) — a
-**guided quiz** for working up breastfeeding difficulty. The clinician runs a
-short **yes/no screening pass** (one question per area — "Is there nipple or
-breast pain?") to flag which problems are in play, then answers as many
-questions as they can from every flagged area (any order, skipping the ones
-they can't judge). The output is **one combined list** ranked by a **posterior
+**guided quiz** for working up breastfeeding difficulty. The parent runs a
+short **yes/no screening pass** (each area has one or more plain screening
+questions — a "yes" to any flags that area in), then answers as many questions
+as they can from every flagged area (any order, skipping the ones they can't
+judge). The output is **one combined list** ranked by a **posterior
 probability** per diagnosis: what matches, what doesn't, what wasn't asked, and
 — last — what the answers ruled out and why. No answer removes a diagnosis
 unless the answers make it genuinely impossible.
@@ -59,9 +59,11 @@ There is **no decision tree and no path**. Any tree walk (or tree-derived
 scoring) lets one early answer gate whole families of diagnoses out, which was
 the recurring complaint about every earlier version.
 
-- `map.yaml` lists **areas**, each with a screening `ask`. The clinician
-  answers all four yes/no; the "yes" areas are worked together and produce one
-  combined list.
+- `map.yaml` lists **areas**. Each area's `ask` is one string or a list of
+  strings — the yes/no screening question(s), each one plain-language and about
+  one observable thing. A "yes" to any of an area's questions flags it in (and
+  skips its remaining screening questions); it takes "no" to all of them to
+  leave the area out. The "yes" areas are worked together into one combined list.
 - A **question** surfaces one or more **findings**, each `present` / `absent` /
   `unknown`:
   - `type: boolean` — the question id **is** the finding id. Yes = present,
@@ -99,10 +101,11 @@ and can never be "confirmed".
 
 ### `session.ts`
 
-`SessionState { areaGate: Record<areaId, boolean>, handled: qid[], skipped:
-qid[], answers: Record<finding, Presence>, revealed, findings: dxId[],
-viewingSummary }`. `screenOf` → `screening | question | results | summary`.
-`reduce(content, state, action)` handles `gateArea` (screening yes/no),
+`SessionState { screenAnswers: Record<`${areaId}:${i}`, boolean>, screenOrder,
+handled: qid[], skipped: qid[], answers: Record<finding, Presence>, revealed,
+findings: dxId[], viewingSummary, viewingSources }`. `screenOf` → `screening |
+question | results | summary | sources`. `reduce(content, state, action)`
+handles `answerScreen` (one screening yes/no),
 `answerQuestion` (findings map — order doesn't matter), `skipQuestion`,
 `setFinding` / `clearFinding` (revise from the results grid), `reveal` ("see
 what fits so far") / `resume`, `back` (undoes the last handled question, then

@@ -36,14 +36,15 @@ async function walkAndShoot(page, dir, shot) {
   await page.waitForTimeout(400);
   await shot("01-start");
 
-  // yes/no screening pass — areas are supply, pain, inflammation, refusal;
-  // say yes to supply + pain, no to the rest
-  const gates = ["Yes", "Yes", "No", "No"];
-  for (let i = 0; i < gates.length; i += 1) {
-    if (await page.getByText(/question 1 of/i).count()) break;
+  // yes/no screening pass — say yes to the first two questions, no to the rest,
+  // until the first real question appears
+  for (let i = 0; i < 12 && !(await page.getByText(/question 1 of/i).count()); i += 1) {
     if (i === 1) await shot("01b-screening");
-    await page.getByRole("button", { name: new RegExp(`^${gates[i]}$`) }).first().click();
-    await page.waitForTimeout(220);
+    const label = i < 2 ? "Yes" : "No";
+    const btn = page.getByRole("button", { name: new RegExp(`^${label}$`) }).first();
+    if (!(await btn.count())) break;
+    await btn.click();
+    await page.waitForTimeout(200);
   }
   await page.waitForTimeout(300);
   await shot("02-question");

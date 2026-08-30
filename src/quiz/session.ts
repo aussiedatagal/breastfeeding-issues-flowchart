@@ -1,9 +1,9 @@
 /**
  * The quiz session — a framework-free state machine.
  *
- * 1. A short yes/no **screening** pass, one question per area, decides which
- *    problem areas are in play ("Is there nipple or breast pain?").
- * 2. The clinician answers the questions from every picked area, in any order,
+ * 1. A short yes/no **screening** pass. Each area has one or more screening
+ *    questions; a "yes" to any of them flags that area in.
+ * 2. The parent answers the questions from every flagged area, in any order,
  *    skipping the ones they can't judge.
  * 3. One combined, probability-ranked list of what fits.
  *
@@ -17,9 +17,15 @@ import { rankAcross, type Match } from "./score.ts";
 
 export type { Presence };
 
+/** `${areaId}:${screenIndex}` */
+type ScreenKey = string;
+const key = (areaId: string, i: number): ScreenKey => `${areaId}:${i}`;
+
 export interface SessionState {
-  /** areaId → included? A key means its screening question has been answered. */
-  areaGate: Record<string, boolean>;
+  /** screening answers, keyed `${areaId}:${screenIndex}` → yes / no */
+  screenAnswers: Record<ScreenKey, boolean>;
+  /** screening keys in the order they were answered (for `back`) */
+  screenOrder: ScreenKey[];
   /** question ids in the order they were answered or skipped */
   handled: string[];
   /** question ids the reader chose to skip ("not sure") */
@@ -35,7 +41,8 @@ export interface SessionState {
 }
 
 export const emptySession = (): SessionState => ({
-  areaGate: {},
+  screenAnswers: {},
+  screenOrder: [],
   handled: [],
   skipped: [],
   answers: {},
@@ -48,15 +55,38 @@ export const emptySession = (): SessionState => ({
 /** which findings a question sets — one for boolean, several for multi */
 export const questionFindings = (q: Question): string[] => q.options.map((o) => o.finding);
 
-/** the areas whose screening question was answered "yes", in map order */
+type Verdict = "in" | "out" | "pending";
+
+/** where an area stands after the screening answers so far */
+function areaVerdict(state: SessionState, area: Area): Verdict {
+  let answered = 0;
+  for (let i = 0; i < area.screens.length; i += 1) {
+    const a = state.screenAnswers[key(area.id, i)];
+    if (a === true) return "in";
+    if (a === false) answered += 1;
+  }
+  return answered === area.screens.length ? "out" : "pending";
+}
+
+/** the areas flagged in, in map order */
 export const selectedAreas = (content: Content, state: SessionState): Area[] =>
-  content.areas.filter((a) => state.areaGate[a.id] === true);
+  content.areas.filter((a) => areaVerdict(state, a) === "in");
 
-/** the first area whose screening question hasn't been answered yet */
-const pendingGate = (content: Content, state: SessionState): Area | undefined =>
-  content.areas.find((a) => state.areaGate[a.id] === undefined);
+/** the next screening question to ask, or undefined when the pass is done */
+function pendingScreen(
+  content: Content,
+  state: SessionState,
+): { area: Area; screenIndex: number } | undefined {
+  for (const area of content.areas) {
+    if (areaVerdict(state, area) !== "pending") continue;
+    for (let i = 0; i < area.screens.length; i += 1) {
+      if (state.screenAnswers[key(area.id, i)] === undefined) return { area, screenIndex: i };
+    }
+  }
+  return undefined;
+}
 
-/** questions from every picked area, in area then authored order */
+/** questions from every flagged area, in area then authored order */
 const selectedQuestions = (content: Content, state: SessionState): Question[] => {
   const areas = new Set(selectedAreas(content, state).map((a) => a.id));
   return content.questions.filter((q) => areas.has(q.area));
@@ -83,9 +113,12 @@ export type Screen =
   | {
       name: "screening";
       area: Area;
-      /** 1-based position in the screening pass */
+      /** the specific screening question text */
+      ask: string;
+      /** which of the area's screening questions this is (0-based) */
+      screenIndex: number;
+      /** 1-based position in the screening pass so far */
       index: number;
-      total: number;
       /** areas already flagged "yes" */
       picked: Area[];
       /** the very first screen — carries the intro */
@@ -95,7 +128,7 @@ export type Screen =
       name: "question";
       area: Area;
       question: Question;
-      /** 1-based position across every picked area */
+      /** 1-based position across every flagged area */
       index: number;
       total: number;
       answers: Record<string, Presence>;
@@ -107,7 +140,7 @@ export type Screen =
       matches: Match[];
       answered: string[];
       answers: Record<string, Presence>;
-      /** every question in every picked area has been answered or skipped */
+      /** every question in every flagged area has been answered or skipped */
       complete: boolean;
       answeredCount: number;
       skippedCount: number;
@@ -119,16 +152,16 @@ export function screenOf(content: Content, state: SessionState): Screen {
   if (state.viewingSources) return { name: "sources" };
   if (state.viewingSummary) return { name: "summary" };
 
-  const pending = pendingGate(content, state);
+  const pending = pendingScreen(content, state);
   if (pending && !state.revealed) {
-    const answered = content.areas.filter((a) => state.areaGate[a.id] !== undefined).length;
     return {
       name: "screening",
-      area: pending,
-      index: answered + 1,
-      total: content.areas.length,
+      area: pending.area,
+      ask: pending.area.screens[pending.screenIndex]!,
+      screenIndex: pending.screenIndex,
+      index: state.screenOrder.length + 1,
       picked: selectedAreas(content, state),
-      first: answered === 0,
+      first: state.screenOrder.length === 0,
     };
   }
 
@@ -171,7 +204,7 @@ export function screenOf(content: Content, state: SessionState): Screen {
 // --- transitions -----------------------------------------------------------
 
 export type SessionAction =
-  | { type: "gateArea"; areaId: string; include: boolean }
+  | { type: "answerScreen"; areaId: string; screenIndex: number; yes: boolean }
   | { type: "answerQuestion"; questionId: string; findings: Record<string, Presence> }
   | { type: "skipQuestion"; questionId: string }
   | { type: "setFinding"; finding: string; value: Presence }
@@ -207,13 +240,18 @@ export function reduce(
   if (!("type" in action)) return action; // hydration from the URL
 
   switch (action.type) {
-    case "gateArea":
+    case "answerScreen": {
+      const k = key(action.areaId, action.screenIndex);
       return {
         ...state,
-        areaGate: { ...state.areaGate, [action.areaId]: action.include },
+        screenAnswers: { ...state.screenAnswers, [k]: action.yes },
+        screenOrder: state.screenOrder.includes(k)
+          ? state.screenOrder
+          : [...state.screenOrder, k],
         revealed: false,
         viewingSummary: false,
       };
+    }
 
     case "answerQuestion": {
       const handled = state.handled.includes(action.questionId)
@@ -263,7 +301,13 @@ export function reduce(
       return { ...state, revealed: false, viewingSummary: false };
 
     case "editAreas":
-      return { ...state, areaGate: {}, revealed: false, viewingSummary: false };
+      return {
+        ...state,
+        screenAnswers: {},
+        screenOrder: [],
+        revealed: false,
+        viewingSummary: false,
+      };
 
     case "openSources":
       return { ...state, viewingSources: true };
@@ -284,12 +328,11 @@ export function reduce(
         };
       }
       // step back through the screening pass
-      const answeredGates = content.areas.filter((a) => state.areaGate[a.id] !== undefined);
-      const lastGate = answeredGates[answeredGates.length - 1];
-      if (lastGate) {
-        const rest = { ...state.areaGate };
-        delete rest[lastGate.id];
-        return { ...state, areaGate: rest };
+      const lastKey = state.screenOrder[state.screenOrder.length - 1];
+      if (lastKey) {
+        const rest = { ...state.screenAnswers };
+        delete rest[lastKey];
+        return { ...state, screenAnswers: rest, screenOrder: state.screenOrder.slice(0, -1) };
       }
       return state;
     }

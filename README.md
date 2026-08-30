@@ -70,10 +70,11 @@ Components are wiring and presentation only.
 
 ### Problem areas
 
-`map.yaml` lists **areas**, each with a yes/no screening question. The clinician
-answers all of them; every "yes" area is worked in the same pass and its
-diagnoses are ranked into one combined list — because pain, low supply and
-refusal are not mutually exclusive, and one often causes another.
+`map.yaml` lists **areas**, each with one or more yes/no screening questions. A
+"yes" to any of an area's questions flags it in; every flagged area is worked in
+the same pass and its diagnoses are ranked into one combined list — because
+pain, low supply and refusal are not mutually exclusive, and one often causes
+another.
 
 ### Scoring — a Bayesian classifier
 

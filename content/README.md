@@ -14,10 +14,11 @@ tells you which diagnosis and which field.
 
 ## How the assessment works
 
-There is **no decision tree**. The clinician first answers a short yes/no
-**screening** question for each area ("Is there nipple or breast pain?"), then
-answers as many detail questions as they can from every area they flagged (in
-any order, skipping the ones they can't judge). Every diagnosis across those
+There is **no decision tree**. The parent first works through a short yes/no
+**screening** pass — each area has one or more plain questions, and a "yes" to
+any of them flags that area in. Then they answer as many detail questions as
+they can from every flagged area (in any order, skipping the ones they can't
+judge). Every diagnosis across those
 areas is scored with a small **Bayesian model**:
 
 - it starts from a **prior** — roughly how common that diagnosis is among
@@ -64,11 +65,17 @@ areas:
   - id: supply # short label, unique
     label: Not enough milk, poor weight gain, or supply feels low # the long line
     short: Milk supply & weight # 2–4 words — the name in the header and results
-    ask: Is low milk supply, poor weight gain, or ineffective feeding a concern? # the screening question
+    ask: # one screening question, or a list — each about ONE observable thing
+      - Has your baby been slow to gain weight?
+      - Are feeds very long or very frequent?
+      - Is your baby rarely settled or content after feeds?
 ```
 
-Every question and diagnosis names its `area`. To add an area, add an `areas:`
-entry (with an `ask:`) and give its questions and diagnoses that `id`.
+`ask` can be a single string or a list. A "yes" to **any** question in the list
+flags the area in; it takes "no" to **all** of them to leave it out. Keep each
+question plain and about one thing — the parent is answering. Every question and
+diagnosis names its `area`; to add an area, add an `areas:` entry (with an
+`ask:`) and give its questions and diagnoses that `id`.
 
 ---
 
