@@ -37,22 +37,30 @@
   area: inflammation
   type: boolean
   showIf: inf2
-  ask: Is the lump smooth, painless, and soft — and did it appear as feeds
-    reduced or after stopping breastfeeding?
-  short: Smooth painless swelling as feeds reduced?
+  ask: Is the lump smooth, soft, and painless — not hot or tender?
+  short: Smooth, soft, painless lump?
   assess: >
     A milk-filled cyst (galactocele) feels smooth and soft or tense, but is not
-    hot or painful, and is common as feeds drop off.
+    hot or painful. It is most common as feeds drop off or after weaning.
 
 - id: inf9
   area: inflammation
-  type: boolean
-  ask: Is there dimpled or "orange-peel" skin on the breast, a nipple that has
-    recently turned inward, or a hard lump that stays fixed in place?
-  short: Orange-peel skin / pulled-in nipple / fixed lump?
+  type: multi
+  ask: Looking in a mirror in good light, can you see or feel any of these?
   assess: >
-    These skin and nipple changes need a scan and a biopsy to rule out a rarer
-    cause of a red, swollen breast. Look in a mirror in good light.
+    Dimpled or "orange-peel" skin, a nipple that has newly turned inward, and a
+    hard lump that stays fixed in place all need a scan and a biopsy to rule out
+    a rarer cause of a red, swollen breast. Tick any that apply.
+  options:
+    - finding: inf9-peau
+      label: Dimpled or "orange-peel" skin on the breast
+      short: Orange-peel skin
+    - finding: inf9-retract
+      label: A nipple that has recently turned inward
+      short: Newly pulled-in nipple
+    - finding: inf9-fixed
+      label: A hard lump that stays fixed in one place
+      short: Hard fixed lump
 
 - id: inf9b
   area: inflammation
@@ -86,12 +94,20 @@
 - id: inf4
   area: inflammation
   type: boolean
-  ask: Has the red, sore area got worse, or lasted more than 2 days — or do you
-    feel very unwell?
-  short: Worse / lasting > 2 days / very unwell?
+  ask: Has the red, sore area been getting worse?
+  short: Getting worse?
   assess: >
-    Early inflammation that is improving often settles on its own. Getting worse,
-    dragging on, or feeling very unwell means you need to be seen.
+    Early inflammation that is improving often settles on its own. An area that
+    is spreading or getting more painful and swollen needs to be seen.
+
+- id: inf4b
+  area: inflammation
+  type: boolean
+  ask: Has the red, sore area lasted more than 2 days?
+  short: Lasted more than 2 days?
+  assess: >
+    Inflammation that drags on beyond a couple of days, rather than easing, is
+    more likely to need treatment.
 
 - id: inf5
   area: inflammation
@@ -108,9 +124,8 @@
   area: inflammation
   type: boolean
   showIf: inf2
-  ask: Is a firm area in the breast getting bigger even though it is being
-    treated?
-  short: Firm area growing despite treatment?
+  ask: Is a firm area in the breast getting bigger instead of settling down?
+  short: Firm area growing, not settling?
   assess: >
     A spreading mass of inflamed tissue with no drainable pocket is managed
     carefully with a breast specialist and should not be cut into. Choose "Not

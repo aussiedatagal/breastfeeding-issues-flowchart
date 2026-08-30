@@ -28,6 +28,7 @@ export function QuizApp({ content }: { content: Content }) {
 
   const atStart = screen.name === "screening" && screen.first;
   const onBack = atStart ? undefined : actions.back;
+  const backLabel = screen.name === "results" ? "Back to the questions" : "Back";
 
   const eyebrow =
     screen.name === "question"
@@ -45,7 +46,6 @@ export function QuizApp({ content }: { content: Content }) {
   return (
     <div className={styles.app}>
       <TopBar
-        {...(onBack ? { onBack } : {})}
         {...(eyebrow ? { eyebrow } : {})}
         findingsCount={screen.name === "summary" ? 0 : findings.length}
         onFindings={actions.openSummary}
@@ -55,6 +55,12 @@ export function QuizApp({ content }: { content: Content }) {
       />
 
       <main ref={mainRef} className={styles.main}>
+        {onBack && (
+          <button type="button" className={styles.back} onClick={onBack}>
+            <span className={styles.backArrow} aria-hidden="true" />
+            {backLabel}
+          </button>
+        )}
         <div key={signature} className={styles.screen}>
           {screen.name === "screening" && (
             <ScreeningScreen

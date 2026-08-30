@@ -74,7 +74,7 @@
   against:
     - finding: ref1
       weight: 1
-    - finding: ref3b
+    - finding: ref3b-blood
       weight: 1
 - id: dx-cmpa
   area: refusal
@@ -96,11 +96,17 @@
     - dx-painrefuse
   coexists:
     - dx-painrefuse
+  sources:
+    - iblce-dco
   supports:
+    - finding: ref3b-blood
+      weight: 3
+    - finding: ref3b-eczema
+      weight: 2
     - finding: ref3
-      weight: 2
-    - finding: ref3b
-      weight: 2
+      weight: 1
+    - finding: ref3b-family
+      weight: 1
   against:
     - finding: ref1
       weight: 1

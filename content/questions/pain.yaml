@@ -16,8 +16,7 @@
 - id: pain2
   area: pain
   type: boolean
-  ask: Is there a wedge or patch of your breast that is red, firm, hot, and sore
-    (you may also feel feverish)?
+  ask: Is there a wedge or patch of your breast that is red, firm, hot, and sore?
   short: Red, firm, hot patch?
   assess: >
     A section of the breast that is red, hard, hot, and tender — rather than pain
@@ -84,23 +83,24 @@
   area: pain
   type: boolean
   showIf: pain3
-  ask: Is there a white or yellow spot at one point on the nipple, with a tender
-    firm line or lump in the breast behind it?
-  short: White spot + tender lump behind?
+  ask: Is there a small white or yellow spot at one point on the nipple, often in
+    the same place each time?
+  short: Recurring white spot on the nipple?
   assess: >
     A tiny blocked pore on the nipple (a "bleb" or milk blister), often coming
-    back in the same spot, with a sore firm area in the breast behind it.
+    back in the same spot, usually with a sore firm area in the breast behind it
+    and on a background of a lot of milk.
 
 - id: pain9
   area: pain
   type: boolean
-  ask: Does your nipple turn white, then blue or red, especially in the cold —
-    with pain between feeds as well as during?
+  ask: Does the tip of your nipple turn white, then blue or red, especially after
+    a feed or in the cold?
   short: Nipple turns white then blue / red?
   assess: >
-    A colour change triggered by cold, often with a stinging or throbbing pain
-    between feeds that eases with warmth. Some people get the same thing in their
-    fingers and toes.
+    A colour change triggered by cold or the end of a feed, usually with a
+    stinging or throbbing pain between feeds (not only during) that eases with
+    warmth. Some people get the same thing in their fingers and toes.
 
 - id: pain10
   area: pain

@@ -23,25 +23,33 @@
 - id: ref3
   area: refusal
   type: boolean
-  ask: Does your baby latch on, then pull off crying, arch or go stiff, and stay
-    unsettled and windy between feeds?
+  ask: Does your baby latch on, then pull off crying or arching, and stay
+    unsettled afterwards?
   short: Latches then pulls off crying, unsettled?
   assess: >
-    A pattern of discomfort: breaking off mid-feed crying and arching, hiccups,
-    frequent bringing up of milk, poor sleep, and fussiness that carries on away
-    from the breast. Worth checking the mouth for thrush (white patches that
-    don't wipe off) and the ears.
+    A pattern of discomfort rather than distraction or fast flow: breaking off
+    mid-feed crying and arching, hiccups, frequent bringing up of milk, poor
+    sleep, and fussiness that carries on away from the breast. Worth checking the
+    mouth for thrush and the ears.
 - id: ref3b
   area: refusal
-  type: boolean
+  type: multi
   showIf: ref3
-  ask: Is there blood or mucus in your baby's poo, worsening eczema, or a strong
-    family history of allergies or asthma?
-  short: Blood / mucus in poo, or eczema?
+  ask: Alongside the unsettled feeding, is any of this true?
   assess: >
-    Blood streaks or mucus in the poo, flaring eczema, a close family history of
-    allergy, and often loose frequent poos can point to a cow's-milk protein
-    allergy rather than ordinary reflux.
+    Blood or mucus in the poo, flaring eczema, and a close family history of
+    allergy or asthma point towards a cow's-milk protein allergy rather than
+    ordinary reflux. Tick any that apply.
+  options:
+    - finding: ref3b-blood
+      label: Blood or mucus in your baby's poo
+      short: Blood / mucus in poo
+    - finding: ref3b-eczema
+      label: Eczema that is getting worse
+      short: Worsening eczema
+    - finding: ref3b-family
+      label: A parent or sibling with allergy, eczema, or asthma
+      short: Family history of allergy
 - id: ref4
   area: refusal
   type: boolean

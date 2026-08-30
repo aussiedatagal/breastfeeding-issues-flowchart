@@ -121,10 +121,14 @@
   coexists:
     - dx-second
   supports:
+    - finding: a8-nogrow
+      weight: 3
+    - finding: a8-shape
+      weight: 2
+    - finding: a8-asym
+      weight: 1
     - finding: a1
-      weight: 2
-    - finding: a8
-      weight: 2
+      weight: 1
   against:
     - finding: q1
       weight: 1
@@ -144,17 +148,27 @@
     - dx-endo
   coexists:
     - dx-second
+  sources:
+    - abm-protocols
   supports:
-    - finding: a1
+    - finding: a9b-birth
+      weight: 2
+    - finding: a9b-diabetes
+      weight: 2
+    - finding: a9b-thyroid
+      weight: 2
+    - finding: a9b-placenta
       weight: 2
     - finding: a9
-      weight: 2
+      weight: 1
+    - finding: a1
+      weight: 1
   against:
     - finding: q1
       weight: 1
     - finding: a7
       weight: 1
-    - finding: a8
+    - finding: a8-nogrow
       weight: 1
 - id: dx-oald
   area: supply
@@ -339,8 +353,14 @@
   seeAlso:
     - dx-cardio
   supports:
-    - finding: a5
+    - finding: a5-preterm
       weight: 2
+    - finding: a5-tone
+      weight: 2
+    - finding: a5-birth
+      weight: 2
+    - finding: a5-jaundice
+      weight: 1
   against:
     - finding: q1
       weight: 1
@@ -380,7 +400,9 @@
       weight: 1
     - finding: a4
       weight: 1
-    - finding: a5
+    - finding: a5-preterm
+      weight: 1
+    - finding: a5-tone
       weight: 1
 - id: dx-barrier
   area: supply
@@ -393,6 +415,8 @@
     - Reassess as the infant grows and engorgement settles.
   supports:
     - finding: a6b
+      weight: 2
+    - finding: a6c
       weight: 2
   against:
     - finding: q1
@@ -407,7 +431,7 @@
       weight: 1
     - finding: a4
       weight: 1
-    - finding: a5
+    - finding: a5-preterm
       weight: 1
     - finding: a6
       weight: 1
@@ -434,9 +458,13 @@
       weight: 1
     - finding: a4
       weight: 1
-    - finding: a5
+    - finding: a5-preterm
+      weight: 1
+    - finding: a5-tone
       weight: 1
     - finding: a6
       weight: 1
     - finding: a6b
+      weight: 1
+    - finding: a6c
       weight: 1
