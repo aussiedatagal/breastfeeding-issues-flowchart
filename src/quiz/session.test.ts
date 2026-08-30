@@ -23,7 +23,7 @@ function miniContent(): Content {
     "questions/q.yaml":
       "- { id: q1, area: a, type: boolean, ask: 'Fever?', short: 'Fever' }\n" +
       "- { id: q2, area: a, type: boolean, ask: 'Red wedge?', short: 'Red wedge' }\n" +
-      "- id: q3\n  area: a\n  type: multi\n  ask: 'Skin change?'\n  options:\n" +
+      "- id: q3\n  area: a\n  type: multi\n  ask: 'Skin change?'\n  showIf: q2\n  options:\n" +
       "    - { finding: rash, label: 'Scaly rash' }\n" +
       "    - { finding: crack, label: 'Crack' }\n" +
       "- { id: q4, area: b, type: boolean, ask: 'Sudden?', short: 'Sudden' }\n",
@@ -117,8 +117,35 @@ describe("screening → questions → results", () => {
     expect(screen.name).toBe("question");
     if (screen.name === "question") {
       expect(screen.area.id).toBe("a");
-      expect(screen.total).toBe(3); // q1, q2, q3 — not q4
+      expect(screen.total).toBe(2); // q1, q2 visible; q3 hidden (showIf q2), q4 is area b
     }
+  });
+
+  it("a showIf question appears only once its gate is answered, and prunes if the gate flips back", () => {
+    // q3 hidden while q2 unanswered
+    let s = after(
+      ...gateBoth,
+      { type: "answerQuestion", questionId: "q1", findings: { q1: "absent" } },
+    );
+    let sc = screenOf(content, s);
+    expect(sc.name === "question" && sc.question.id).toBe("q2");
+
+    // q2 present → q3 appears; answer it
+    s = reduce(content, s, { type: "answerQuestion", questionId: "q2", findings: { q2: "present" } });
+    sc = screenOf(content, s);
+    expect(sc.name === "question" && sc.question.id).toBe("q3");
+    s = reduce(content, s, {
+      type: "answerQuestion",
+      questionId: "q3",
+      findings: { rash: "present", crack: "absent" },
+    });
+    expect(s.answers.rash).toBe("present");
+
+    // flip q2 to absent from the grid → q3 is hidden and its answers are pruned
+    s = reduce(content, s, { type: "setFinding", finding: "q2", value: "absent" });
+    expect(s.answers.rash).toBeUndefined();
+    expect(s.answers.crack).toBeUndefined();
+    expect(s.handled).not.toContain("q3");
   });
 
   it("no area screened in → an empty results screen", () => {

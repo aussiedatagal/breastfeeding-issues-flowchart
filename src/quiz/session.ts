@@ -34,6 +34,8 @@ export interface SessionState {
   answers: Record<string, Presence>;
   /** the reader asked to see results before working through every question */
   revealed: boolean;
+  /** the forward pass finished at least once — stay on results while revising */
+  submitted: boolean;
   /** pinned diagnosis ids — the running problem list */
   findings: string[];
   viewingSummary: boolean;
@@ -47,6 +49,7 @@ export const emptySession = (): SessionState => ({
   skipped: [],
   answers: {},
   revealed: false,
+  submitted: false,
   findings: [],
   viewingSummary: false,
   viewingSources: false,
@@ -54,6 +57,11 @@ export const emptySession = (): SessionState => ({
 
 /** which findings a question sets — one for boolean, several for multi */
 export const questionFindings = (q: Question): string[] => q.options.map((o) => o.finding);
+
+/** whether a question should appear in the parent's flow right now. A hidden
+ *  question's findings stay unknown — nothing is ruled out by hiding it. */
+export const isVisible = (q: Question, answers: Record<string, Presence>): boolean =>
+  q.showIf.every((c) => answers[c.finding] === c.is);
 
 type Verdict = "in" | "out" | "pending";
 
@@ -109,6 +117,36 @@ export function answeredFindings(content: Content, state: SessionState): string[
 const isHandled = (q: Question, state: SessionState) =>
   state.skipped.includes(q.id) || questionFindings(q).every((f) => state.answers[f] !== undefined);
 
+/** the next question to put in front of the parent, or null when done */
+function nextQuestion(content: Content, state: SessionState): Question | null {
+  return (
+    selectedQuestions(content, state).find(
+      (q) => !isHandled(q, state) && isVisible(q, state.answers),
+    ) ?? null
+  );
+}
+
+/** clear answers to questions that are now hidden — so toggling a gate back and
+ *  forth from the results grid can't leave a stale answer scoring away. */
+function pruneHidden(content: Content, state: SessionState): SessionState {
+  let { answers, handled, skipped } = state;
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const q of content.questions) {
+      if (isVisible(q, answers)) continue;
+      const fs = questionFindings(q);
+      if (fs.some((f) => answers[f] !== undefined) || handled.includes(q.id)) {
+        answers = Object.fromEntries(Object.entries(answers).filter(([f]) => !fs.includes(f)));
+        handled = handled.filter((id) => id !== q.id);
+        skipped = skipped.filter((id) => id !== q.id);
+        changed = true;
+      }
+    }
+  }
+  return answers === state.answers ? state : { ...state, answers, handled, skipped };
+}
+
 export type Screen =
   | {
       name: "screening";
@@ -153,7 +191,7 @@ export function screenOf(content: Content, state: SessionState): Screen {
   if (state.viewingSummary) return { name: "summary" };
 
   const pending = pendingScreen(content, state);
-  if (pending && !state.revealed) {
+  if (pending && !state.revealed && !state.submitted) {
     return {
       name: "screening",
       area: pending.area,
@@ -166,14 +204,14 @@ export function screenOf(content: Content, state: SessionState): Screen {
   }
 
   const areas = selectedAreas(content, state);
-  const questions = selectedQuestions(content, state);
-  const next = questions.find((q) => !isHandled(q, state)) ?? null;
+  const questions = selectedQuestions(content, state).filter((q) => isVisible(q, state.answers));
+  const next = nextQuestion(content, state);
   const answered = answeredFindings(content, state);
   const answeredCount = questions.filter(
     (q) => !state.skipped.includes(q.id) && questionFindings(q).every((f) => state.answers[f] !== undefined),
   ).length;
 
-  if (next === null || state.revealed) {
+  if (next === null || state.revealed || state.submitted) {
     return {
       name: "results",
       areas,
@@ -257,48 +295,50 @@ export function reduce(
       const handled = state.handled.includes(action.questionId)
         ? state.handled
         : [...state.handled, action.questionId];
-      return {
+      const next = pruneHidden(content, {
         ...state,
         handled,
         skipped: without(state.skipped, action.questionId),
         answers: { ...state.answers, ...action.findings },
         viewingSummary: false,
-      };
+      });
+      return { ...next, submitted: state.submitted || nextQuestion(content, next) === null };
     }
 
     case "skipQuestion": {
       const handled = state.handled.includes(action.questionId)
         ? state.handled
         : [...state.handled, action.questionId];
-      return {
+      const next = pruneHidden(content, {
         ...state,
         handled,
         skipped: state.skipped.includes(action.questionId)
           ? state.skipped
           : [...state.skipped, action.questionId],
         viewingSummary: false,
-      };
+      });
+      return { ...next, submitted: state.submitted || nextQuestion(content, next) === null };
     }
 
     case "setFinding":
-      return {
+      return pruneHidden(content, {
         ...state,
         answers: { ...state.answers, [action.finding]: action.value },
         viewingSummary: false,
-      };
+      });
 
     case "clearFinding":
-      return {
+      return pruneHidden(content, {
         ...state,
         answers: dropAnswers(state.answers, [action.finding]),
         viewingSummary: false,
-      };
+      });
 
     case "reveal":
       return { ...state, revealed: true, viewingSummary: false };
 
     case "resume":
-      return { ...state, revealed: false, viewingSummary: false };
+      return { ...state, revealed: false, submitted: false, viewingSummary: false };
 
     case "editAreas":
       return {
@@ -306,6 +346,7 @@ export function reduce(
         screenAnswers: {},
         screenOrder: [],
         revealed: false,
+        submitted: false,
         viewingSummary: false,
       };
 
@@ -322,6 +363,7 @@ export function reduce(
         const last = state.handled[state.handled.length - 1]!;
         return {
           ...state,
+          submitted: false,
           handled: state.handled.slice(0, -1),
           skipped: without(state.skipped, last),
           answers: dropAnswers(state.answers, findingsOf(content, last)),

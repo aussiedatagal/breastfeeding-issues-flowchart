@@ -12,6 +12,7 @@
 - id: ref2
   area: refusal
   type: boolean
+  showIf: ref1
   ask: Can you think of something that set it off — an illness, teething, a big
     fright at the breast, or a change at home?
   short: Something set it off?
@@ -33,6 +34,7 @@
 - id: ref3b
   area: refusal
   type: boolean
+  showIf: ref3
   ask: Is there blood or mucus in your baby's poo, worsening eczema, or a strong
     family history of allergies or asthma?
   short: Blood / mucus in poo, or eczema?

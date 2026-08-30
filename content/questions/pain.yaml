@@ -1,5 +1,6 @@
 # Questions the PARENT answers, in plain language. `short` is the label on the
-# clinician's results grid.
+# clinician's results grid. `showIf` hides a question until it makes sense — the
+# finding then stays unknown, so nothing is ruled out.
 
 - id: pain1
   area: pain
@@ -11,6 +12,7 @@
     A sharp pinch as the baby draws the nipple in that goes away once milk is
     flowing, with the nipple looking rounded (not squashed flat or white) when
     the baby comes off.
+
 - id: pain2
   area: pain
   type: boolean
@@ -21,6 +23,7 @@
     A section of the breast that is red, hard, hot, and tender — rather than pain
     only in the nipple, or a deep ache all over. This is the "mastitis" range of
     problems.
+
 - id: pain3
   area: pain
   type: boolean
@@ -30,9 +33,11 @@
     Look in good light for redness, flaking, a rash, a crack or sore, tiny
     blisters or crusting, a white spot on the tip, or a colour change. "No" means
     the skin looks normal.
+
 - id: pain4
   area: pain
   type: boolean
+  showIf: pain3
   ask: Are there small blisters grouped together, small round ulcers, or
     golden-yellow crusty patches on the nipple?
   short: Blisters / ulcers / crusting?
@@ -40,27 +45,33 @@
     Clusters of little blisters or shallow round sores (sometimes with tingling
     first) can be a cold-sore-type (herpes) infection. Honey-coloured crusts can
     be a bacterial skin infection. Both should be seen promptly.
+
 - id: pain5
   area: pain
   type: boolean
+  showIf: pain3
   ask: Is there a specific wound on the nipple — a crack, split, graze, bruise,
     or scab?
   short: Nipple wound / crack?
   assess: >
     A clear break in the skin, with pain in that exact spot — rather than a
     spread-out rash.
+
 - id: pain6
   area: pain
   type: boolean
-  ask: Has a nipple wound failed to heal after 2 to 3 days, or is the redness
+  showIf: pain5
+  ask: Has the nipple wound failed to heal after 2 to 3 days, or is the redness
     spreading or oozing pus or yellow crust?
   short: Wound not healing / infected?
   assess: >
     Signs that a nipple crack has become infected: not healing after a couple of
     days, spreading redness, pus, or yellow crusting.
+
 - id: pain7
   area: pain
   type: boolean
+  showIf: pain3
   ask: Is there a scaly, itchy, or burning rash with a clear edge on the nipple
     or areola?
   short: Scaly, itchy rash?
@@ -68,15 +79,18 @@
     A well-defined patch that is scaly, itchy, or burning. It can flare after a
     new cream, nipple cream, breast pads, fragrance, or laundry detergent, or go
     along with eczema or psoriasis elsewhere on your skin.
+
 - id: pain8
   area: pain
   type: boolean
+  showIf: pain3
   ask: Is there a white or yellow spot at one point on the nipple, with a tender
     firm line or lump in the breast behind it?
   short: White spot + tender lump behind?
   assess: >
     A tiny blocked pore on the nipple (a "bleb" or milk blister), often coming
     back in the same spot, with a sore firm area in the breast behind it.
+
 - id: pain9
   area: pain
   type: boolean
@@ -87,6 +101,7 @@
     A colour change triggered by cold, often with a stinging or throbbing pain
     between feeds that eases with warmth. Some people get the same thing in their
     fingers and toes.
+
 - id: pain10
   area: pain
   type: boolean
@@ -98,6 +113,7 @@
     pumping), lifting again within a minute or two, and you feel fine between
     feeds. It is a reflex tied to a brief hormone drop — not the same as
     postnatal depression, though the two can happen together.
+
 - id: pain11
   area: pain
   type: boolean
@@ -109,6 +125,7 @@
     nipple surface), there between feeds as well as during. Often linked to a
     history of blocked ducts, blebs, cracked nipples, past mastitis, a lot of
     pumping, or oversupply.
+
 - id: pain12
   area: pain
   type: boolean

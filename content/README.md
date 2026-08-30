@@ -101,20 +101,41 @@ absent, "Not sure" = skipped (counts as neither).
 
 ### Pick-any (`multi`)
 
-Use when a question has several independent answers (e.g. _which_ skin change).
-Each option is its own finding; options the reader doesn't pick are recorded as
-absent.
+Use when a question has several independent answers (e.g. _which_ skin change,
+or a list of possible triggers). Each option is its own finding; options the
+reader doesn't pick are recorded as absent.
 
 ```yaml
 - id: skin-change-type
   area: pain
   type: multi
-  ask: Which skin changes are present?
+  ask: Which skin changes can you see?
   options:
-    - { finding: skin-rash, label: A scaly, itchy, well-demarcated rash }
-    - { finding: skin-vesicles, label: Grouped vesicles or punched-out ulcers }
+    - { finding: skin-rash, label: A scaly, itchy patch with a clear edge }
+    - { finding: skin-vesicles, label: Small blisters grouped together }
     - { finding: skin-bleb, label: A white spot at one point on the nipple }
 ```
+
+### Only asking when it makes sense (`showIf`)
+
+Add `showIf` so a question is only put to the parent when it's relevant — e.g.
+"Is the lump soft or fluid-feeling?" should only appear after "Can you feel a
+distinct lump?" is answered yes.
+
+```yaml
+- id: inf7
+  area: inflammation
+  type: boolean
+  showIf: inf2 # show only when finding inf2 is present
+  ask: Is the lump soft or fluid-feeling and very tender…?
+  short: Soft, very tender lump?
+```
+
+`showIf` can be a finding id (show when present), `{ finding: inf2, is: absent }`,
+or a list (all must hold). It must point at an **earlier** question in the
+**same area**. This changes only what the parent sees — a hidden question's
+finding stays *unknown*, so it never rules anything out. If the parent later
+changes the gating answer, the hidden question's answers are cleared.
 
 ---
 

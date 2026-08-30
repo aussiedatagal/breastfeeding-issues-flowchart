@@ -57,13 +57,21 @@
     - Stop or switch the offending drug where possible (progestogen-only or
       non-hormonal contraception; avoid decongestants).
     - If pregnant, counsel that some decline is expected.
+  sources:
+    - abm-protocols
   supports:
-    - finding: a1
+    - finding: a12-pregnant
+      weight: 3
+    - finding: a12-pill
+      weight: 2
+    - finding: a12-decongestant
+      weight: 2
+    - finding: a12-periods
       weight: 2
     - finding: a7
       weight: 2
-    - finding: a12
-      weight: 2
+    - finding: a1
+      weight: 1
   against:
     - finding: q1
       weight: 1
@@ -93,7 +101,9 @@
       weight: 1
     - finding: a11
       weight: 1
-    - finding: a12
+    - finding: a12-pregnant
+      weight: 1
+    - finding: a12-pill
       weight: 1
 - id: dx-igt
   area: supply

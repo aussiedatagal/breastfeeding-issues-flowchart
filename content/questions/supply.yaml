@@ -42,13 +42,26 @@
     nipple.
 - id: a12
   area: supply
-  type: boolean
-  ask: Did your supply drop after starting a new medicine, a new pregnancy, or
-    your periods returning?
-  short: New medicine / hormonal change?
+  type: multi
+  ask: Since your baby was born, have any of these happened?
   assess: >
-    Some medicines (including the combined pill and some cold-and-flu tablets), a
-    new pregnancy, periods returning, or a thyroid problem can lower supply.
+    The combined (oestrogen) contraceptive pill, regular decongestant
+    (pseudoephedrine) cold-and-flu tablets, a new pregnancy, and periods
+    returning can each lower milk supply. Tick any that apply — leave them all
+    unticked if none do.
+  options:
+    - finding: a12-pill
+      label: I've started the combined contraceptive pill
+      short: On the combined pill
+    - finding: a12-decongestant
+      label: I've been taking decongestant (cold & flu) tablets regularly
+      short: Taking decongestants
+    - finding: a12-pregnant
+      label: I've become pregnant again
+      short: Pregnant again
+    - finding: a12-periods
+      label: My periods have come back
+      short: Periods returned
 - id: a8
   area: supply
   type: boolean

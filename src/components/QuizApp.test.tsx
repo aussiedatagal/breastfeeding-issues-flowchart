@@ -68,9 +68,21 @@ describe("<QuizApp>", () => {
   it("only asks questions from areas screened in", () => {
     render(<QuizApp content={content} />);
     screenIn(["pain"]);
-    expect(screen.getByText(/question 1 of/i)).toBeDefined();
-    // the pain area has 12 questions; screening in one area caps the total there
-    expect(screen.getByText(/question 1 of 12/i)).toBeDefined();
+    // the count is the pain area's questions minus the ones hidden by showIf
+    const painVisible = content.questions.filter(
+      (q) => q.area === "pain" && q.showIf.length === 0,
+    ).length;
+    expect(screen.getByText(new RegExp(`question 1 of ${painVisible}`, "i"))).toBeDefined();
+  });
+
+  it("a showIf question stays hidden until its gate is answered", () => {
+    render(<QuizApp content={content} />);
+    screenIn(["pain"]);
+    // pain3 gates pain4/5/7/8 — answer everything "No" and never see them
+    const gated = content.questions.filter((q) => q.area === "pain" && q.showIf.length > 0);
+    expect(gated.length).toBeGreaterThan(0);
+    answerToResults();
+    for (const q of gated) expect(screen.queryByText(q.ask)).toBeNull();
   });
 
   it("screening in nothing lands on an empty results screen", () => {

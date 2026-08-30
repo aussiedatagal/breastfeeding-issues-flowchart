@@ -40,11 +40,15 @@
     - Refer on a 2-week cancer pathway.
   seeAlso:
     - mim-ibc
+  sources:
+    - abm-36
   supports:
-    - finding: inf2
-      weight: 2
     - finding: inf9
-      weight: 2
+      weight: 3
+    - finding: inf9b
+      weight: 3
+    - finding: inf2
+      weight: 1
   against:
     - finding: inf1
       weight: 1
