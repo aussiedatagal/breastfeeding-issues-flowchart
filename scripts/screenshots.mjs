@@ -114,6 +114,13 @@ async function walkAndShoot(page, dir, shot) {
     await page.waitForTimeout(300);
     await shot("09-sources", { fullPage: true });
   }
+
+  const mapToggle = page.getByRole("button", { name: /^Map$/ }).first();
+  if (await mapToggle.count()) {
+    await mapToggle.click();
+    await page.waitForTimeout(3500); // mermaid loads + renders
+    await shot("10-content-map", { fullPage: true });
+  }
 }
 
 async function main() {

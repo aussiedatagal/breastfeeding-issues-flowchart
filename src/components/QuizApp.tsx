@@ -8,6 +8,7 @@ import { QuestionScreen } from "./screens/QuestionScreen.tsx";
 import { ResultsScreen } from "./screens/ResultsScreen.tsx";
 import { SummaryScreen } from "./screens/SummaryScreen.tsx";
 import { SourcesScreen } from "./screens/SourcesScreen.tsx";
+import { MapScreen } from "./screens/MapScreen.tsx";
 import styles from "./QuizApp.module.css";
 
 export function QuizApp({ content }: { content: Content }) {
@@ -27,7 +28,7 @@ export function QuizApp({ content }: { content: Content }) {
   }, [signature]);
 
   const atStart = screen.name === "screening" && screen.first;
-  const onBack = atStart ? undefined : actions.back;
+  const onBack = atStart || screen.name === "map" ? undefined : actions.back;
   const backLabel = screen.name === "results" ? "Back to the questions" : "Back";
 
   const eyebrow =
@@ -41,7 +42,9 @@ export function QuizApp({ content }: { content: Content }) {
             ? "Findings"
             : screen.name === "sources"
               ? "Sources"
-              : undefined;
+              : screen.name === "map"
+                ? "Content map"
+                : undefined;
 
   return (
     <div className={styles.app}>
@@ -50,11 +53,19 @@ export function QuizApp({ content }: { content: Content }) {
         findingsCount={screen.name === "summary" ? 0 : findings.length}
         onFindings={actions.openSummary}
         onSources={actions.openSources}
+        onToggleMap={actions.toggleMap}
+        mapActive={screen.name === "map"}
         theme={theme.choice}
         onCycleTheme={theme.cycle}
       />
 
-      <main ref={mainRef} className={styles.main}>
+      <main ref={mainRef} className={styles.main} data-wide={screen.name === "map"}>
+        {screen.name === "map" && (
+          <button type="button" className={styles.back} onClick={actions.toggleMap}>
+            <span className={styles.backArrow} aria-hidden="true" />
+            Back to the quiz
+          </button>
+        )}
         {onBack && (
           <button type="button" className={styles.back} onClick={onBack}>
             <span className={styles.backArrow} aria-hidden="true" />
@@ -117,6 +128,8 @@ export function QuizApp({ content }: { content: Content }) {
           )}
 
           {screen.name === "sources" && <SourcesScreen content={content} />}
+
+          {screen.name === "map" && <MapScreen content={content} />}
 
           {screen.name === "summary" && (
             <SummaryScreen

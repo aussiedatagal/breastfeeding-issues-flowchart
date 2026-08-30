@@ -37,6 +37,25 @@
   text-overflow: ellipsis;
 }
 
+.viewToggle {
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline-strong);
+  color: var(--ink-muted);
+  font-size: var(--step--1);
+  font-weight: 600;
+}
+.viewToggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.viewToggle[data-active="true"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
 .findings {
   display: inline-flex;
   align-items: center;

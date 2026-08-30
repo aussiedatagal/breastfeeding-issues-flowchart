@@ -44,6 +44,7 @@ npm run dev        # http://localhost:5173
 | `npm run build`       | `validate` → type-check → production bundle into `dist/`                                           |
 | `npm run preview`     | Serve the production build locally                                                                 |
 | `npm run screenshots` | Walk the whole quiz at 3 viewports × light/dark, PNGs into `screenshots/` (needs Chrome installed) |
+| `npm run map`         | Standalone HTML overview of every question + diagnosis as a per-area graph (also in-app via the **Map** toggle) |
 
 ## Architecture
 

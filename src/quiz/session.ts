@@ -40,6 +40,7 @@ export interface SessionState {
   findings: string[];
   viewingSummary: boolean;
   viewingSources: boolean;
+  viewingMap: boolean;
 }
 
 export const emptySession = (): SessionState => ({
@@ -53,6 +54,7 @@ export const emptySession = (): SessionState => ({
   findings: [],
   viewingSummary: false,
   viewingSources: false,
+  viewingMap: false,
 });
 
 /** which findings a question sets — one for boolean, several for multi */
@@ -184,9 +186,11 @@ export type Screen =
       skippedCount: number;
     }
   | { name: "summary" }
-  | { name: "sources" };
+  | { name: "sources" }
+  | { name: "map" };
 
 export function screenOf(content: Content, state: SessionState): Screen {
+  if (state.viewingMap) return { name: "map" };
   if (state.viewingSources) return { name: "sources" };
   if (state.viewingSummary) return { name: "summary" };
 
@@ -256,6 +260,7 @@ export type SessionAction =
   | { type: "closeSummary" }
   | { type: "openSources" }
   | { type: "closeSources" }
+  | { type: "toggleMap" }
   | { type: "pinFinding"; id: string }
   | { type: "unpinFinding"; id: string }
   | { type: "clearFindings" };
@@ -355,7 +360,11 @@ export function reduce(
     case "closeSources":
       return { ...state, viewingSources: false };
 
+    case "toggleMap":
+      return { ...state, viewingMap: !state.viewingMap };
+
     case "back": {
+      if (state.viewingMap) return { ...state, viewingMap: false };
       if (state.viewingSources) return { ...state, viewingSources: false };
       if (state.viewingSummary) return { ...state, viewingSummary: false };
       if (state.revealed) return { ...state, revealed: false };

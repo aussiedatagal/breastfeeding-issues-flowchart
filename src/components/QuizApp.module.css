@@ -59,4 +59,8 @@
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
   }
+  /* the content map needs room */
+  .main[data-wide="true"] {
+    max-width: min(72rem, calc(100vw - 3rem));
+  }
 }
