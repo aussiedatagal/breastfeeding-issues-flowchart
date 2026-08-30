@@ -4,8 +4,8 @@
 - id: inf1
   area: inflammation
   type: boolean
-  ask: Are BOTH breasts full, firm, and tender all over, in the first 2 to 5 days
-    after birth?
+  ask: In the first 2 to 5 days after birth, were BOTH breasts full, firm, and
+    tender all over?
   short: Both breasts, firm all over, day 2–5?
   assess: >
     Normal early engorgement affects both breasts all over as the milk comes in.
