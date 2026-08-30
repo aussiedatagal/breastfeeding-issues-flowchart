@@ -215,8 +215,12 @@
   reference: true
 - id: dx-perc-over
   area: supply
-  name: Perceived low supply due to oversupply
+  name: Oversupply presenting as low supply
   flag: often-mislabelled
+  note: >
+    Growth is on track and the baby is windy, gulping, and passing green frothy
+    stools — the problem is too much milk, too fast, not too little. Families
+    (and referrers) often read the fussing and frequent feeding as "not enough".
   steps:
     - Show the growth chart; explain the physiology.
     - Manage as oversupply — finish the first breast, block feeding, stop rescue
@@ -228,17 +232,21 @@
   coexists:
     - dx-oald
   supports:
-    - finding: q1
-      weight: 2
     - finding: b5
+      weight: 3
+    - finding: a3
+      weight: 2
+    - finding: q1
       weight: 2
   against: []
 - id: dx-perceived
   area: supply
-  name: Perceived insufficient milk supply (normal)
+  name: Supply is adequate — concern doesn't match the growth
   flag: likely-normal
-  note: A positive diagnosis made on normal growth and output — not a label of
-    exclusion.
+  note: >
+    A positive finding, not a label of exclusion: weight gain and output are on
+    track, so the milk supply is enough even though it doesn't feel that way.
+    Also called perceived insufficient milk supply (PIMS).
   steps:
     - Reassure with the objective data; show the growth chart.
     - Teach normal infant behaviour, hunger cues, cluster feeding, and the weeks

@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "screenshots": "npm run build && node scripts/screenshots.mjs"
+    "screenshots": "npm run build && node scripts/screenshots.mjs",
+    "map": "node scripts/content-map.mjs"
   },
   "dependencies": {
     "react": "^19.2.0",
