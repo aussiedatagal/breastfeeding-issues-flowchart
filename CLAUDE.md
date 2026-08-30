@@ -162,6 +162,8 @@ content is still all `boolean`.
   (`min-width: 40rem`) puts the same column in a contained card.
 - The start screen IS the first screening question (with the intro above it) —
   there is no separate landing screen.
+- Back is a "‹ Back" link at the top of the content frame (not the TopBar,
+  which just carries the wordmark + Findings + "?" + theme).
 - Opt-in detail everywhere — "How do I check this?", per-match detail, and the
   look-alikes are collapsed `Disclosure`s.
 - `do-not-miss` diagnoses get a red badge / note — but still nothing pops up.

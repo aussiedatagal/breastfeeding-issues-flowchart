@@ -2,8 +2,6 @@ import type { ThemeChoice } from "../../hooks/useTheme.ts";
 import styles from "./TopBar.module.css";
 
 interface Props {
-  /** shown when there is somewhere to go back to */
-  onBack?: () => void;
   /** small context label, e.g. the current problem area */
   eyebrow?: string;
   findingsCount: number;
@@ -16,7 +14,6 @@ interface Props {
 const THEME_ICON: Record<ThemeChoice, string> = { system: "◐", light: "○", dark: "●" };
 
 export function TopBar({
-  onBack,
   eyebrow,
   findingsCount,
   onFindings,
@@ -27,13 +24,7 @@ export function TopBar({
   return (
     <header className={styles.bar}>
       <div className={styles.left}>
-        {onBack ? (
-          <button type="button" className={styles.back} onClick={onBack} aria-label="Back">
-            <span className={styles.arrow} aria-hidden="true" />
-          </button>
-        ) : (
-          <span className={styles.mark}>Breastfeeding</span>
-        )}
+        <span className={styles.mark}>Breastfeeding</span>
         {eyebrow && <span className={styles.eyebrow}>{eyebrow}</span>}
       </div>
 

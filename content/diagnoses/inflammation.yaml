@@ -43,10 +43,14 @@
   sources:
     - abm-36
   supports:
-    - finding: inf9
+    - finding: inf9-peau
+      weight: 3
+    - finding: inf9-retract
       weight: 3
     - finding: inf9b
       weight: 3
+    - finding: inf9-fixed
+      weight: 2
     - finding: inf2
       weight: 1
   against:
@@ -80,7 +84,9 @@
       weight: 1
     - finding: inf8
       weight: 1
-    - finding: inf9
+    - finding: inf9-peau
+      weight: 1
+    - finding: inf9-retract
       weight: 1
 - id: dx-lump
   area: inflammation
@@ -105,7 +111,9 @@
       weight: 1
     - finding: inf8
       weight: 1
-    - finding: inf9
+    - finding: inf9-peau
+      weight: 1
+    - finding: inf9-retract
       weight: 1
     - finding: inf10
       weight: 1
@@ -124,6 +132,8 @@
       weight: 2
     - finding: inf5
       weight: 2
+    - finding: inf4b
+      weight: 1
   against:
     - finding: inf1
       weight: 1
@@ -143,6 +153,8 @@
       weight: 2
     - finding: inf6
       weight: 2
+    - finding: inf4b
+      weight: 1
   against:
     - finding: inf1
       weight: 1
@@ -167,6 +179,8 @@
       weight: 2
     - finding: inf4
       weight: 2
+    - finding: inf4b
+      weight: 1
   against:
     - finding: inf1
       weight: 1

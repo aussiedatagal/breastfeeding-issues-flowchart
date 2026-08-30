@@ -37,26 +37,6 @@
   text-overflow: ellipsis;
 }
 
-.back {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  margin-left: -8px;
-  border-radius: var(--radius-pill);
-}
-.back:hover {
-  background: var(--surface-sunken);
-}
-.arrow {
-  width: 10px;
-  height: 10px;
-  border-left: 2px solid var(--ink);
-  border-bottom: 2px solid var(--ink);
-  transform: rotate(45deg);
-  margin-left: 3px;
-}
-
 .findings {
   display: inline-flex;
   align-items: center;
