@@ -5,3 +5,5 @@ dist/
 *.tsbuildinfo
 coverage/
 screenshots/
+content-map.html
+content-map.artifact.html
