@@ -33,8 +33,9 @@ export const area = z
     id,
     label: text,
     short: text.optional(),
-    /** the yes/no screening question on the start flow ("Is there nipple pain?") */
-    ask: text.optional(),
+    /** yes/no screening question(s) on the start flow. One string, or several —
+     *  a "yes" to ANY of them flags the area in. */
+    ask: z.union([text, z.array(text).min(1)]).optional(),
   })
   .strict();
 export type Area = z.infer<typeof area>;

@@ -6,18 +6,27 @@
  *
  * `area` = areas screened in, `no` = areas screened out, `p` / `x` = findings
  * answered present / absent, `s` = skipped questions — all keyed by id so a
- * content edit can't silently change what an old link means.
+ * content edit can't silently change what an old link means. Mid-screening
+ * position (which of an area's screening questions was answered) is not
+ * preserved — only the in/out verdict.
  */
 import type { Content, Presence } from "../content/model.ts";
 import type { SessionState } from "./session.ts";
-import { answeredFindings, emptySession, questionFindings } from "./session.ts";
+import { answeredFindings, emptySession, questionFindings, selectedAreas } from "./session.ts";
+
+/** an area every one of whose screening questions was answered "no" */
+function screenedOut(content: Content, state: SessionState) {
+  return content.areas.filter((a) =>
+    a.screens.every((_, i) => state.screenAnswers[`${a.id}:${i}`] === false),
+  );
+}
 
 export function encode(content: Content, state: SessionState): string {
   const answered = answeredFindings(content, state);
   const present = answered.filter((f) => state.answers[f] === "present");
   const absent = answered.filter((f) => state.answers[f] === "absent");
-  const gatesIn = content.areas.filter((a) => state.areaGate[a.id] === true).map((a) => a.id);
-  const gatesOut = content.areas.filter((a) => state.areaGate[a.id] === false).map((a) => a.id);
+  const gatesIn = selectedAreas(content, state).map((a) => a.id);
+  const gatesOut = screenedOut(content, state).map((a) => a.id);
 
   const parts: string[] = [];
   if (gatesIn.length) parts.push(`area=${gatesIn.join(",")}`);
@@ -41,10 +50,25 @@ export function decode(content: Content, hash: string): SessionState {
   const state = emptySession();
   const csv = (key: string) => (params.get(key) ?? "").split(",").filter(Boolean);
   const uniq = (list: string[]) => list.filter((v, i) => list.indexOf(v) === i);
-  const isArea = (id: string) => content.areas.some((a) => a.id === id);
+  const areaById = new Map(content.areas.map((a) => [a.id, a]));
 
-  for (const id of csv("area")) if (isArea(id)) state.areaGate[id] = true;
-  for (const id of csv("no")) if (isArea(id) && state.areaGate[id] === undefined) state.areaGate[id] = false;
+  for (const id of csv("area")) {
+    const area = areaById.get(id);
+    if (area && state.screenAnswers[`${id}:0`] === undefined) {
+      state.screenAnswers[`${id}:0`] = true;
+      state.screenOrder.push(`${id}:0`);
+    }
+  }
+  for (const id of csv("no")) {
+    const area = areaById.get(id);
+    if (!area || state.screenAnswers[`${id}:0`] !== undefined) continue;
+    area.screens.forEach((_, i) => {
+      state.screenAnswers[`${id}:${i}`] = false;
+      state.screenOrder.push(`${id}:${i}`);
+    });
+  }
+
+  const selected = new Set(selectedAreas(content, state).map((a) => a.id));
 
   const take = (key: string, value: Presence) => {
     for (const f of csv(key)) {
@@ -54,9 +78,6 @@ export function decode(content: Content, hash: string): SessionState {
   take("p", "present");
   take("x", "absent");
 
-  const selected = new Set(
-    content.areas.filter((a) => state.areaGate[a.id] === true).map((a) => a.id),
-  );
   state.skipped = uniq(
     csv("s").filter((id) => {
       const q = content.question.get(id);
@@ -64,7 +85,6 @@ export function decode(content: Content, hash: string): SessionState {
     }),
   );
 
-  // rebuild the handled order: answered questions, then skipped ones
   const answeredQ = new Set<string>();
   for (const fid of Object.keys(state.answers)) {
     const qid = content.finding.get(fid)?.questionId;

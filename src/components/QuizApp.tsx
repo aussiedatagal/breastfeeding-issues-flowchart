@@ -17,7 +17,7 @@ export function QuizApp({ content }: { content: Content }) {
   const mainRef = useRef<HTMLElement>(null);
   const signature =
     screen.name === "screening"
-      ? `s:${screen.area.id}`
+      ? `s:${screen.area.id}:${screen.screenIndex}`
       : screen.name === "question"
         ? `q:${screen.question.id}`
         : screen.name;
@@ -60,12 +60,13 @@ export function QuizApp({ content }: { content: Content }) {
             <ScreeningScreen
               content={content}
               area={screen.area}
+              ask={screen.ask}
+              screenIndex={screen.screenIndex}
               index={screen.index}
-              total={screen.total}
               picked={screen.picked}
               first={screen.first}
               findingsCount={findings.length}
-              onGate={actions.gateArea}
+              onScreen={actions.answerScreen}
               onOpenSummary={actions.openSummary}
             />
           )}

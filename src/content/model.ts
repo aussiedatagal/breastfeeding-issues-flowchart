@@ -1,7 +1,16 @@
-import type { Area, Flag, Reference } from "./schema.ts";
+import type { Flag, Reference } from "./schema.ts";
 
-export type { Area, Flag, Reference };
+export type { Flag, Reference };
 export type Presence = "present" | "absent";
+
+/** runtime shape of a problem area — `screens` is the normalised list of yes/no
+ *  screening questions (always at least one). */
+export interface Area {
+  id: string;
+  label: string;
+  short?: string;
+  screens: string[];
+}
 
 /** One observable thing. A boolean question is a single finding; a multi
  *  question contributes one per option. */

@@ -4,28 +4,30 @@ import styles from "./ScreeningScreen.module.css";
 interface Props {
   content: Content;
   area: Area;
+  ask: string;
+  screenIndex: number;
   index: number;
-  total: number;
   picked: Area[];
   first: boolean;
   findingsCount: number;
-  onGate: (areaId: string, include: boolean) => void;
+  onScreen: (areaId: string, screenIndex: number, yes: boolean) => void;
   onOpenSummary: () => void;
 }
 
 export function ScreeningScreen({
   content,
   area,
+  ask,
+  screenIndex,
   index,
-  total,
   picked,
   first,
   findingsCount,
-  onGate,
+  onScreen,
   onOpenSummary,
 }: Props) {
   return (
-    <section className={styles.section} key={area.id}>
+    <section className={styles.section} key={`${area.id}:${screenIndex}`}>
       {first ? (
         <>
           <p className={styles.kicker}>Breastfeeding difficulty</p>
@@ -33,17 +35,13 @@ export function ScreeningScreen({
           <p className={styles.lede}>{content.intro}</p>
         </>
       ) : (
-        <p className={styles.progress}>
-          Screening · {index} of {total}
-        </p>
+        <p className={styles.progress}>Screening · question {index}</p>
       )}
 
-      <h2 className={styles.question}>{area.ask ?? `${area.label}?`}</h2>
+      <h2 className={styles.question}>{ask}</h2>
 
       {picked.length > 0 && (
-        <p className={styles.picked}>
-          So far: {picked.map((a) => a.short ?? a.label).join(", ")}
-        </p>
+        <p className={styles.picked}>So far: {picked.map((a) => a.short ?? a.label).join(", ")}</p>
       )}
 
       <div className={styles.spacer} />
@@ -53,7 +51,7 @@ export function ScreeningScreen({
           type="button"
           className={styles.answer}
           data-answer="yes"
-          onClick={() => onGate(area.id, true)}
+          onClick={() => onScreen(area.id, screenIndex, true)}
         >
           Yes
         </button>
@@ -61,7 +59,7 @@ export function ScreeningScreen({
           type="button"
           className={styles.answer}
           data-answer="no"
-          onClick={() => onGate(area.id, false)}
+          onClick={() => onScreen(area.id, screenIndex, false)}
         >
           No
         </button>

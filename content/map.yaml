@@ -8,8 +8,10 @@ areas:
   - id: supply
     label: Not enough milk, poor weight gain, or supply feels low
     short: Milk supply & weight
-    ask: Has your baby been slow to gain weight, or are feeds hard work — very
-      long, very frequent, or the baby rarely settled?
+    ask:
+      - Has your baby been slow to gain weight?
+      - Are feeds very long or very frequent?
+      - Is your baby rarely settled or content after feeds?
   - id: pain
     label: Sore, cracked, burning, or a deep ache — at or between feeds
     short: Nipple & breast pain
