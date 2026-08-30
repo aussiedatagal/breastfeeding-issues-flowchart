@@ -7,6 +7,8 @@ interface Props {
   findingsCount: number;
   onFindings: () => void;
   onSources: () => void;
+  onToggleMap: () => void;
+  mapActive: boolean;
   theme: ThemeChoice;
   onCycleTheme: () => void;
 }
@@ -18,6 +20,8 @@ export function TopBar({
   findingsCount,
   onFindings,
   onSources,
+  onToggleMap,
+  mapActive,
   theme,
   onCycleTheme,
 }: Props) {
@@ -29,6 +33,14 @@ export function TopBar({
       </div>
 
       <div className={styles.right}>
+        <button
+          type="button"
+          className={styles.viewToggle}
+          data-active={mapActive}
+          onClick={onToggleMap}
+        >
+          {mapActive ? "Quiz" : "Map"}
+        </button>
         {findingsCount > 0 && (
           <button type="button" className={styles.findings} onClick={onFindings}>
             Findings <span className={styles.count}>{findingsCount}</span>

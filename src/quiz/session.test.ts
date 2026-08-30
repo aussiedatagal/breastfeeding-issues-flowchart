@@ -195,6 +195,18 @@ describe("screening → questions → results", () => {
     expect(screenOf(content, reduce(content, s, { type: "back" })).name).toBe("question");
   });
 
+  it("toggleMap flips to the content-map view and back, keeping the session", () => {
+    const s = after(
+      ...gateBoth,
+      { type: "answerQuestion", questionId: "q1", findings: { q1: "present" } },
+      { type: "toggleMap" },
+    );
+    expect(screenOf(content, s).name).toBe("map");
+    const back = reduce(content, s, { type: "toggleMap" });
+    expect(screenOf(content, back).name).toBe("question");
+    expect(back.answers.q1).toBe("present");
+  });
+
   it("editAreas clears the screening pass but keeps pinned findings", () => {
     const s = after(
       ...gateBoth,

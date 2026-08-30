@@ -60,6 +60,7 @@ export function useQuizSession(content: Content) {
       closeSummary: () => dispatch({ type: "closeSummary" }),
       openSources: () => dispatch({ type: "openSources" }),
       closeSources: () => dispatch({ type: "closeSources" }),
+      toggleMap: () => dispatch({ type: "toggleMap" }),
       pinFinding: (id: string) => dispatch({ type: "pinFinding", id }),
       unpinFinding: (id: string) => dispatch({ type: "unpinFinding", id }),
       clearFindings: () => dispatch({ type: "clearFindings" }),

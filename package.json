@@ -17,6 +17,7 @@
     "map": "node scripts/content-map.mjs"
   },
   "dependencies": {
+    "mermaid": "^11.17.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "yaml": "^2.9.0",
