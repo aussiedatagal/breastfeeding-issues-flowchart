@@ -16,6 +16,7 @@ interface Props {
   onSkip: (questionId: string) => void;
   onSetFinding: (finding: string, value: Presence) => void;
   onReveal: () => void;
+  onBack: () => void;
 }
 
 export function QuestionScreen({
@@ -30,6 +31,7 @@ export function QuestionScreen({
   onSkip,
   onSetFinding,
   onReveal,
+  onBack,
 }: Props) {
   return (
     <section className={styles.section} key={question.id}>
@@ -64,6 +66,10 @@ export function QuestionScreen({
           See what fits so far →
         </button>
       )}
+
+      <button type="button" className={styles.stepBack} onClick={onBack}>
+        ← Previous question
+      </button>
     </section>
   );
 }

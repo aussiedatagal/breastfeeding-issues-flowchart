@@ -31,8 +31,8 @@ for (const a of content.areas) for (const q of a.screens) screenTextToArea.set(q
 /** walk the yes/no screening pass, saying yes only to the wanted areas */
 function screenIn(wanted: string[]) {
   for (let i = 0; i < 20; i += 1) {
-    const h2 = screen.queryAllByRole("heading", { level: 2 })[0];
-    const areaId = h2 && screenTextToArea.get(h2.textContent!.trim());
+    const h1 = screen.queryAllByRole("heading", { level: 1 })[0];
+    const areaId = h1 && screenTextToArea.get(h1.textContent!.trim());
     if (!areaId) break; // left the screening pass
     const yes = wanted.includes(areaId);
     fireEvent.click(screen.getByRole("button", { name: yes ? /^Yes$/ : /^No$/ }));
