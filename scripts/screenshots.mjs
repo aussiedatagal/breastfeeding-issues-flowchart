@@ -118,7 +118,7 @@ async function walkAndShoot(page, dir, shot) {
   const mapToggle = page.getByRole("button", { name: /^Map$/ }).first();
   if (await mapToggle.count()) {
     await mapToggle.click();
-    await page.waitForTimeout(9000); // cytoscape loads + per-area layouts settle
+    await page.waitForTimeout(9000); // cytoscape + elk load, layout settles
     try {
       await shot("10-content-map"); // viewport only — cytoscape canvas breaks fullPage
     } catch {

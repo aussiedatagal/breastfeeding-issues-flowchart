@@ -12,7 +12,6 @@
 import type { Content } from "./model.ts";
 
 export type NodeKind =
-  | "area"
   | "screen"
   | "boolean"
   | "multi"
@@ -21,15 +20,13 @@ export type NodeKind =
   | "fallback"
   | "reference";
 
-export type EdgeKind = "flow" | "showIf" | "supports" | "against" | "excludes" | "link";
+export type EdgeKind = "gate" | "showIf" | "supports" | "against" | "excludes" | "link";
 
 export interface GraphNode {
   id: string;
   label: string;
   kind: NodeKind;
   area: string;
-  /** compound parent — the area node this belongs to (area nodes have none) */
-  parent?: string;
   /** longer text for the detail panel */
   detail?: string;
 }
@@ -52,7 +49,6 @@ export interface GraphModel {
 
 const qNode = (id: string) => `q:${id}`;
 const dNode = (id: string) => `dx:${id}`;
-const aNode = (id: string) => `area:${id}`;
 
 const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s);
 const findingShort = (content: Content, fid: string) => content.finding.get(fid)?.short ?? fid;
@@ -64,14 +60,11 @@ export function buildGraph(content: Content): GraphModel {
   const areaOfDx = new Map(content.diagnoses.map((d) => [d.id, d.area]));
 
   for (const area of content.areas) {
-    nodes.push({ id: aNode(area.id), kind: "area", area: area.id, label: area.short ?? area.label });
-
     nodes.push({
       id: `scr:${area.id}`,
       kind: "screen",
       area: area.id,
-      parent: aNode(area.id),
-      label: `Screening (${area.screens.length})`,
+      label: `${area.short ?? area.label} — screening (${area.screens.length})`,
       detail: area.screens.map((s) => "• " + s).join("\n"),
     });
 
@@ -80,15 +73,14 @@ export function buildGraph(content: Content): GraphModel {
         id: qNode(q.id),
         kind: q.type,
         area: area.id,
-        parent: aNode(area.id),
         label: q.type === "multi" ? `${q.id} ☑ ${clip(q.ask, 46)}` : `${q.id} · ${findingShort(content, q.id)}`,
         detail:
           q.ask +
           (q.type === "multi" ? `\n\n• ${q.options.map((o) => findingShort(content, o.finding)).join("\n• ")}` : "") +
           (q.assess ? `\n\n${q.assess}` : ""),
       });
-      // a faint tether so every question sits with its area's screening node
-      edges.push({ id: `e:flow:${q.id}`, source: `scr:${area.id}`, target: qNode(q.id), kind: "flow" });
+      // structural: the screening node anchors its area's questions
+      edges.push({ id: `e:gate:${q.id}`, source: `scr:${area.id}`, target: qNode(q.id), kind: "gate" });
       for (const c of q.showIf) {
         edges.push({
           id: `e:showIf:${c.finding}->${q.id}`,
@@ -113,15 +105,14 @@ export function buildGraph(content: Content): GraphModel {
       id: dNode(d.id),
       kind,
       area: d.area,
-      parent: aNode(d.area),
       label: d.name,
       detail: [d.note, d.points.length ? `Points to it:\n• ${d.points.join("\n• ")}` : ""]
         .filter(Boolean)
         .join("\n\n"),
     });
-    // faint tether so every diagnosis sits inside its area, even the ones whose
-    // only real edges are hidden by default (fallbacks, mimics, against-only)
-    edges.push({ id: `e:flow:${d.id}`, source: `scr:${d.area}`, target: dNode(d.id), kind: "flow" });
+    // structural: keep every diagnosis anchored to its area (fallbacks and
+    // mimics have no support edge of their own)
+    edges.push({ id: `e:gate:${d.id}`, source: `scr:${d.area}`, target: dNode(d.id), kind: "gate" });
 
     for (const s of d.supports) {
       const q = questionOf(content, s.finding);

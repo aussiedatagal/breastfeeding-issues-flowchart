@@ -166,8 +166,8 @@ content is still all `boolean`.
 - Back is a "‹ Back" link at the top of the content frame (not the TopBar,
   which carries the wordmark + Map/Quiz toggle + Findings + "?" + theme).
 - The TopBar **Map** toggle opens `MapScreen` — the whole content as one
-  interactive graph (Cytoscape + fcose force layout, lazy `import()` → own
-  chunk). `src/content/graph.ts` `buildGraph()` is the shared node/edge model:
+  interactive graph (Cytoscape + ELK `layered` hierarchical layout, lazy
+  `import()` → own chunk — no node overlap, one hierarchy per area). `src/content/graph.ts` `buildGraph()` is the shared node/edge model:
   screening gates + questions (with `showIf` edges) + diagnoses, joined by
   finding→diagnosis edges and diagnosis↔diagnosis `seeAlso` / `coexists` edges
   (the latter are what connect the four areas — ~37 of them, `dx-oald` the main
