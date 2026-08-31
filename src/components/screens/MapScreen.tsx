@@ -13,7 +13,7 @@ const AREA_COLOR: Record<string, string> = {
 const areaColor = (id: string) => AREA_COLOR[id] ?? "#6b6252";
 
 const EDGE_COLOR: Record<EdgeKind, string> = {
-  flow: "#c2b79f",
+  flow: "#cabfa4",
   showIf: "#8a7f6a",
   supports: "#35786a",
   against: "#b1503d",
@@ -28,27 +28,70 @@ const EDGE_FILTERS: { kind: EdgeKind; label: string }[] = [
   { kind: "excludes", label: "rules out" },
   { kind: "link", label: "distinguish / alongside" },
 ];
-const ALL_EDGES: EdgeKind[] = ["flow", "showIf", "supports", "against", "excludes", "link"];
+/* start with a clean scoring backbone; the noisy ones are opt-in */
+const DEFAULT_EDGES: EdgeKind[] = ["flow", "showIf", "supports", "excludes"];
 
-const LAYOUT = {
+const SUB_LAYOUT = {
   name: "fcose",
-  quality: "proof",
+  quality: "default",
   animate: false,
   randomize: true,
-  nodeSeparation: 110,
-  idealEdgeLength: 95,
-  nodeRepulsion: 9000,
-  gravity: 0.2,
+  nodeSeparation: 75,
+  idealEdgeLength: 52,
+  nodeRepulsion: 3600,
+  gravity: 0.5,
   packComponents: true,
+  tile: true,
 } as const;
 
-/** force-directed layout of whatever is visible, then fit */
-function relayout(cy: cytoscape.Core) {
-  const visible = cy.elements(":visible");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- fcose opts aren't typed
-  const l = visible.layout({ ...LAYOUT } as any);
-  l.one("layoutstop", () => cy.fit(visible, 40));
-  l.run();
+const COLS = 2;
+const GAP = 150;
+
+/** lay out each visible area on its own (fast), then pack the areas into a grid
+ *  sized to their contents — one constrained layout over the whole thing is far
+ *  too slow. */
+async function relayout(cy: cytoscape.Core, areaIds: string[], visibleAreas: Set<string>) {
+  const shown = areaIds.filter((id) => visibleAreas.has(id));
+  const boxes: ({ nodes: cytoscape.NodeCollection; bb: cytoscape.BoundingBox12 } | null)[] = [];
+
+  for (const id of shown) {
+    const nodes = cy.nodes(`[area = "${id}"]`).filter((n) => !n.isParent() && n.visible());
+    if (nodes.length === 0) {
+      boxes.push(null);
+      continue;
+    }
+    const eles = nodes.union(nodes.edgesWith(nodes)).filter((el) => el.visible());
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- fcose opts aren't typed
+    const l = eles.layout({ ...SUB_LAYOUT } as any);
+    await new Promise<void>((res) => {
+      l.one("layoutstop", () => res());
+      l.run();
+    });
+    boxes.push({ nodes, bb: nodes.boundingBox() });
+  }
+
+  const colW: number[] = [];
+  const rowH: number[] = [];
+  boxes.forEach((b, i) => {
+    if (!b) return;
+    const c = i % COLS;
+    const r = Math.floor(i / COLS);
+    colW[c] = Math.max(colW[c] ?? 0, b.bb.x2 - b.bb.x1);
+    rowH[r] = Math.max(rowH[r] ?? 0, b.bb.y2 - b.bb.y1);
+  });
+  const colX: number[] = [];
+  const rowY: number[] = [];
+  colW.reduce((x, w, c) => ((colX[c] = x), x + w + GAP), 0);
+  rowH.reduce((y, h, r) => ((rowY[r] = y), y + h + GAP), 0);
+
+  boxes.forEach((b, i) => {
+    if (!b) return;
+    b.nodes.shift({
+      x: (colX[i % COLS] ?? 0) - b.bb.x1,
+      y: (rowY[Math.floor(i / COLS)] ?? 0) - b.bb.y1,
+    });
+  });
+  cy.fit(cy.elements(":visible"), 25);
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- cytoscape stylesheet is loosely typed */
@@ -61,7 +104,7 @@ const CY_STYLE: any[] = [
       "font-family": "IBM Plex Sans, system-ui, sans-serif",
       color: "#2b2620",
       "text-wrap": "wrap",
-      "text-max-width": "180px",
+      "text-max-width": "150px",
       "text-valign": "center",
       "text-halign": "center",
       "background-color": "#fbf7ee",
@@ -70,7 +113,26 @@ const CY_STYLE: any[] = [
       shape: "round-rectangle",
       width: "label",
       height: "label",
-      padding: "10px",
+      padding: "9px",
+    },
+  },
+  {
+    selector: "node:parent",
+    style: {
+      label: "data(label)",
+      "font-size": 15,
+      "font-weight": 700,
+      color: "data(color)",
+      "text-valign": "top",
+      "text-halign": "center",
+      "text-margin-y": 4,
+      "background-color": "data(color)",
+      "background-opacity": 0.05,
+      "border-width": 1,
+      "border-color": "data(color)",
+      "border-opacity": 0.4,
+      shape: "round-rectangle",
+      padding: "26px",
     },
   },
   { selector: 'node[kind = "screen"]', style: { "background-color": "#ece1cb", "font-weight": 600 } },
@@ -86,46 +148,45 @@ const CY_STYLE: any[] = [
   {
     selector: "edge",
     style: {
-      width: 1.5,
+      width: 1.3,
       "line-color": "data(ecolor)",
+      "line-opacity": 0.55,
       "target-arrow-color": "data(ecolor)",
       "target-arrow-shape": "triangle",
-      "arrow-scale": 0.9,
+      "arrow-scale": 0.8,
       "curve-style": "bezier",
-      label: "data(label)",
       "font-size": 9,
-      "font-family": "IBM Plex Sans, system-ui, sans-serif",
-      color: "#6b6252",
+      color: "#5b5344",
       "text-background-color": "#f5efe4",
-      "text-background-opacity": 0.85,
+      "text-background-opacity": 0.9,
       "text-background-padding": "2px",
     },
   },
-  { selector: 'edge[kind = "showIf"]', style: { "line-style": "dashed", width: 2 } },
-  { selector: 'edge[kind = "supports"]', style: { width: 2.5 } },
+  { selector: 'edge[kind = "flow"]', style: { width: 1, "line-opacity": 0.25, "target-arrow-shape": "none", "curve-style": "straight" } },
+  { selector: 'edge[kind = "showIf"]', style: { "line-style": "dashed", width: 1.8 } },
+  { selector: 'edge[kind = "supports"]', style: { width: 2 } },
   { selector: 'edge[kind = "against"]', style: { "line-style": "dashed" } },
-  { selector: 'edge[kind = "excludes"]', style: { width: 4 } },
-  { selector: 'edge[kind = "link"]', style: { "line-style": "dotted", width: 2, "target-arrow-shape": "vee" } },
-  { selector: "edge[?cross]", style: { width: 3.5 } },
+  { selector: 'edge[kind = "excludes"]', style: { width: 3.5 } },
+  { selector: 'edge[kind = "link"]', style: { "line-style": "dotted", width: 1.4, "line-opacity": 0.4, "target-arrow-shape": "vee" } },
+  { selector: 'edge[?cross]', style: { width: 2.4, "line-opacity": 0.6 } },
   { selector: ".hidden", style: { display: "none" } },
-  { selector: ".faded", style: { opacity: 0.1, "text-opacity": 0.1 } },
-  { selector: ".pick", style: { "border-width": 4, "border-color": "#1f4a41", "background-color": "#d7ece4" } },
+  { selector: ".dim", style: { opacity: 0.08 } },
+  { selector: ".hot", style: { "line-opacity": 1, opacity: 1, label: "data(label)", width: 2.6, "z-index": 20 } },
+  { selector: "node.pick", style: { "border-width": 4, "border-color": "#1f4a41", "background-color": "#d7ece4", "z-index": 30 } },
 ];
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 export function MapScreen({ content }: { content: Content }) {
   const model: GraphModel = useMemo(() => buildGraph(content), [content]);
   const stats = useMemo(() => graphStats(content), [content]);
+  const areaIds = useMemo(() => model.areas.map((a) => a.id), [model]);
   const containerRef = useRef<HTMLDivElement>(null);
   const cyRef = useRef<cytoscape.Core | null>(null);
 
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [areasOn, setAreasOn] = useState<Set<string>>(new Set(model.areas.map((a) => a.id)));
-  // "against" edges are mostly weight-1 migration noise — start them hidden
-  const [edgesOn, setEdgesOn] = useState<Set<EdgeKind>>(
-    new Set(ALL_EDGES.filter((k) => k !== "against")),
-  );
+  const [edgesOn, setEdgesOn] = useState<Set<EdgeKind>>(new Set(DEFAULT_EDGES));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = model.nodes.find((n) => n.id === selectedId) ?? null;
 
@@ -148,21 +209,22 @@ export function MapScreen({ content }: { content: Content }) {
           ],
           style: CY_STYLE,
           layout: { name: "preset" },
-          wheelSensitivity: 0.25,
-          minZoom: 0.1,
+          wheelSensitivity: 0.3,
+          minZoom: 0.08,
           maxZoom: 2.5,
         });
         cyRef.current = instance;
-        instance.on("tap", "node", (ev) => setSelectedId(ev.target.id()));
+        instance.on("tap", "node", (ev) => {
+          if (!ev.target.isParent()) setSelectedId(ev.target.id());
+        });
         instance.on("tap", (ev) => {
           if (ev.target === instance) setSelectedId(null);
         });
         setReady(true);
-        // the flex container settles a frame after mount — then lay out + fit
         setTimeout(() => {
           instance.resize();
-          relayout(instance);
-        }, 120);
+          relayout(instance, areaIds, areasOn);
+        }, 130);
       } catch (e) {
         if (alive) setError(e instanceof Error ? e.message : String(e));
       }
@@ -172,6 +234,7 @@ export function MapScreen({ content }: { content: Content }) {
       cyRef.current?.destroy();
       cyRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- areaIds/areasOn read once at mount
   }, [model]);
 
   useEffect(() => {
@@ -179,29 +242,35 @@ export function MapScreen({ content }: { content: Content }) {
     if (!cy || !ready) return;
     cy.batch(() => {
       cy.nodes().forEach((n) => {
-        n.toggleClass("hidden", !areasOn.has(n.data("area")));
+        if (!n.isParent()) n.toggleClass("hidden", !areasOn.has(n.data("area")));
+      });
+      cy.nodes(":parent").forEach((p) => {
+        p.toggleClass("hidden", p.children(":visible").length === 0);
       });
       cy.edges().forEach((e) => {
         const k = e.data("kind") as EdgeKind;
-        e.toggleClass(
-          "hidden",
-          !edgesOn.has(k) || e.source().hasClass("hidden") || e.target().hasClass("hidden"),
-        );
+        const endsHidden = e.source().hasClass("hidden") || e.target().hasClass("hidden");
+        e.toggleClass("hidden", endsHidden || (k !== "flow" && !edgesOn.has(k)));
       });
     });
-    relayout(cy);
+    relayout(cy, areaIds, areasOn);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- areaIds is stable
   }, [ready, areasOn, edgesOn]);
 
   useEffect(() => {
     const cy = cyRef.current;
     if (!cy || !ready) return;
+    cy.elements().removeClass("dim hot pick");
+    if (!selectedId) return;
+    const node = cy.getElementById(selectedId);
+    if (node.empty()) return;
+    const hood = node.closedNeighborhood();
     cy.batch(() => {
-      cy.elements().removeClass("faded pick");
-      if (!selectedId) return;
-      const node = cy.getElementById(selectedId);
-      cy.elements().not(node.closedNeighborhood()).addClass("faded");
+      cy.elements().not(hood).not(hood.ancestors()).addClass("dim");
+      hood.edges().addClass("hot");
       node.addClass("pick");
     });
+    cy.animate({ fit: { eles: hood, padding: 90 }, duration: 350, easing: "ease-out" });
   }, [ready, selectedId]);
 
   const toggle = <T,>(set: Set<T>, v: T): Set<T> => {
@@ -233,7 +302,11 @@ export function MapScreen({ content }: { content: Content }) {
         const key = other.id() + "|" + String(e.data("label"));
         if (seen.has(key)) continue;
         seen.add(key);
-        out.push({ id: other.id(), label: String(other.data("label")), via: String(e.data("label") ?? "") });
+        out.push({
+          id: other.id(),
+          label: String(other.data("label")),
+          via: String(e.data("label") ?? ""),
+        });
       }
     }
     return out;
@@ -261,11 +334,11 @@ export function MapScreen({ content }: { content: Content }) {
         <div>
           <h1 className={styles.title}>Content map</h1>
           <p className={styles.lede}>
-            One graph, all four areas. No decision tree — dashed{" "}
+            One graph, four areas (the tinted boxes). No decision tree — dashed{" "}
             <b style={{ color: EDGE_COLOR.showIf }}>showIf</b> edges only change what the parent is
-            asked; solid <b style={{ color: EDGE_COLOR.supports }}>green</b> edges score a diagnosis;
-            dotted <b style={{ color: EDGE_COLOR.link }}>violet</b> edges (thicker across areas) are
-            “distinguish from” / “occurs alongside”. Drag to pan, scroll to zoom, click any node.
+            asked; solid <b style={{ color: EDGE_COLOR.supports }}>green</b> edges score a diagnosis.
+            Turn on <b style={{ color: EDGE_COLOR.link }}>distinguish / alongside</b> to see the links
+            between areas. Click a node to trace just its connections.
           </p>
         </div>
         <button type="button" className={styles.fit} onClick={fit}>
@@ -326,7 +399,7 @@ export function MapScreen({ content }: { content: Content }) {
             <RelList head="Supported by" items={related(["supports"], "in")} />
             <RelList head="Argued against by" items={related(["against"], "in")} />
             <RelList head="Ruled out by" items={related(["excludes"], "in")} />
-            <RelList head="Feeds" items={related(["supports", "against", "excludes"], "out")} />
+            <RelList head="Feeds into" items={related(["supports", "against", "excludes"], "out")} />
             <RelList head="Gated by" items={related(["showIf"], "in")} />
             <RelList head="Gates" items={related(["showIf"], "out")} />
             <RelList head="Related diagnoses" items={related(["link"], "both")} />

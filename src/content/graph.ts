@@ -1,9 +1,10 @@
 /**
  * The whole content as one directed graph — screening gates, questions (with
- * their `showIf` gates), and diagnoses, joined by:
+ * their `showIf` gates), and diagnoses, grouped into a compound node per
+ * problem area, joined by:
  *   • finding → diagnosis edges  (supports / argues-against / rules-out)
  *   • diagnosis → diagnosis edges (`seeAlso` "distinguish from", `coexists`
- *     "occurs alongside") — these are what connect the four problem areas.
+ *     "occurs alongside") — these are what connect the four areas.
  *
  * Framework-free. The in-app Map view renders it with Cytoscape; the standalone
  * `npm run map` generator renders the same model.
@@ -11,6 +12,7 @@
 import type { Content } from "./model.ts";
 
 export type NodeKind =
+  | "area"
   | "screen"
   | "boolean"
   | "multi"
@@ -26,6 +28,8 @@ export interface GraphNode {
   label: string;
   kind: NodeKind;
   area: string;
+  /** compound parent — the area node this belongs to (area nodes have none) */
+  parent?: string;
   /** longer text for the detail panel */
   detail?: string;
 }
@@ -48,7 +52,9 @@ export interface GraphModel {
 
 const qNode = (id: string) => `q:${id}`;
 const dNode = (id: string) => `dx:${id}`;
+const aNode = (id: string) => `area:${id}`;
 
+const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s);
 const findingShort = (content: Content, fid: string) => content.finding.get(fid)?.short ?? fid;
 const questionOf = (content: Content, fid: string) => content.finding.get(fid)?.questionId ?? fid;
 
@@ -58,39 +64,41 @@ export function buildGraph(content: Content): GraphModel {
   const areaOfDx = new Map(content.diagnoses.map((d) => [d.id, d.area]));
 
   for (const area of content.areas) {
-    const scr = `scr:${area.id}`;
+    nodes.push({ id: aNode(area.id), kind: "area", area: area.id, label: area.short ?? area.label });
+
     nodes.push({
-      id: scr,
+      id: `scr:${area.id}`,
       kind: "screen",
       area: area.id,
-      label: `Screen: ${area.short ?? area.label}`,
-      detail: area.screens.join("\n"),
+      parent: aNode(area.id),
+      label: `Screening (${area.screens.length})`,
+      detail: area.screens.map((s) => "• " + s).join("\n"),
     });
 
-    const qs = content.questions.filter((q) => q.area === area.id);
-    qs.forEach((q, i) => {
+    for (const q of content.questions.filter((qq) => qq.area === area.id)) {
       nodes.push({
         id: qNode(q.id),
         kind: q.type,
         area: area.id,
-        label:
-          q.type === "multi"
-            ? `${q.id} ☑ ${q.options.map((o) => findingShort(content, o.finding)).join(" · ")}`
-            : `${q.id} · ${findingShort(content, q.id)}`,
-        detail: q.ask + (q.assess ? `\n\n${q.assess}` : ""),
+        parent: aNode(area.id),
+        label: q.type === "multi" ? `${q.id} ☑ ${clip(q.ask, 46)}` : `${q.id} · ${findingShort(content, q.id)}`,
+        detail:
+          q.ask +
+          (q.type === "multi" ? `\n\n• ${q.options.map((o) => findingShort(content, o.finding)).join("\n• ")}` : "") +
+          (q.assess ? `\n\n${q.assess}` : ""),
       });
-      if (i === 0) edges.push({ id: `e:${scr}->${q.id}`, source: scr, target: qNode(q.id), kind: "flow" });
+      // a faint tether so every question sits with its area's screening node
+      edges.push({ id: `e:flow:${q.id}`, source: `scr:${area.id}`, target: qNode(q.id), kind: "flow" });
       for (const c of q.showIf) {
-        const parent = qNode(questionOf(content, c.finding));
         edges.push({
           id: `e:showIf:${c.finding}->${q.id}`,
-          source: parent,
+          source: qNode(questionOf(content, c.finding)),
           target: qNode(q.id),
           kind: "showIf",
           label: `only if ${c.is === "present" ? "yes" : "no"}`,
         });
       }
-    });
+    }
   }
 
   for (const d of content.diagnoses) {
@@ -105,11 +113,15 @@ export function buildGraph(content: Content): GraphModel {
       id: dNode(d.id),
       kind,
       area: d.area,
+      parent: aNode(d.area),
       label: d.name,
       detail: [d.note, d.points.length ? `Points to it:\n• ${d.points.join("\n• ")}` : ""]
         .filter(Boolean)
         .join("\n\n"),
     });
+    // faint tether so every diagnosis sits inside its area, even the ones whose
+    // only real edges are hidden by default (fallbacks, mimics, against-only)
+    edges.push({ id: `e:flow:${d.id}`, source: `scr:${d.area}`, target: dNode(d.id), kind: "flow" });
 
     for (const s of d.supports) {
       const q = questionOf(content, s.finding);
@@ -121,17 +133,16 @@ export function buildGraph(content: Content): GraphModel {
         label:
           content.question.get(q)?.type === "multi"
             ? `${findingShort(content, s.finding)} · w${s.weight}`
-            : `w${s.weight}`,
+            : `supports · w${s.weight}`,
       });
     }
     for (const a of d.against.filter((x) => x.weight >= 2)) {
-      const q = questionOf(content, a.finding);
       edges.push({
         id: `e:agn:${d.id}:${a.finding}`,
-        source: qNode(q),
+        source: qNode(questionOf(content, a.finding)),
         target: dNode(d.id),
         kind: "against",
-        label: "against",
+        label: "argues against",
       });
     }
     for (const e of d.excludes) {
