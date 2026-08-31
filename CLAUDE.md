@@ -35,7 +35,7 @@ src/content/        zod schema + model + loader:
                       model.ts    the runtime shape (Question / Diagnosis / Finding + maps)
                       build.ts    buildContent() — validate + normalise, never throws
                       load.ts     assemble the YAML files → buildContent (Vite glob + scripts)
-                      graph.ts    areaDiagram() — Mermaid source per area (in-app Map + npm run map)
+                      graph.ts    buildGraph() — the whole content as one node/edge model
 src/quiz/           framework-free engine, unit-tested:
                       score.ts    rankAcross() — Bayesian posterior per diagnosis across the picked areas
                       session.ts  screenOf() + the reducer (pure state machine)
@@ -165,10 +165,15 @@ content is still all `boolean`.
   there is no separate landing screen.
 - Back is a "‹ Back" link at the top of the content frame (not the TopBar,
   which carries the wordmark + Map/Quiz toggle + Findings + "?" + theme).
-- The TopBar **Map** toggle opens `MapScreen` — the content overview (per-area
-  Mermaid DAG from `src/content/graph.ts`). Mermaid is a lazy `import()` so it
-  stays out of the main bundle. `scripts/content-map.mjs` (`npm run map`) emits
-  the same diagrams as a standalone HTML file.
+- The TopBar **Map** toggle opens `MapScreen` — the whole content as one
+  interactive graph (Cytoscape + fcose force layout, lazy `import()` → own
+  chunk). `src/content/graph.ts` `buildGraph()` is the shared node/edge model:
+  screening gates + questions (with `showIf` edges) + diagnoses, joined by
+  finding→diagnosis edges and diagnosis↔diagnosis `seeAlso` / `coexists` edges
+  (the latter are what connect the four areas — ~37 of them, `dx-oald` the main
+  hub). Click a node to focus it; area / edge-type filter chips; `against` edges
+  hidden by default (weight-1 migration noise). `npm run map`
+  (`scripts/content-map.mjs`) emits the same graph as a standalone HTML file.
 - Opt-in detail everywhere — "How do I check this?", per-match detail, and the
   look-alikes are collapsed `Disclosure`s.
 - `do-not-miss` diagnoses get a red badge / note — but still nothing pops up.

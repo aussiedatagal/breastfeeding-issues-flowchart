@@ -118,7 +118,7 @@ async function walkAndShoot(page, dir, shot) {
   const mapToggle = page.getByRole("button", { name: /^Map$/ }).first();
   if (await mapToggle.count()) {
     await mapToggle.click();
-    await page.waitForTimeout(3500); // mermaid loads + renders
+    await page.waitForTimeout(8000); // cytoscape loads + force layout settles
     await shot("10-content-map", { fullPage: true });
   }
 }
