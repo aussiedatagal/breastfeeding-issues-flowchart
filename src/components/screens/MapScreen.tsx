@@ -28,8 +28,9 @@ const EDGE_FILTERS: { kind: EdgeKind; label: string }[] = [
   { kind: "excludes", label: "rules out" },
   { kind: "link", label: "distinguish / alongside" },
 ];
-/* start with a clean scoring backbone; the noisy ones are opt-in */
-const DEFAULT_EDGES: EdgeKind[] = ["flow", "showIf", "supports", "excludes"];
+/* the scoring backbone + the diagnosis links that connect the areas;
+ * "argues against" is weight-1 migration noise, so it stays opt-in */
+const DEFAULT_EDGES: EdgeKind[] = ["flow", "showIf", "supports", "excludes", "link"];
 
 const SUB_LAYOUT = {
   name: "fcose",
@@ -45,7 +46,7 @@ const SUB_LAYOUT = {
 } as const;
 
 const COLS = 2;
-const GAP = 150;
+const GAP = 90;
 
 /** lay out each visible area on its own (fast), then pack the areas into a grid
  *  sized to their contents — one constrained layout over the whole thing is far
@@ -167,8 +168,8 @@ const CY_STYLE: any[] = [
   { selector: 'edge[kind = "supports"]', style: { width: 2 } },
   { selector: 'edge[kind = "against"]', style: { "line-style": "dashed" } },
   { selector: 'edge[kind = "excludes"]', style: { width: 3.5 } },
-  { selector: 'edge[kind = "link"]', style: { "line-style": "dotted", width: 1.4, "line-opacity": 0.4, "target-arrow-shape": "vee" } },
-  { selector: 'edge[?cross]', style: { width: 2.4, "line-opacity": 0.6 } },
+  { selector: 'edge[kind = "link"]', style: { "line-style": "dotted", width: 1.3, "line-opacity": 0.35, "target-arrow-shape": "vee" } },
+  { selector: 'edge[?cross]', style: { "line-style": "solid", width: 2.8, "line-opacity": 0.8, "z-index": 10 } },
   { selector: ".hidden", style: { display: "none" } },
   { selector: ".dim", style: { opacity: 0.08 } },
   { selector: ".hot", style: { "line-opacity": 1, opacity: 1, label: "data(label)", width: 2.6, "z-index": 20 } },
@@ -334,11 +335,12 @@ export function MapScreen({ content }: { content: Content }) {
         <div>
           <h1 className={styles.title}>Content map</h1>
           <p className={styles.lede}>
-            One graph, four areas (the tinted boxes). No decision tree — dashed{" "}
-            <b style={{ color: EDGE_COLOR.showIf }}>showIf</b> edges only change what the parent is
-            asked; solid <b style={{ color: EDGE_COLOR.supports }}>green</b> edges score a diagnosis.
-            Turn on <b style={{ color: EDGE_COLOR.link }}>distinguish / alongside</b> to see the links
-            between areas. Click a node to trace just its connections.
+            The four areas (tinted boxes) barely overlap — questions never cross them. What ties
+            them together is <b style={{ color: EDGE_COLOR.link }}>diagnosis↔diagnosis</b> links
+            (“distinguish from” / “occurs alongside”); the ones that cross a box are drawn solid and
+            bold. Within a box: dashed <b style={{ color: EDGE_COLOR.showIf }}>showIf</b> edges only
+            change what the parent is asked, solid <b style={{ color: EDGE_COLOR.supports }}>green</b>{" "}
+            edges score a diagnosis. Click a node to trace just its connections.
           </p>
         </div>
         <button type="button" className={styles.fit} onClick={fit}>
