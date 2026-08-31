@@ -13,7 +13,7 @@ const AREA_COLOR: Record<string, string> = {
 const areaColor = (id: string) => AREA_COLOR[id] ?? "#6b6252";
 
 const EDGE_COLOR: Record<EdgeKind, string> = {
-  flow: "#cabfa4",
+  gate: "#d4c9ad",
   showIf: "#8a7f6a",
   supports: "#35786a",
   against: "#b1503d",
@@ -30,69 +30,42 @@ const EDGE_FILTERS: { kind: EdgeKind; label: string }[] = [
 ];
 /* the scoring backbone + the diagnosis links that connect the areas;
  * "argues against" is weight-1 migration noise, so it stays opt-in */
-const DEFAULT_EDGES: EdgeKind[] = ["flow", "showIf", "supports", "excludes", "link"];
+const DEFAULT_EDGES: EdgeKind[] = ["gate", "showIf", "supports", "excludes", "link"];
 
-const SUB_LAYOUT = {
-  name: "fcose",
-  quality: "default",
-  animate: false,
-  randomize: true,
-  nodeSeparation: 75,
-  idealEdgeLength: 52,
-  nodeRepulsion: 3600,
-  gravity: 0.5,
-  packComponents: true,
-  tile: true,
+/** ELK `layered` (Sugiyama): proper hierarchical layout, no node overlap,
+ *  orthogonal routing. Run per area (small, fast) then packed into a grid. */
+const ELK_LAYOUT = {
+  name: "elk",
+  fit: false,
+  elk: {
+    algorithm: "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 20,
+    "elk.spacing.edgeNode": 14,
+    "elk.spacing.edgeEdge": 8,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 60,
+    "elk.layered.spacing.edgeNodeBetweenLayers": 20,
+    "elk.spacing.componentComponent": 45,
+    "elk.separateConnectedComponents": "true",
+    "elk.layered.crossingMinimization.strategy": "LAYER_SWEEP",
+    "elk.layered.nodePlacement.strategy": "BRANDES_KOEPF",
+    "elk.layered.cycleBreaking.strategy": "GREEDY",
+    "elk.edgeRouting": "ORTHOGONAL",
+  },
 } as const;
 
-const COLS = 2;
-const GAP = 90;
-
-/** lay out each visible area on its own (fast), then pack the areas into a grid
- *  sized to their contents — one constrained layout over the whole thing is far
- *  too slow. */
-async function relayout(cy: cytoscape.Core, areaIds: string[], visibleAreas: Set<string>) {
-  const shown = areaIds.filter((id) => visibleAreas.has(id));
-  const boxes: ({ nodes: cytoscape.NodeCollection; bb: cytoscape.BoundingBox12 } | null)[] = [];
-
-  for (const id of shown) {
-    const nodes = cy.nodes(`[area = "${id}"]`).filter((n) => !n.isParent() && n.visible());
-    if (nodes.length === 0) {
-      boxes.push(null);
-      continue;
-    }
-    const eles = nodes.union(nodes.edgesWith(nodes)).filter((el) => el.visible());
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- fcose opts aren't typed
-    const l = eles.layout({ ...SUB_LAYOUT } as any);
-    await new Promise<void>((res) => {
-      l.one("layoutstop", () => res());
-      l.run();
-    });
-    boxes.push({ nodes, bb: nodes.boundingBox() });
-  }
-
-  const colW: number[] = [];
-  const rowH: number[] = [];
-  boxes.forEach((b, i) => {
-    if (!b) return;
-    const c = i % COLS;
-    const r = Math.floor(i / COLS);
-    colW[c] = Math.max(colW[c] ?? 0, b.bb.x2 - b.bb.x1);
-    rowH[r] = Math.max(rowH[r] ?? 0, b.bb.y2 - b.bb.y1);
-  });
-  const colX: number[] = [];
-  const rowY: number[] = [];
-  colW.reduce((x, w, c) => ((colX[c] = x), x + w + GAP), 0);
-  rowH.reduce((y, h, r) => ((rowY[r] = y), y + h + GAP), 0);
-
-  boxes.forEach((b, i) => {
-    if (!b) return;
-    b.nodes.shift({
-      x: (colX[i % COLS] ?? 0) - b.bb.x1,
-      y: (rowY[Math.floor(i / COLS)] ?? 0) - b.bb.y1,
-    });
-  });
-  cy.fit(cy.elements(":visible"), 25);
+/** One ELK pass over everything EXCEPT the diagnosis↔diagnosis `link` edges —
+ *  those connect distant areas and would fight the hierarchy. The four areas
+ *  share no question edges, so ELK stacks them as separate components; the
+ *  `link` edges then draw between the diagnosis columns. */
+function relayout(cy: cytoscape.Core) {
+  const eles = cy
+    .elements(":visible")
+    .filter((el) => el.isNode() || el.data("kind") !== "link" || !el.data("cross"));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- elk opts aren't typed
+  const l = eles.layout({ ...ELK_LAYOUT } as any);
+  l.one("layoutstop", () => cy.fit(cy.elements(":visible"), 18));
+  l.run();
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- cytoscape stylesheet is loosely typed */
@@ -117,26 +90,7 @@ const CY_STYLE: any[] = [
       padding: "9px",
     },
   },
-  {
-    selector: "node:parent",
-    style: {
-      label: "data(label)",
-      "font-size": 15,
-      "font-weight": 700,
-      color: "data(color)",
-      "text-valign": "top",
-      "text-halign": "center",
-      "text-margin-y": 4,
-      "background-color": "data(color)",
-      "background-opacity": 0.05,
-      "border-width": 1,
-      "border-color": "data(color)",
-      "border-opacity": 0.4,
-      shape: "round-rectangle",
-      padding: "26px",
-    },
-  },
-  { selector: 'node[kind = "screen"]', style: { "background-color": "#ece1cb", "font-weight": 600 } },
+  { selector: 'node[kind = "screen"]', style: { "background-color": "#e6dcc5", "font-weight": 700, "border-width": 2, "font-size": 12, shape: "round-tag" } },
   { selector: 'node[kind = "multi"]', style: { "border-style": "double", "border-width": 4 } },
   {
     selector:
@@ -155,7 +109,9 @@ const CY_STYLE: any[] = [
       "target-arrow-color": "data(ecolor)",
       "target-arrow-shape": "triangle",
       "arrow-scale": 0.8,
-      "curve-style": "bezier",
+      "curve-style": "taxi",
+      "taxi-direction": "rightward",
+      "taxi-turn": 24,
       "font-size": 9,
       color: "#5b5344",
       "text-background-color": "#f5efe4",
@@ -163,13 +119,13 @@ const CY_STYLE: any[] = [
       "text-background-padding": "2px",
     },
   },
-  { selector: 'edge[kind = "flow"]', style: { width: 1, "line-opacity": 0.25, "target-arrow-shape": "none", "curve-style": "straight" } },
+  { selector: 'edge[kind = "gate"]', style: { width: 1, "line-opacity": 0.3, "line-color": "#c8bda0", "target-arrow-shape": "none", "curve-style": "taxi" } },
   { selector: 'edge[kind = "showIf"]', style: { "line-style": "dashed", width: 1.8 } },
   { selector: 'edge[kind = "supports"]', style: { width: 2 } },
   { selector: 'edge[kind = "against"]', style: { "line-style": "dashed" } },
   { selector: 'edge[kind = "excludes"]', style: { width: 3.5 } },
-  { selector: 'edge[kind = "link"]', style: { "line-style": "dotted", width: 1.3, "line-opacity": 0.35, "target-arrow-shape": "vee" } },
-  { selector: 'edge[?cross]', style: { "line-style": "solid", width: 2.8, "line-opacity": 0.8, "z-index": 10 } },
+  { selector: 'edge[kind = "link"]', style: { "line-style": "dotted", width: 1, "line-opacity": 0.18, "target-arrow-shape": "none", "curve-style": "straight" } },
+  { selector: 'edge[?cross]', style: { width: 1.1, "line-opacity": 0.28 } },
   { selector: ".hidden", style: { display: "none" } },
   { selector: ".dim", style: { opacity: 0.08 } },
   { selector: ".hot", style: { "line-opacity": 1, opacity: 1, label: "data(label)", width: 2.6, "z-index": 20 } },
@@ -180,7 +136,6 @@ const CY_STYLE: any[] = [
 export function MapScreen({ content }: { content: Content }) {
   const model: GraphModel = useMemo(() => buildGraph(content), [content]);
   const stats = useMemo(() => graphStats(content), [content]);
-  const areaIds = useMemo(() => model.areas.map((a) => a.id), [model]);
   const containerRef = useRef<HTMLDivElement>(null);
   const cyRef = useRef<cytoscape.Core | null>(null);
 
@@ -195,11 +150,11 @@ export function MapScreen({ content }: { content: Content }) {
     let alive = true;
     (async () => {
       try {
-        const [{ default: cy }, { default: fcose }] = await Promise.all([
+        const [{ default: cy }, { default: elk }] = await Promise.all([
           import("cytoscape"),
-          import("cytoscape-fcose"),
+          import("cytoscape-elk"),
         ]);
-        cy.use(fcose);
+        cy.use(elk);
         if (!alive || !containerRef.current) return;
 
         const instance = cy({
@@ -216,7 +171,7 @@ export function MapScreen({ content }: { content: Content }) {
         });
         cyRef.current = instance;
         instance.on("tap", "node", (ev) => {
-          if (!ev.target.isParent()) setSelectedId(ev.target.id());
+          setSelectedId(ev.target.id());
         });
         instance.on("tap", (ev) => {
           if (ev.target === instance) setSelectedId(null);
@@ -224,7 +179,7 @@ export function MapScreen({ content }: { content: Content }) {
         setReady(true);
         setTimeout(() => {
           instance.resize();
-          relayout(instance, areaIds, areasOn);
+          relayout(instance);
         }, 130);
       } catch (e) {
         if (alive) setError(e instanceof Error ? e.message : String(e));
@@ -235,7 +190,6 @@ export function MapScreen({ content }: { content: Content }) {
       cyRef.current?.destroy();
       cyRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- areaIds/areasOn read once at mount
   }, [model]);
 
   useEffect(() => {
@@ -243,19 +197,15 @@ export function MapScreen({ content }: { content: Content }) {
     if (!cy || !ready) return;
     cy.batch(() => {
       cy.nodes().forEach((n) => {
-        if (!n.isParent()) n.toggleClass("hidden", !areasOn.has(n.data("area")));
-      });
-      cy.nodes(":parent").forEach((p) => {
-        p.toggleClass("hidden", p.children(":visible").length === 0);
+        n.toggleClass("hidden", !areasOn.has(n.data("area")));
       });
       cy.edges().forEach((e) => {
         const k = e.data("kind") as EdgeKind;
         const endsHidden = e.source().hasClass("hidden") || e.target().hasClass("hidden");
-        e.toggleClass("hidden", endsHidden || (k !== "flow" && !edgesOn.has(k)));
+        e.toggleClass("hidden", endsHidden || (k !== "gate" && !edgesOn.has(k)));
       });
     });
-    relayout(cy, areaIds, areasOn);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- areaIds is stable
+    relayout(cy);
   }, [ready, areasOn, edgesOn]);
 
   useEffect(() => {
@@ -335,12 +285,13 @@ export function MapScreen({ content }: { content: Content }) {
         <div>
           <h1 className={styles.title}>Content map</h1>
           <p className={styles.lede}>
-            The four areas (tinted boxes) barely overlap — questions never cross them. What ties
-            them together is <b style={{ color: EDGE_COLOR.link }}>diagnosis↔diagnosis</b> links
-            (“distinguish from” / “occurs alongside”); the ones that cross a box are drawn solid and
-            bold. Within a box: dashed <b style={{ color: EDGE_COLOR.showIf }}>showIf</b> edges only
-            change what the parent is asked, solid <b style={{ color: EDGE_COLOR.supports }}>green</b>{" "}
-            edges score a diagnosis. Click a node to trace just its connections.
+            Each area is its own hierarchy — a screening tag, then its questions, then its diagnoses,
+            left to right (node border = area colour). Solid{" "}
+            <b style={{ color: EDGE_COLOR.supports }}>green</b> edges score a diagnosis; dashed{" "}
+            <b style={{ color: EDGE_COLOR.showIf }}>showIf</b> edges only change what the parent is
+            asked. The areas are joined only by the faint{" "}
+            <b style={{ color: EDGE_COLOR.link }}>violet</b> diagnosis↔diagnosis links (“distinguish
+            from” / “occurs alongside”). Click a node to trace just its connections.
           </p>
         </div>
         <button type="button" className={styles.fit} onClick={fit}>
