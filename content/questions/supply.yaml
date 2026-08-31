@@ -25,12 +25,13 @@
 - id: a10
   area: supply
   type: boolean
-  ask: Are feeds often spaced out, cut short, or replaced by bottles of formula?
-  short: Feeds spaced out or topped up?
+  ask: During the day, does your baby often go longer than about 3 hours between
+    feeds?
+  short: Long gaps between feeds?
   assess: >
-    Long stretches without feeding, feeding to a schedule, heavy dummy use, or
-    regular formula top-ups all reduce how often milk is removed — which lowers
-    supply over time.
+    Long stretches without milk being removed — from scheduling, heavy dummy use,
+    long sleeps, very short feeds, or regular formula top-ups — lower supply over
+    time.
 
 - id: a11
   area: supply
@@ -151,14 +152,22 @@
 - id: a2
   area: supply
   type: boolean
-  ask: Have you had hands-on help with positioning and latch — and if so, did
-    feeds get a lot better?
-  short: Hands-on latch help fixed it?
+  ask: Has someone skilled sat with you through a feed and adjusted how your baby
+    is held and latched?
+  short: Had hands-on latch help?
   assess: >
-    If a midwife, lactation consultant, or breastfeeding counsellor adjusted how
-    the baby is held and latched and the feed improved right away — deeper latch,
-    more swallowing, less pain — answer yes. Answer no if you haven't had that
-    help, or it didn't change things.
+    A midwife, lactation consultant, or breastfeeding counsellor working through
+    a whole feed with you and hands-on adjusting the hold and latch — not just
+    general advice.
+- id: a2b
+  area: supply
+  type: boolean
+  showIf: a2
+  ask: Straight after that help, did the feeds get a lot better?
+  short: Latch help fixed it?
+  assess: >
+    A clear improvement right away — deeper latch, more swallowing, less pain.
+    Answer no if it did not really change things.
 
 - id: a3
   area: supply
@@ -174,13 +183,13 @@
 - id: a4
   area: supply
   type: boolean
-  ask: Has anyone raised tongue-tie, or does your baby struggle to open wide,
-    poke the tongue out, or stay on the breast?
-  short: Signs of a tongue problem?
+  ask: Even with good positioning, does your baby stay shallow on the breast,
+    click, or keep slipping off?
+  short: Signs of a tongue-movement problem?
   assess: >
-    This is about how well the tongue moves, not how it looks. Signs include a
-    shallow latch, clicking, sliding off, and feeding that doesn't improve with
-    better positioning. A lactation consultant or doctor can assess it.
+    This is about how well the tongue moves, not how it looks: a shallow latch,
+    clicking, sliding off, trouble staying on, and feeding that doesn't improve
+    with better positioning. A lactation consultant or doctor can assess it.
 
 - id: a5
   area: supply
@@ -207,13 +216,13 @@
 - id: a6
   area: supply
   type: boolean
-  ask: Does your baby feed eagerly for a few minutes then tire, sweat on the
-    forehead, breathe fast, or go pale or bluish?
-  short: Tires / colour change with feeds?
+  ask: Does your baby tire quickly during feeds and keep stopping to breathe or
+    rest?
+  short: Tires / breathless with feeds?
   assess: >
-    A baby who runs out of steam quickly during feeds, sweats, breathes fast, or
-    changes colour should be seen by a doctor — this can point to a heart or
-    breathing problem.
+    A baby who runs out of steam quickly during feeds — sweating on the forehead,
+    breathing fast, going pale or bluish, long pauses to recover — should be seen
+    by a doctor, as this can point to a heart or breathing problem.
 
 - id: a6b
   area: supply

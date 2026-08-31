@@ -23,9 +23,8 @@
 - id: ref3
   area: refusal
   type: boolean
-  ask: Does your baby latch on, then pull off crying or arching, and stay
-    unsettled afterwards?
-  short: Latches then pulls off crying, unsettled?
+  ask: Does your baby latch on, then pull off crying or arching partway through?
+  short: Latches then pulls off crying?
   assess: >
     A pattern of discomfort rather than distraction or fast flow: breaking off
     mid-feed crying and arching, hiccups, frequent bringing up of milk, poor
@@ -72,18 +71,37 @@
 - id: ref6
   area: refusal
   type: boolean
-  ask: Did the fussing start after regular bottle use, and does your baby take a
-    fast bottle teat eagerly but fuss at the breast?
-  short: Prefers the bottle since bottles started?
+  ask: Did the fussing at the breast start after your baby began having regular
+    bottles?
+  short: Fussing began after bottles?
+  assess: >
+    A change that lines up with introducing regular bottles, rather than being
+    there from the start.
+- id: ref6b
+  area: refusal
+  type: boolean
+  showIf: ref6
+  ask: Does your baby take a bottle eagerly but pull and fuss at the breast?
+  short: Takes bottle, fusses at breast?
   assess: >
     Some babies come to prefer the fast, constant flow of a bottle teat and then
     fuss and pull at the breast, especially before the milk lets down.
 - id: ref7
   area: refusal
   type: boolean
-  ask: Has your baby had a lot of unpleasant experiences around the mouth (tubes,
-    suctioning, force-feeding) and now pushes away anything near the mouth?
-  short: Defensive about the mouth?
+  ask: Has your baby had a lot of unpleasant experiences around the mouth —
+    feeding tubes, suctioning, or being force-fed?
+  short: History of mouth trauma?
+  assess: >
+    A history of tubes, suctioning, or pressured feeding can leave a baby
+    defensive about the mouth.
+- id: ref7b
+  area: refusal
+  type: boolean
+  showIf: ref7
+  ask: Does your baby now turn away or get upset when anything comes near their
+    mouth?
+  short: Defends the mouth now?
   assess: >
     Oral aversion follows negative experiences around the mouth: the baby is
     otherwise well and growing, but defends against anything approaching the
@@ -91,10 +109,11 @@
 - id: ref8
   area: refusal
   type: boolean
-  ask: Does your baby start okay but get more and more frustrated as the feed
-    goes on, and take a bottle more calmly?
+  ask: Does your baby start the feed calmly but get more and more frustrated as
+    it goes on?
   short: Frustration builds through the feed?
   assess: >
-    Frustration that builds through the feed can mean the flow is slow or the
-    supply is falling — rather than fighting a fast flow at the start. If weight
-    gain is also slipping, the milk-supply questions are worth doing too.
+    Frustration that builds through the feed — and often eases with a bottle —
+    can mean the flow is slow or the supply is falling, rather than fighting a
+    fast flow at the start. If weight gain is also slipping, the milk-supply
+    questions are worth doing too.

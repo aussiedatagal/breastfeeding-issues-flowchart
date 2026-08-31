@@ -47,7 +47,7 @@
       weight: 3
     - finding: inf9-retract
       weight: 3
-    - finding: inf9b
+    - finding: inf9d
       weight: 3
     - finding: inf9-fixed
       weight: 2
@@ -76,6 +76,8 @@
     - finding: inf2
       weight: 2
     - finding: inf10
+      weight: 2
+    - finding: inf9d
       weight: 2
   against:
     - finding: inf1

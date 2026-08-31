@@ -16,12 +16,12 @@
 - id: pain2
   area: pain
   type: boolean
-  ask: Is there a wedge or patch of your breast that is red, firm, hot, and sore?
-  short: Red, firm, hot patch?
+  ask: Is there a wedge-shaped area of one breast that looks red and feels hot?
+  short: Red, hot patch of breast?
   assess: >
-    A section of the breast that is red, hard, hot, and tender — rather than pain
-    only in the nipple, or a deep ache all over. This is the "mastitis" range of
-    problems.
+    A section of the breast that is red and hot — usually also firm and tender —
+    rather than pain only in the nipple, or a deep ache all over. This is the
+    "mastitis" range of problems.
 
 - id: pain3
   area: pain
@@ -37,13 +37,14 @@
   area: pain
   type: boolean
   showIf: pain3
-  ask: Are there small blisters grouped together, small round ulcers, or
-    golden-yellow crusty patches on the nipple?
-  short: Blisters / ulcers / crusting?
+  ask: Apart from any plain crack, is there something unusual on the nipple skin
+    — a blister cluster, small round sores, or yellow crusting?
+  short: Unusual blisters / sores / crust?
   assess: >
-    Clusters of little blisters or shallow round sores (sometimes with tingling
-    first) can be a cold-sore-type (herpes) infection. Honey-coloured crusts can
-    be a bacterial skin infection. Both should be seen promptly.
+    Something more than a plain crack. A cluster of little blisters or shallow
+    round sores (sometimes with tingling first) can be a cold-sore-type (herpes)
+    infection; honey-coloured crusting can be a bacterial skin infection. Both
+    should be seen promptly.
 
 - id: pain5
   area: pain
@@ -60,20 +61,29 @@
   area: pain
   type: boolean
   showIf: pain5
-  ask: Has the nipple wound failed to heal after 2 to 3 days, or is the redness
-    spreading or oozing pus or yellow crust?
-  short: Wound not healing / infected?
+  ask: After 2 to 3 days of care, is the nipple wound still not starting to heal?
+  short: Wound not healing?
   assess: >
-    Signs that a nipple crack has become infected: not healing after a couple of
-    days, spreading redness, pus, or yellow crusting.
+    A nipple crack that is being managed well usually starts to improve within a
+    couple of days. One that is stuck, or getting worse, may be infected.
+
+- id: pain6b
+  area: pain
+  type: boolean
+  showIf: pain5
+  ask: Around the nipple wound, is the redness spreading, or is there pus or
+    yellow crusting?
+  short: Spreading redness or pus?
+  assess: >
+    Spreading redness, pus, or yellow crusting around a nipple crack are signs it
+    has become infected and needs to be seen.
 
 - id: pain7
   area: pain
   type: boolean
   showIf: pain3
-  ask: Is there a scaly, itchy, or burning rash with a clear edge on the nipple
-    or areola?
-  short: Scaly, itchy rash?
+  ask: Is there a rash with a clear edge on the nipple or areola?
+  short: Rash with a clear edge?
   assess: >
     A well-defined patch that is scaly, itchy, or burning. It can flare after a
     new cream, nipple cream, breast pads, fragrance, or laundry detergent, or go
@@ -118,13 +128,13 @@
   area: pain
   type: boolean
   ask: Is there a deep, dull ache or burning inside the breast that carries on
-    during and after feeds, often in both breasts and worse lower down?
+    during and after feeds?
   short: Deep ache during + after feeds?
   assess: >
     A fairly constant deep ache or burning felt inside the breast (not on the
-    nipple surface), there between feeds as well as during. Often linked to a
-    history of blocked ducts, blebs, cracked nipples, past mastitis, a lot of
-    pumping, or oversupply.
+    nipple surface), there between feeds as well as during — often in both
+    breasts and worse lower down. Often linked to a history of blocked ducts,
+    blebs, cracked nipples, past mastitis, a lot of pumping, or oversupply.
 
 - id: pain12
   area: pain

@@ -19,7 +19,10 @@ areas:
   - id: inflammation
     label: A breast lump, or a red, hot, or inflamed area
     short: Lump or inflammation
-    ask: Is part of your breast painful, red, swollen, or lumpy?
+    ask:
+      - Is one area of your breast red or hot?
+      - Is one area of your breast swollen or hard?
+      - Can you feel a lump in your breast?
   - id: refusal
     label: The baby fights, fusses at, or refuses the breast
     short: Fussing or refusing

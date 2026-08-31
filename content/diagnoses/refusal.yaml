@@ -160,6 +160,8 @@
   supports:
     - finding: ref6
       weight: 2
+    - finding: ref6b
+      weight: 2
   against:
     - finding: ref1
       weight: 1
@@ -178,6 +180,8 @@
     - Positive oral experiences away from hunger; skin-to-skin.
   supports:
     - finding: ref7
+      weight: 2
+    - finding: ref7b
       weight: 2
   against:
     - finding: ref1

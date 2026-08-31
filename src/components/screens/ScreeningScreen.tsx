@@ -12,6 +12,7 @@ interface Props {
   findingsCount: number;
   onScreen: (areaId: string, screenIndex: number, yes: boolean) => void;
   onOpenSummary: () => void;
+  onBack?: () => void;
 }
 
 export function ScreeningScreen({
@@ -25,20 +26,20 @@ export function ScreeningScreen({
   findingsCount,
   onScreen,
   onOpenSummary,
+  onBack,
 }: Props) {
   return (
     <section className={styles.section} key={`${area.id}:${screenIndex}`}>
       {first ? (
         <>
           <p className={styles.kicker}>Breastfeeding difficulty</p>
-          <h1 className={styles.title}>What's going on?</h1>
           <p className={styles.lede}>{content.intro}</p>
         </>
       ) : (
         <p className={styles.progress}>Screening · question {index}</p>
       )}
 
-      <h2 className={styles.question}>{ask}</h2>
+      <h1 className={styles.question}>{ask}</h1>
 
       {picked.length > 0 && (
         <p className={styles.picked}>So far: {picked.map((a) => a.short ?? a.label).join(", ")}</p>
@@ -68,6 +69,12 @@ export function ScreeningScreen({
       {first && findingsCount > 0 && (
         <button type="button" className={styles.findingsLink} onClick={onOpenSummary}>
           Your findings so far ({findingsCount}) →
+        </button>
+      )}
+
+      {onBack && !first && (
+        <button type="button" className={styles.stepBack} onClick={onBack}>
+          ← Previous question
         </button>
       )}
 

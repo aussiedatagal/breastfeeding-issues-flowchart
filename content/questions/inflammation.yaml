@@ -26,19 +26,19 @@
   area: inflammation
   type: boolean
   showIf: inf2
-  ask: Is the lump soft or fluid-feeling and very tender, with red, thin, shiny
-    skin over it?
-  short: Soft, very tender lump + red skin?
+  ask: Does the lump feel like it is full of fluid, and is it very painful?
+  short: Fluid-feeling, very painful lump?
   assess: >
-    A tense, fluid-feeling, very painful lump with red thinned skin over it can
-    be an abscess (a pocket of pus) and needs a scan and prompt treatment.
+    A tense, fluid-feeling, very painful lump — often with red, thin, shiny skin
+    over it — can be an abscess (a pocket of pus) and needs a scan and prompt
+    treatment.
 
 - id: inf8
   area: inflammation
   type: boolean
   showIf: inf2
-  ask: Is the lump smooth, soft, and painless — not hot or tender?
-  short: Smooth, soft, painless lump?
+  ask: Is the lump painless — not hot or tender to touch?
+  short: Painless, not hot?
   assess: >
     A milk-filled cyst (galactocele) feels smooth and soft or tense, but is not
     hot or painful. It is most common as feeds drop off or after weaning.
@@ -65,18 +65,36 @@
 - id: inf9b
   area: inflammation
   type: boolean
-  ask: Have you finished a course of antibiotics for this breast without it
-    clearing up?
-  short: Not cleared after antibiotics?
+  ask: Have you been prescribed antibiotics for this breast?
+  short: Prescribed antibiotics?
   assess: >
-    A red, swollen breast that does not settle after an appropriate antibiotic
-    course needs imaging, not another prescription. Answer "No" if you haven't
-    had antibiotics for it.
+    Antibiotic tablets from a doctor for this red or inflamed breast — not
+    creams. Answer "No" if you have not been given any.
+
+- id: inf9c
+  area: inflammation
+  type: boolean
+  showIf: inf9b
+  ask: Have you finished the whole course of antibiotics?
+  short: Finished the course?
+  assess: >
+    Taken every dose to the end, rather than stopping early or still being
+    partway through.
+
+- id: inf9d
+  area: inflammation
+  type: boolean
+  showIf: inf9c
+  ask: Since finishing the antibiotics, is the breast still red, sore, or swollen?
+  short: Still inflamed after a full course?
+  assess: >
+    A red, swollen breast that has not clearly settled after a full, appropriate
+    antibiotic course needs breast imaging — not another prescription.
 
 - id: inf10
   area: inflammation
   type: boolean
-  ask: Has inflammation or a lump come back more than once in the same spot?
+  ask: Has a problem come back more than once in exactly the same spot?
   short: Keeps coming back, same spot?
   assess: >
     Repeated problems in exactly the same place suggest something fixed there — a

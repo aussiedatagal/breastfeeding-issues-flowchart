@@ -27,9 +27,16 @@ export function QuizApp({ content }: { content: Content }) {
     window.scrollTo({ top: 0 });
   }, [signature]);
 
-  const atStart = screen.name === "screening" && screen.first;
-  const onBack = atStart || screen.name === "map" ? undefined : actions.back;
+  // the quiz screens (screening / question) carry their own "previous question"
+  // control at the foot of the questionnaire; only the true sub-views get a
+  // top-of-frame back link
+  const topBack =
+    screen.name === "results" || screen.name === "summary" || screen.name === "sources"
+      ? actions.back
+      : undefined;
   const backLabel = screen.name === "results" ? "Back to the questions" : "Back";
+  const stepBack =
+    screen.name === "screening" && screen.first ? undefined : actions.back;
 
   const eyebrow =
     screen.name === "question"
@@ -66,8 +73,8 @@ export function QuizApp({ content }: { content: Content }) {
             Back to the quiz
           </button>
         )}
-        {onBack && (
-          <button type="button" className={styles.back} onClick={onBack}>
+        {topBack && (
+          <button type="button" className={styles.back} onClick={topBack}>
             <span className={styles.backArrow} aria-hidden="true" />
             {backLabel}
           </button>
@@ -85,6 +92,7 @@ export function QuizApp({ content }: { content: Content }) {
               findingsCount={findings.length}
               onScreen={actions.answerScreen}
               onOpenSummary={actions.openSummary}
+              {...(stepBack ? { onBack: stepBack } : {})}
             />
           )}
 
@@ -101,6 +109,7 @@ export function QuizApp({ content }: { content: Content }) {
               onSkip={actions.skipQuestion}
               onSetFinding={actions.setFinding}
               onReveal={actions.reveal}
+              onBack={actions.back}
             />
           )}
 
