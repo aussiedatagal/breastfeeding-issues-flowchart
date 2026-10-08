@@ -12,9 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
-    "format": "prettier --write .",
-    "screenshots": "npm run build && node scripts/screenshots.mjs",
-    "map": "node scripts/content-map.mjs"
+    "format": "prettier --write ."
   },
   "dependencies": {
     "cytoscape": "^3.34.2",

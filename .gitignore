@@ -7,3 +7,6 @@ coverage/
 screenshots/
 content-map.html
 content-map.artifact.html
+
+# research behind the page stays local
+research/
